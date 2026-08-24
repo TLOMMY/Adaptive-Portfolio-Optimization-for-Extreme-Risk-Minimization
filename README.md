@@ -1,4 +1,4 @@
-# Adaptive Portfolio Optimization
+#Adaptive Portfolio Optimization for Extreme Risk Minimization
 
 Implementation work for Team KYMBJ's Track 2 Operations Research project.
 
