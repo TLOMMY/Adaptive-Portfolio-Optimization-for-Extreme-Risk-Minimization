@@ -47,14 +47,86 @@ def make_prices(
     return pd.DataFrame(prices, index=index, columns=tickers).astype("float64")
 
 
+def make_distinct_risk_prices(
+    n_days: int = 2000,
+    start: str = "2012-01-02",
+    seed: int = SEED,
+) -> pd.DataFrame:
+    """Prices for four assets with deliberately separated risk/return profiles.
+
+    Used where a test needs the risk-return trade-off to be visible: a fixture in
+    which every asset looks alike cannot demonstrate that an optimizer responds
+    to risk aversion at all.
+
+        SAFE  : very low drift, very low volatility   (cash-like)
+        BOND  : low drift,      low volatility
+        STOCK : high drift,     high volatility
+        WILD  : high drift,     very high volatility
+    """
+    profiles = {
+        "SAFE": (0.00005, 0.0010),
+        "BOND": (0.00015, 0.0035),
+        "STOCK": (0.00045, 0.0110),
+        "WILD": (0.00055, 0.0200),
+    }
+    rng = np.random.default_rng(seed)
+    index = pd.bdate_range(start=start, periods=n_days, name="date")
+    columns = {}
+    for ticker, (drift, vol) in profiles.items():
+        shocks = rng.normal(loc=drift, scale=vol, size=n_days)
+        columns[ticker] = 100.0 * np.exp(np.cumsum(shocks))
+    return pd.DataFrame(columns, index=index).astype("float64")
+
+
+DISTINCT_ASSET_CLASSES = {
+    "Equity": ["STOCK", "WILD"],
+    "Fixed Income": ["SAFE", "BOND"],
+}
+
+
 @pytest.fixture
 def prices() -> pd.DataFrame:
     return make_prices()
 
 
 @pytest.fixture
+def risk_prices() -> pd.DataFrame:
+    return make_distinct_risk_prices()
+
+
+@pytest.fixture
+def risk_view(risk_prices) -> MarketDataView:
+    """A view late enough in `risk_prices` to support a 500-day lookback."""
+    return MarketDataView(risk_prices, risk_prices.index[1500])
+
+
+@pytest.fixture
+def rebalance_context(risk_prices) -> RebalanceContext:
+    tickers = list(risk_prices.columns)
+    return RebalanceContext(
+        as_of=risk_prices.index[1500],
+        current_weights=pd.Series(0.0, index=tickers),
+        portfolio_value=100_000.0,
+        period_index=0,
+    )
+
+
+@pytest.fixture
 def short_prices() -> pd.DataFrame:
     return make_prices(n_days=400, start="2014-01-01")
+
+
+@pytest.fixture
+def phase2_settings() -> BacktestSettings:
+    """A short experiment with a lookback the `prices` fixture can support."""
+    return BacktestSettings(
+        start=pd.Timestamp("2016-01-01").date(),
+        end=pd.Timestamp("2018-12-31").date(),
+        lookback_years=1.0,
+        rebalance_frequency=RebalanceFrequency.QUARTERLY,
+        initial_capital=100_000.0,
+        transaction_cost_bps=0.0,
+    )
 
 
 @pytest.fixture

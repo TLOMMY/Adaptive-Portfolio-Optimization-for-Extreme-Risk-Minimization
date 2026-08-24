@@ -17,16 +17,17 @@ observes what actually happened next, and repeats.
 |-------|-------|-------|
 | 0 | Environment, repo skeleton, data snapshot | **Complete** |
 | 1 | Data pipeline, backtest engine, no-look-ahead proofs | **Complete** |
-| 2 | Equal-weight + Markowitz optimizer, performance metrics | Not started |
+| 2 | Estimation layer, equal-weight + Markowitz, metrics | **Complete** |
 | 3 | Scenario-based CVaR optimizer | Not started |
 | 4 | Robust minimum-variance optimizer | Not started |
 | 5 | Investor profile system | Not started |
 | 6 | Streamlit interface | Not started |
 | 7 | Polish, documentation, validation | Not started |
 
-No optimization models exist yet, by design: the replay machinery and its
-no-look-ahead guarantees were built and validated first, so that a later failure
-in an optimizer cannot be confused with a failure in the experiment harness.
+The replay machinery and its no-look-ahead guarantees were built and validated
+before any optimizer existed, so that a failure in a model could never be
+confused with a failure in the experiment harness. Every optimizer added since
+is re-checked against the same invariance proofs.
 
 ---
 
@@ -110,7 +111,12 @@ Every convention that could be defined more than one way is defined once, in
 | One-way turnover | `0.5 · Σ|w_after − w_before|` — the reported metric |
 | Cost base | `Σ|w_after − w_before|` — a sale and the purchase it funds are two chargeable trades |
 | Transaction costs | **0 bps** in the validated baseline; mechanism present and configurable |
-| Risk horizon | Daily. Reported CVaR is a **daily** figure and is labelled as such |
+| Risk horizon | Daily. Reported CVaR will be a **daily** figure and labelled as such (Phase 3) |
+| Cumulative return | `V_T / V_0 − 1`, from the value path |
+| Annualised return | Geometric: `(V_T/V_0)^(252/n) − 1`, *n* = return count |
+| Annualised volatility | Sample stdev (`ddof=1`) of daily returns `× √252` |
+| Maximum drawdown | `min_t (V_t / peak_t − 1)`, stored **negative** |
+| Return target / shortfall | Annualised decimal, both in the same units |
 | Missing quotes | Forward-filled *within* the view → zero return, never an artificial jump |
 
 **Turnover at the first rebalance.** Establishing the position from cash trades
@@ -120,16 +126,87 @@ first trade is not a rebalance in the usual sense, so
 
 ---
 
+## Models
+
+### Estimation layer
+
+One estimator pair is used for the whole main experiment, so every model is fed
+identically constructed inputs and no result depends on an estimator choice made
+mid-experiment. Alternatives (EWMA, James–Stein) are a sensitivity-analysis
+extension and are deliberately absent.
+
+| Parameter | Estimator | Annualisation |
+|---|---|---|
+| Expected returns `mu` | Sample mean of daily simple returns | `x 252` (arithmetic) |
+| Covariance `Sigma` | Ledoit–Wolf shrinkage toward a scaled identity | `x 252` |
+
+Ledoit–Wolf is chosen for conditioning, not fit: its shrinkage intensity is
+derived analytically from the data rather than tuned, so nothing about it is
+fitted to the evaluation period. The realised intensity is recorded per decision
+date. A PSD repair step guards the covariance and logs loudly if it ever fires.
+
+### Markowitz mean-variance
+
+$$\max_x \; \mu^\top x - \lambda\, x^\top \Sigma x$$
+
+subject to $\mathbf{1}^\top x = 1$, $0 \le x_i \le w_{\max}$, asset-class caps
+$\sum_{i \in c} x_i \le L_c$, and an optional return target
+$\mu^\top x \ge R_{\min}$. Convex QP, solved with **CLARABEL**.
+
+### Equal weight
+
+$x_i = 1/N$. Uses no estimated parameters, so it is immune to estimation error —
+a genuinely hard benchmark, not a straw man. It runs through the same interface
+and receives the same `MarketDataView` as every optimizer.
+
+### Unattainable return targets
+
+A return target may exceed what any feasible portfolio can deliver. **The
+constraint is never dropped.** A nonnegative shortfall variable measures how far
+the target is from attainable:
+
+$$\min_{x,s} \; s \quad \text{s.t.} \quad \mu^\top x + s \ge R_{\min}, \; s \ge 0, \; \text{(structural constraints)}$$
+
+The optimal $s^\star$ is the **minimum unavoidable shortfall** — zero when the
+target is attainable, otherwise exactly the gap to the best achievable expected
+return. The mean-variance problem is then solved with the closest attainable
+target $R_{\min} - s^\star$, and $s^\star$ is reported as `return_shortfall` in
+annualised decimal units, alongside `max_attainable_return` and
+`effective_return_target`.
+
+Preferred to a big-M penalty: no penalty weight to tune, and $s^\star$ is exact
+rather than an artefact of penalty scaling. Structural infeasibility — a feasible
+region that is empty regardless of objective, such as a weight cap too low to
+fill the budget — is a different thing and is raised as an error.
+
+---
+
 ## Default experiment
 
 * **Universe** — 10 ETFs spanning equity, fixed income, commodities, real assets
   (`SPY IJR EFA EEM AGG TLT SHY LQD GLD VNQ`). Selected for asset-class breadth
   and pre-2013 inception, **not** for realised performance over the evaluation
   window. Concentration constraints apply at asset-class granularity.
-* **Window** — first decision **2016-01-04**, through **2026-08-21**
-* **Lookback** — 3 years of daily data before each decision date
-* **Rebalancing** — quarterly (43 decision dates)
+* **Window** — **frozen**: 2016-01-01 → 2025-12-31, first decision **2016-01-04**
+* **Lookback** — 3 years of daily data, **required in full** at every decision date
+* **Rebalancing** — quarterly (40 decision dates)
 * **Snapshot** — 5,695 sessions, 2004-01-02 → 2026-08-21, no interior gaps
+
+### Research mode vs. demo mode
+
+The formal experiment uses a **frozen** window (`RESEARCH_START` / `RESEARCH_END`)
+so that refreshing the snapshot cannot alter published results — a test asserts
+that appending future data changes nothing. `BacktestSettings.for_demo(latest)`
+extends the window to the most recent data for a live presentation; those results
+are **not reproducible** and every result carries `mode` and `reproducible` flags
+so the two can never be confused.
+
+### Lookback enforcement
+
+A decision made from a shorter-than-configured window is not the experiment that
+was configured, so it never happens silently. `LookbackPolicy.REQUIRE` (default)
+aborts and names the offending dates; `LookbackPolicy.EXCLUDE` drops them before
+the experiment starts and records which were dropped.
 
 All four are configurable; the application works with another universe by
 changing configuration alone.
@@ -200,7 +277,13 @@ pytest --cov=src --cov-report=term-missing
 | `test_rebalance.py` | Calendar snapping, frequencies, holding-period contiguity |
 | `test_data_provider.py` | Panel contract, snapshot round-trip, cache |
 | `test_config.py` | Settings validation, universe integrity |
-| `test_integration_snapshot.py` | The real 2016–2026 experiment end to end |
+| `test_estimation.py` | Sample mean, Ledoit–Wolf, PSD repair, boundary invariance |
+| `test_constraints.py` | Declaration validity, structural feasibility, the region a solver sees |
+| `test_equal_weight.py` | 1/N exactness, parameter independence, constraint conflicts |
+| `test_markowitz.py` | Constraint satisfaction, the λ trade-off, the shortfall identity |
+| `test_metrics.py` | Every metric against a hand-computed answer |
+| `test_walkforward.py` | Optimizers inside the engine: invariance, constraints at every date, frozen window |
+| `test_integration_snapshot.py` | The real frozen-window experiment end to end |
 
 Correctness is checked against **analytically known answers** wherever possible —
 a 100%-in-one-asset portfolio must reproduce that asset's price path exactly; an
