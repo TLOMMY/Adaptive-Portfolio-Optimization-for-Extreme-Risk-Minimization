@@ -25,6 +25,7 @@ from src.portfolio.constraints import ConstraintSet
 from src.portfolio.cvar import CVaROptimizer
 from src.portfolio.equal_weight import EqualWeightOptimizer
 from src.portfolio.markowitz import MarkowitzOptimizer
+from src.portfolio.robust_variance import RobustMinimumVarianceOptimizer
 
 TOL = 1e-6
 
@@ -429,3 +430,178 @@ def test_research_experiment_runs_with_cvar():
     assert (frame["n_scenarios"] == settings.lookback_days).all()
     assert (frame["risk_horizon_days"] == 1).all()
     assert (frame["cvar"] >= frame["var"] - 1e-12).all()
+
+
+# ---------------------------------------------------------------------------
+# Robust minimum-variance walk-forward  (Phase 4)
+# ---------------------------------------------------------------------------
+
+
+def make_robust(lookback: int, **kwargs) -> RobustMinimumVarianceOptimizer:
+    from src.estimation.covariance_scenarios import RollingWindowUncertaintySet
+
+    # The walk-forward fixture uses a 1-year lookback, too short for the default
+    # 252/126 construction, so the uncertainty set is scaled down proportionally.
+    # Structure (5 subwindows + full window) is unchanged.
+    return RobustMinimumVarianceOptimizer(
+        lookback_days=lookback,
+        asset_class_map=DISTINCT_ASSET_CLASSES,
+        constraints=ConstraintSet(**kwargs),
+        uncertainty_set=RollingWindowUncertaintySet(
+            window_length=126, stride=31, n_subwindows=5, min_observations=120
+        ),
+    )
+
+
+def test_robust_walkforward_survives_a_poisoned_future(risk_prices, wf_settings):
+    lookback = wf_settings.lookback_days
+
+    def run(panel):
+        return BacktestEngine(panel, wf_settings).run(
+            {"robust": make_robust(lookback, max_weight=0.5, min_return=0.02)}
+        )["robust"]
+
+    reference = run(risk_prices)
+    assert len(reference.weights_history) >= 8
+
+    for boundary in reference.weights_history.index:
+        poisoned = risk_prices.copy()
+        poisoned.loc[poisoned.index > boundary] = 707_070.0
+        observed = run(poisoned)
+
+        pd.testing.assert_frame_equal(
+            observed.weights_history.loc[:boundary],
+            reference.weights_history.loc[:boundary],
+            obj=f"robust weights at or before {boundary.date()}",
+        )
+
+
+def test_robust_walkforward_survives_a_missing_future(risk_prices, wf_settings):
+    lookback = wf_settings.lookback_days
+    full = BacktestEngine(risk_prices, wf_settings).run(
+        {"robust": make_robust(lookback, max_weight=0.5)}
+    )["robust"]
+
+    for boundary in full.weights_history.index[1:5]:
+        truncated_settings = BacktestSettings(
+            start=wf_settings.start,
+            end=boundary.date(),
+            lookback_years=wf_settings.lookback_years,
+            rebalance_frequency=wf_settings.rebalance_frequency,
+            transaction_cost_bps=0.0,
+        )
+        truncated = BacktestEngine(
+            risk_prices.loc[risk_prices.index <= boundary], truncated_settings
+        ).run({"robust": make_robust(lookback, max_weight=0.5)})["robust"]
+
+        pd.testing.assert_frame_equal(
+            truncated.weights_history,
+            full.weights_history.loc[: truncated.weights_history.index[-1]],
+        )
+
+
+def test_robust_constraints_and_objective_hold_at_every_rebalance(
+    risk_prices, wf_settings
+):
+    result = BacktestEngine(risk_prices, wf_settings).run(
+        {
+            "robust": make_robust(
+                wf_settings.lookback_days,
+                max_weight=0.4,
+                asset_class_limits={"Equity": 0.5},
+            )
+        }
+    )["robust"]
+    weights = result.weights_history
+
+    assert np.allclose(weights.sum(axis=1).to_numpy(), 1.0, atol=TOL)
+    assert (weights.to_numpy() >= -TOL).all()
+    assert (weights.to_numpy() <= 0.4 + TOL).all()
+    assert (weights[["STOCK", "WILD"]].sum(axis=1).to_numpy() <= 0.5 + TOL).all()
+    assert not any(r.status.startswith("error") for r in result.rebalances)
+
+    frame = result.diagnostics_frame()
+    assert (frame["n_covariance_scenarios"] == 6).all()
+    assert np.allclose(
+        frame["worst_case_volatility"].to_numpy(),
+        np.sqrt(frame["worst_case_variance"].to_numpy()),
+    )
+    assert (
+        pd.to_datetime(frame["covariance_window_end"]) <= frame["as_of"]
+    ).all()
+
+
+def test_all_four_models_share_one_information_set(risk_prices, wf_settings):
+    lookback = wf_settings.lookback_days
+    experiment = BacktestEngine(risk_prices, wf_settings).run(
+        {
+            "ew": EqualWeightOptimizer(lookback_days=lookback),
+            "mv": MarkowitzOptimizer(2.5, lookback_days=lookback),
+            "cvar": make_cvar(lookback),
+            "robust": make_robust(lookback),
+        }
+    )
+    frames = {n: experiment[n].diagnostics_frame() for n in experiment.strategy_names}
+    reference = frames["ew"]
+    for name, frame in frames.items():
+        assert (frame["as_of"] == reference["as_of"]).all(), name
+        assert (frame["window_start"] == reference["window_start"]).all(), name
+        assert (frame["window_end"] == reference["window_end"]).all(), name
+
+
+@pytest.mark.skipif(not DEFAULT_SNAPSHOT.exists(), reason="snapshot not generated")
+def test_research_experiment_runs_with_robust():
+    prices = CsvProvider().get_adjusted_prices(DEFAULT_UNIVERSE.tickers)
+    settings = BacktestSettings()
+    classes = DEFAULT_UNIVERSE.asset_class_map()
+
+    result = BacktestEngine(prices, settings).run(
+        {
+            "Robust": RobustMinimumVarianceOptimizer(
+                lookback_days=settings.lookback_days,
+                asset_class_map=classes,
+                constraints=ConstraintSet(max_weight=0.35, asset_class_limits={"Equity": 0.7}),
+            )
+        }
+    )["Robust"]
+
+    assert len(result.weights_history) == 40
+    assert all(r.status == "optimal" for r in result.rebalances)
+    weights = result.weights_history
+    assert np.allclose(weights.sum(axis=1).to_numpy(), 1.0, atol=TOL)
+    assert (weights.to_numpy() >= -TOL).all()
+    assert (weights.to_numpy() <= 0.35 + TOL).all()
+
+    frame = result.diagnostics_frame()
+    assert (frame["n_covariance_scenarios"] == 6).all()
+    assert (frame["covariance_window_length"] == 252).all()
+    assert (frame["covariance_window_stride"] == 126).all()
+
+
+@pytest.mark.skipif(not DEFAULT_SNAPSHOT.exists(), reason="snapshot not generated")
+def test_robust_research_window_is_frozen_against_new_data():
+    prices = CsvProvider().get_adjusted_prices(DEFAULT_UNIVERSE.tickers)
+    settings = BacktestSettings()
+
+    def run(panel):
+        return BacktestEngine(panel, settings).run(
+            {
+                "robust": RobustMinimumVarianceOptimizer(
+                    lookback_days=settings.lookback_days,
+                    constraints=ConstraintSet(max_weight=0.35),
+                )
+            }
+        )["robust"]
+
+    reference = run(prices)
+    extra_index = pd.bdate_range(
+        prices.index[-1] + pd.Timedelta(days=1), periods=200, name="date"
+    )
+    extra = pd.DataFrame(
+        np.tile(prices.iloc[-1].to_numpy() * 1.5, (len(extra_index), 1)),
+        index=extra_index, columns=prices.columns,
+    )
+    extended = run(pd.concat([prices, extra]))
+
+    pd.testing.assert_frame_equal(extended.weights_history, reference.weights_history)
+    pd.testing.assert_series_equal(extended.portfolio_values, reference.portfolio_values)

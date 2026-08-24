@@ -61,19 +61,41 @@ def ledoit_wolf_covariance(
         raise ValueError(f"lookback_days must be at least 2, got {lookback_days}")
 
     returns = view.returns(lookback_days)
+    return ledoit_wolf_from_returns(
+        returns, annualize=annualize, context=str(view.as_of.date())
+    )
+
+
+def ledoit_wolf_from_returns(
+    returns: pd.DataFrame,
+    annualize: bool = True,
+    context: str = "",
+) -> tuple[pd.DataFrame, float]:
+    """Ledoit-Wolf covariance of an explicit block of returns.
+
+    Separated from :func:`ledoit_wolf_covariance` so that constructions needing
+    covariances of *subwindows* -- notably the robust optimizer's uncertainty set
+    -- estimate them by exactly the same methodology and annualisation
+    convention as the single full-window estimate, rather than reimplementing it.
+
+    The caller is responsible for having sliced ``returns`` from a
+    ``MarketDataView``; this function has no notion of a decision date.
+    """
     n_obs, n_assets = returns.shape
+    if n_obs < 2:
+        raise ValueError(f"need at least 2 observations, got {n_obs}")
     if n_obs <= n_assets:
         logger.warning(
-            "Covariance at %s estimated from %d observations for %d assets; "
+            "Covariance %s estimated from %d observations for %d assets; "
             "shrinkage is carrying most of the estimate.",
-            view.as_of.date(), n_obs, n_assets,
+            context, n_obs, n_assets,
         )
 
     estimator = LedoitWolf(assume_centered=False).fit(returns.to_numpy())
     matrix = np.asarray(estimator.covariance_, dtype="float64")
     shrinkage = float(estimator.shrinkage_)
 
-    matrix = ensure_positive_semidefinite(matrix, context=f"{view.as_of.date()}")
+    matrix = ensure_positive_semidefinite(matrix, context=context)
     if annualize:
         matrix = matrix * TRADING_DAYS_PER_YEAR
 

@@ -89,9 +89,63 @@ def prices() -> pd.DataFrame:
     return make_prices()
 
 
+def make_three_asset_prices(n_days: int = 900, seed: int = 4242) -> pd.DataFrame:
+    """Three assets drawn from an explicit target covariance.
+
+    Built so the minimum-variance solution is **interior**: the three volatilities
+    are close together and the correlation structure is asymmetric (A and B move
+    together, C is nearly independent), so the optimum trades off correlation
+    rather than collapsing onto the single lowest-variance asset. A fixture whose
+    optimum sits at a corner would make a grid-search comparison meaningless --
+    both methods would return the same vertex regardless of whether either was
+    actually optimizing.
+    """
+    volatilities = np.array([0.0100, 0.0110, 0.0120])
+    correlation = np.array(
+        [
+            [1.00, 0.85, 0.15],
+            [0.85, 1.00, 0.20],
+            [0.15, 0.20, 1.00],
+        ]
+    )
+    covariance = np.outer(volatilities, volatilities) * correlation
+    factor = np.linalg.cholesky(covariance)
+
+    rng = np.random.default_rng(seed)
+    shocks = rng.standard_normal((n_days, 3)) @ factor.T
+    drift = np.array([0.00020, 0.00030, 0.00045])
+
+    index = pd.bdate_range(start="2013-01-01", periods=n_days, name="date")
+    prices = 100.0 * np.exp(np.cumsum(drift + shocks, axis=0))
+    return pd.DataFrame(prices, index=index, columns=["LOW", "MID", "HIGH"]).astype(
+        "float64"
+    )
+
+
 @pytest.fixture
 def risk_prices() -> pd.DataFrame:
     return make_distinct_risk_prices()
+
+
+@pytest.fixture
+def three_asset_prices() -> pd.DataFrame:
+    return make_three_asset_prices()
+
+
+@pytest.fixture
+def three_asset_view(three_asset_prices) -> MarketDataView:
+    return MarketDataView(three_asset_prices, three_asset_prices.index[800])
+
+
+@pytest.fixture
+def three_asset_context(three_asset_prices) -> RebalanceContext:
+    tickers = list(three_asset_prices.columns)
+    return RebalanceContext(
+        as_of=three_asset_prices.index[800],
+        current_weights=pd.Series(0.0, index=tickers),
+        portfolio_value=100_000.0,
+        period_index=0,
+    )
 
 
 @pytest.fixture

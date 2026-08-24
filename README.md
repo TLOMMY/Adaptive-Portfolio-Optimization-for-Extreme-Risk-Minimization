@@ -19,7 +19,7 @@ observes what actually happened next, and repeats.
 | 1 | Data pipeline, backtest engine, no-look-ahead proofs | **Complete** |
 | 2 | Estimation layer, equal-weight + Markowitz, metrics | **Complete** |
 | 3 | Scenario-based CVaR optimizer | **Complete** |
-| 4 | Robust minimum-variance optimizer | Not started |
+| 4 | Robust minimum-variance optimizer | **Complete** |
 | 5 | Investor profile system | Not started |
 | 6 | Streamlit interface | Not started |
 | 7 | Polish, documentation, validation | Not started |
@@ -182,6 +182,40 @@ Multi-day horizons are implemented via non-overlapping compounded blocks, but a
 3-year lookback only yields `756/h` scenarios, so a 21-day horizon (36 scenarios)
 correctly trips the guard.
 
+### Robust minimum variance
+
+Minimise **worst-case** annualised variance over a finite covariance uncertainty
+set $\{Q_s\}$, in epigraph form:
+
+$$\min_{x,z} \; z \quad \text{s.t.} \quad x^\top Q_s x \le z \;\; \forall s$$
+
+plus the same structural constraints and optional return target. Each $Q_s$ is
+PSD, so every quadratic constraint is convex — a convex QCQP, solved as an SOCP
+with **CLARABEL**. The binding epigraph constraint identifies the worst-case
+scenario.
+
+**Uncertainty set** (MVP, fixed — *not* a claim of optimality): five overlapping
+252-observation subwindows at stride 126 (offsets 0, 126, 252, 378, 504 — the
+last ending exactly at the decision date), plus the full 756-observation
+estimate: **six** scenarios. Every one uses the same Ledoit–Wolf estimator and
+annualisation as Phase 2, so scenarios differ only by data window. The
+`CovarianceUncertaintySet` interface exists so box or ellipsoidal sets can
+replace scenario enumeration without touching the optimizer.
+
+**Units**: the objective is annualised **variance**. No square root is taken
+inside the program; worst-case volatility is reported afterwards as $\sqrt{z}$.
+
+**Validation** is separate from the CVaR `MIN_SCENARIOS` rule, which counts tail
+points. Here each scenario is a whole covariance matrix, so each is checked for
+consistent ticker order, finiteness, symmetry, PSD-ness, a window ending at or
+before the decision date, and at least `MIN_OBSERVATIONS_PER_SCENARIO = 120`
+underlying returns. Generating fewer scenarios than required is an error, never
+a silent shrink of the uncertainty set.
+
+This protects against *estimation* uncertainty in the covariance — that the
+sample window understated co-movement — not against regimes absent from the
+lookback entirely.
+
 ### Equal weight
 
 $x_i = 1/N$. Uses no estimated parameters, so it is immune to estimation error —
@@ -313,6 +347,8 @@ pytest --cov=src --cov-report=term-missing
 | `test_metrics.py` | Every metric against a hand-computed answer; CVaR vs. RU minimisation |
 | `test_scenarios.py` | Scenario construction, non-overlapping blocks, MIN_SCENARIOS guard, boundary invariance |
 | `test_cvar.py` | LP feasibility, CVaR vs. independent metric, α monotonicity, shortfall, boundary invariance |
+| `test_covariance_scenarios.py` | Uncertainty-set construction, PSD/symmetry/finiteness validation, boundary invariance |
+| `test_robust.py` | Worst-case objective identity, grid-search optimality, set monotonicity, singleton reduction |
 | `test_walkforward.py` | Optimizers inside the engine: invariance, constraints at every date, frozen window |
 | `test_integration_snapshot.py` | The real frozen-window experiment end to end |
 
