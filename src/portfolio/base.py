@@ -272,10 +272,46 @@ class PortfolioOptimizer(ABC):
                     f"asset class {cls!r} exposure {exposure:.6f} exceeds limit {limit}"
                 )
 
+
+    def _solve_with_turnover_fallback(self, solve, current_weights):
+        """Solve with the turnover limit, retrying without it if that is infeasible.
+
+        Drift between rebalances can push the pre-rebalance weights outside the
+        box constraints; with a tight limit the feasible region can then be
+        empty, because no point within `max_turnover` of the drifted portfolio
+        satisfies the caps. Rather than fail a decision date, the limit is
+        dropped and the relaxation is recorded in diagnostics and surfaced in the
+        UI. It is reported, never silent -- unlike a return target, a turnover
+        limit is a soft operational preference, not a stated objective.
+        """
+        from src.portfolio.base import InfeasibleProblemError
+
+        if self.constraints.max_turnover is None or current_weights is None:
+            return solve(current_weights), False
+        try:
+            return solve(current_weights), False
+        except InfeasibleProblemError:
+            logger.warning(
+                "%s: turnover limit %.3f made the problem infeasible; "
+                "re-solving without it.", self.name, self.constraints.max_turnover,
+            )
+            return solve(None), True
+
     # -- shared return-target mechanism  (decision D9) ------------------------
 
+    @staticmethod
+    def current_weights_array(
+        context: RebalanceContext, tickers: list[str]
+    ) -> np.ndarray:
+        """Drifted pre-rebalance weights in ``tickers`` order, for turnover limits."""
+        return context.current_weights.reindex(tickers).fillna(0.0).to_numpy(dtype="float64")
+
     def _resolve_return_target(
-        self, mu: np.ndarray, tickers: list[str], solver: str
+        self,
+        mu: np.ndarray,
+        tickers: list[str],
+        solver: str,
+        current_weights: np.ndarray | None = None,
     ) -> ReturnTarget:
         """Reconcile the configured minimum-return requirement with feasibility.
 
@@ -291,7 +327,9 @@ class PortfolioOptimizer(ABC):
         if target is None:
             return ReturnTarget(target=None, shortfall=0.0, max_attainable=None, effective=None)
 
-        shortfall, max_attainable = self._minimum_shortfall(mu, tickers, target, solver)
+        shortfall, max_attainable = self._minimum_shortfall(
+            mu, tickers, target, solver, current_weights
+        )
 
         effective = target - shortfall
         if shortfall > 0.0:
@@ -307,7 +345,12 @@ class PortfolioOptimizer(ABC):
         )
 
     def _minimum_shortfall(
-        self, mu: np.ndarray, tickers: list[str], target: float, solver: str
+        self,
+        mu: np.ndarray,
+        tickers: list[str],
+        target: float,
+        solver: str,
+        current_weights: np.ndarray | None = None,
     ) -> tuple[float, float]:
         r"""Minimise the nonnegative shortfall :math:`s` against a return target.
 
@@ -324,7 +367,13 @@ class PortfolioOptimizer(ABC):
         x = cp.Variable(len(tickers), name="x")
         s = cp.Variable(nonneg=True, name="shortfall")
 
-        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
+        # The turnover limit must be present here too: the attainable-return
+        # frontier is a property of the feasible region the model actually
+        # solves over, so omitting it would report a shortfall against a region
+        # the optimizer never sees.
+        constraints = build_constraints(
+            x, tickers, self.constraints, self.asset_class_map, current_weights
+        )
         constraints.append(mu @ x + s >= target)
 
         problem = cp.Problem(cp.Minimize(s), constraints)

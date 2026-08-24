@@ -91,6 +91,28 @@ class BacktestResult:
             return 0.0
         return float(sum(r.turnover for r in records) / len(records))
 
+    def until(self, as_of: pd.Timestamp) -> BacktestResult:
+        """A copy of this result truncated at ``as_of``.
+
+        Used by the time machine to report performance "so far" without re-running
+        the experiment: because every decision is causal, the prefix of a completed
+        run is exactly what stepping forward to that date would have produced.
+        """
+        as_of = pd.Timestamp(as_of)
+        values = self.portfolio_values.loc[:as_of]
+        if len(values) < 2:
+            values = self.portfolio_values.iloc[:2]
+            as_of = values.index[-1]
+        rebalances = [r for r in self.rebalances if r.as_of <= as_of]
+        return BacktestResult(
+            strategy_name=self.strategy_name,
+            portfolio_values=values,
+            daily_returns=values.pct_change().dropna().rename(self.strategy_name),
+            weights_history=self.weights_history.loc[:as_of],
+            rebalances=rebalances,
+            settings_summary=dict(self.settings_summary),
+        )
+
     def diagnostics_frame(self) -> pd.DataFrame:
         """Flatten per-rebalance diagnostics into a table for inspection."""
         rows = []

@@ -37,17 +37,19 @@ class ConstraintSet:
     min_return
         Minimum required annualised expected return, as a decimal (``0.08`` =
         8% per year). ``None`` imposes no return target.
-
-    Notes
-    -----
-    Turnover constraints are part of the investor-profile specification and are
-    deferred to that phase; they are not silently applied here.
+    max_turnover
+        Maximum one-way turnover at a rebalance,
+        ``0.5 * sum_i |x_i - w_i^pre| <= max_turnover``, measured against the
+        *drifted* pre-rebalance weights the engine supplies. ``None`` imposes no
+        limit. Never applied at the first rebalance, where the portfolio is
+        established from cash and the "turnover" is definitionally 1.0.
     """
 
     max_weight: float = 1.0
     allow_shorting: bool = False
     asset_class_limits: dict[str, float] = field(default_factory=dict)
     min_return: float | None = None
+    max_turnover: float | None = None
 
     def __post_init__(self) -> None:
         if not 0.0 < self.max_weight <= 1.0:
@@ -64,6 +66,10 @@ class ConstraintSet:
                 raise ConstraintError(
                     f"asset-class limit for {name!r} must lie in [0, 1], got {limit}"
                 )
+        if self.max_turnover is not None and self.max_turnover <= 0.0:
+            raise ConstraintError(
+                f"max_turnover must be positive, got {self.max_turnover}"
+            )
 
     @property
     def min_weight(self) -> float:
@@ -121,6 +127,7 @@ def build_constraints(
     tickers: list[str],
     constraints: ConstraintSet,
     asset_class_map: dict[str, list[str]] | None = None,
+    current_weights: np.ndarray | None = None,
 ) -> list[cp.Constraint]:
     """Translate a :class:`ConstraintSet` into CVXPY constraints.
 
@@ -142,6 +149,14 @@ def build_constraints(
             continue
         selector = np.array([1.0 if t in members else 0.0 for t in tickers])
         built.append(selector @ x <= limit)
+
+    # One-way turnover against the drifted pre-rebalance weights. Skipped when
+    # there is no existing position: at inception every portfolio "turns over"
+    # its whole notional, so a limit there would simply forbid investing.
+    if constraints.max_turnover is not None and current_weights is not None:
+        previous = np.asarray(current_weights, dtype="float64")
+        if previous.sum() > 1e-12:
+            built.append(0.5 * cp.norm1(x - previous) <= constraints.max_turnover)
 
     return built
 

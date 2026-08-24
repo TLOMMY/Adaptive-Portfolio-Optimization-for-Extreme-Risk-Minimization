@@ -45,6 +45,8 @@ purpose and both are labelled.
 
 from __future__ import annotations
 
+import logging
+
 import cvxpy as cp
 import numpy as np
 
@@ -62,6 +64,8 @@ from src.portfolio.base import (
     SolverError,
 )
 from src.portfolio.constraints import ConstraintSet, build_constraints
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIDENCE = 0.95
 """Default :math:`\\alpha`. The objective then averages the worst 5% of scenarios."""
@@ -150,14 +154,25 @@ class CVaROptimizer(PortfolioOptimizer):
 
         mu = parameters.mu
         tickers = parameters.tickers
+        previous = self.current_weights_array(context, tickers)
 
-        # Shared with every optimizer; see PortfolioOptimizer._resolve_return_target.
-        target = self._resolve_return_target(mu, tickers, self.solver)
+        def solve(weights_for_turnover):
+            target = self._resolve_return_target(
+                mu, tickers, self.solver, weights_for_turnover
+            )
+            x, var, cvar = self._minimise_cvar(
+                scenarios, mu, tickers, target.effective, weights_for_turnover
+            )
+            return x, var, cvar, target
 
-        weights, var, cvar = self._minimise_cvar(scenarios, mu, tickers, target.effective)
+        (weights, var, cvar, target), relaxed = self._solve_with_turnover_fallback(
+            solve, previous
+        )
 
         diagnostics = {
             "cvar_confidence": self.confidence,
+            "turnover_limit": self.constraints.max_turnover,
+            "turnover_limit_relaxed": relaxed,
             # Loss units, positive = loss, over `risk_horizon_days`. NOT annualised.
             "cvar": cvar,
             "var": var,
@@ -179,6 +194,7 @@ class CVaROptimizer(PortfolioOptimizer):
         mu: np.ndarray,
         tickers: list[str],
         return_target: float | None,
+        current_weights: np.ndarray | None = None,
     ) -> tuple[np.ndarray, float, float]:
         """Solve the Rockafellar-Uryasev LP. Returns ``(weights, VaR, CVaR)``."""
         n_scenarios = scenarios.n_scenarios
@@ -188,7 +204,9 @@ class CVaROptimizer(PortfolioOptimizer):
         z = cp.Variable(name="var")          # the VaR threshold
         u = cp.Variable(n_scenarios, nonneg=True, name="excess_loss")
 
-        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
+        constraints = build_constraints(
+            x, tickers, self.constraints, self.asset_class_map, current_weights
+        )
         # u_s >= L_s(x) - z, with L_s(x) = -r_s' x. Vectorised over scenarios.
         constraints.append(u >= -(returns @ x) - z)
         if return_target is not None:

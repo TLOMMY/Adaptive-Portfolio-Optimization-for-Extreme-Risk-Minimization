@@ -41,6 +41,8 @@ scaled.
 
 from __future__ import annotations
 
+import logging
+
 import cvxpy as cp
 import numpy as np
 
@@ -52,6 +54,8 @@ from src.portfolio.base import (
     SolverError,
 )
 from src.portfolio.constraints import ConstraintSet, build_constraints
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_RISK_AVERSION = 2.5
 """Default :math:`\\lambda`. With annualised inputs this trades one unit of
@@ -95,12 +99,24 @@ class MarkowitzOptimizer(PortfolioOptimizer):
     ) -> OptimizationOutcome:
         mu, sigma = parameters.mu, parameters.sigma
         tickers = parameters.tickers
+        previous = self.current_weights_array(context, tickers)
 
-        # Shared with every optimizer; see PortfolioOptimizer._resolve_return_target.
-        target = self._resolve_return_target(mu, tickers, self.solver)
-        weights = self._mean_variance(mu, sigma, tickers, target.effective)
+        def solve(weights_for_turnover):
+            target = self._resolve_return_target(
+                mu, tickers, self.solver, weights_for_turnover
+            )
+            x = self._mean_variance(
+                mu, sigma, tickers, target.effective, weights_for_turnover
+            )
+            return x, target
 
-        diagnostics = {"risk_aversion": self.risk_aversion}
+        (weights, target), relaxed = self._solve_with_turnover_fallback(solve, previous)
+
+        diagnostics = {
+            "risk_aversion": self.risk_aversion,
+            "turnover_limit": self.constraints.max_turnover,
+            "turnover_limit_relaxed": relaxed,
+        }
         diagnostics.update(target.diagnostics())
 
         return OptimizationOutcome(
@@ -116,10 +132,13 @@ class MarkowitzOptimizer(PortfolioOptimizer):
         sigma: np.ndarray,
         tickers: list[str],
         return_target: float | None,
+        current_weights: np.ndarray | None = None,
     ) -> np.ndarray:
         x = cp.Variable(len(tickers), name="x")
 
-        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
+        constraints = build_constraints(
+            x, tickers, self.constraints, self.asset_class_map, current_weights
+        )
         if return_target is not None:
             constraints.append(mu @ x >= return_target)
 

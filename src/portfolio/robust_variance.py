@@ -41,6 +41,7 @@ the future.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import cvxpy as cp
@@ -60,6 +61,8 @@ from src.portfolio.base import (
     SolverError,
 )
 from src.portfolio.constraints import ConstraintSet, build_constraints
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SOLVER = "CLARABEL"
 """The program is a convex QCQP; CLARABEL solves the resulting SOCP directly."""
@@ -127,17 +130,27 @@ class RobustMinimumVarianceOptimizer(PortfolioOptimizer):
 
         mu = parameters.mu
         tickers = parameters.tickers
+        previous = self.current_weights_array(context, tickers)
 
-        # Shared with every optimizer; see PortfolioOptimizer._resolve_return_target.
-        target = self._resolve_return_target(mu, tickers, self.solver)
-        weights, objective = self._minimise_worst_case(
-            covariances, mu, tickers, target.effective
+        def solve(weights_for_turnover):
+            target = self._resolve_return_target(
+                mu, tickers, self.solver, weights_for_turnover
+            )
+            x, objective = self._minimise_worst_case(
+                covariances, mu, tickers, target.effective, weights_for_turnover
+            )
+            return x, objective, target
+
+        (weights, objective, target), relaxed = self._solve_with_turnover_fallback(
+            solve, previous
         )
 
         diagnostics: dict[str, Any] = {
             # Annualised VARIANCE, not volatility. sqrt is applied only for
             # reporting, in _worst_case_diagnostics.
             "robust_objective": objective,
+            "turnover_limit": self.constraints.max_turnover,
+            "turnover_limit_relaxed": relaxed,
         }
         diagnostics.update(covariances.summary())
         diagnostics.update(target.diagnostics())
@@ -157,11 +170,14 @@ class RobustMinimumVarianceOptimizer(PortfolioOptimizer):
         mu: np.ndarray,
         tickers: list[str],
         return_target: float | None,
+        current_weights: np.ndarray | None = None,
     ) -> tuple[np.ndarray, float]:
         x = cp.Variable(len(tickers), name="x")
         z = cp.Variable(name="worst_case_variance")
 
-        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
+        constraints = build_constraints(
+            x, tickers, self.constraints, self.asset_class_map, current_weights
+        )
         for scenario in covariances.scenarios:
             # psd_wrap: the matrices are PSD by construction and validated as
             # such, but floating-point symmetrisation can leave eigenvalues at

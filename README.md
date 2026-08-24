@@ -20,8 +20,8 @@ observes what actually happened next, and repeats.
 | 2 | Estimation layer, equal-weight + Markowitz, metrics | **Complete** |
 | 3 | Scenario-based CVaR optimizer | **Complete** |
 | 4 | Robust minimum-variance optimizer | **Complete** |
-| 5 | Investor profile system | Not started |
-| 6 | Streamlit interface | Not started |
+| 5 | Investor profile system | **Complete** |
+| 6 | Streamlit interface | **Complete (MVP)** |
 | 7 | Polish, documentation, validation | Not started |
 
 The replay machinery and its no-look-ahead guarantees were built and validated
@@ -37,6 +37,12 @@ is re-checked against the same invariance proofs.
 conda activate amazon_or          # Python 3.12
 pip install -e ".[dev]"
 
+streamlit run app.py              # <- launch the interactive demo
+```
+
+Other commands:
+
+```bash
 python scripts/fetch_data.py      # refresh the price snapshot (optional)
 pytest -q                         # run the full suite
 ```
@@ -44,6 +50,49 @@ pytest -q                         # run the full suite
 The application reads the **committed CSV snapshot** at
 `data/snapshots/prices_diversified_etf_10.csv` by default, so it runs with no
 network access. `scripts/fetch_data.py` regenerates that snapshot.
+
+---
+
+## Investor profiles
+
+Four illustrative presets, differing in **exactly three decision factors** — risk
+objective, return requirement, liquidity preference. Universe, weight caps
+(35%), lookback, rebalance cadence and estimators are identical across all four,
+so differences in outcome are attributable to those three factors and nothing
+else.
+
+| Profile | Risk objective | Model | Return target | Turnover limit |
+|---|---|---|---|---|
+| Growth | Favour return, accept volatility | Markowitz (λ=1.0) | 8% | 50% |
+| Balanced | Balance return against volatility | Markowitz (λ=5.0) | 6% | 25% |
+| Downside Protection / Retirement | Reduce severe downside losses | CVaR 95% | 4% | 15% |
+| Extreme Low Risk | Minimise risk under covariance uncertainty | Robust Min-Variance | 2% | 15% |
+
+**Illustrative academic presets, not investment advice.** The parameter values
+are prototype assumptions chosen to make the comparison legible, not calibrated
+to any real investor.
+
+All four models run under the *selected profile's* constraints, so the
+comparison asks "given this investor's requirements, which formulation best
+satisfies their objective?" rather than comparing constraint sets. Equal Weight
+is the exception by construction — it uses no estimated parameters and ignores
+the return target and turnover limit.
+
+### Turnover limit
+
+`0.5 · Σ|xᵢ − wᵢ^pre| ≤ L`, measured against the **drifted** pre-rebalance
+weights, and enforced in the return-shortfall stage too — the attainable-return
+frontier is a property of the region the model actually solves over. Skipped at
+inception, where the portfolio is established from cash. If drift pushes the
+pre-rebalance point outside the box and the region becomes empty, the limit is
+dropped and the relaxation is **recorded and displayed**, never silent.
+
+### Evaluation periods
+
+Full (2016–2024), and subperiods 2016–2018, 2019–2021, 2022–2024. The 3-year
+estimation lookback extends before each period's start; nothing is retuned per
+period. These are **historical subperiod robustness analyses**, not evidence of
+future generalisability.
 
 ---
 
