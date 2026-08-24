@@ -139,6 +139,43 @@ st.caption(
     "demonstration — not investment advice."
 )
 
+# The guide sits above everything and opens by default the first time a session
+# loads, then stays shut once someone has started driving the app. A newcomer
+# needs it immediately; a presenter mid-demo does not.
+if "guide_seen" not in st.session_state:
+    st.session_state.guide_seen = False
+
+with st.expander(
+    "👋  **New here? Start with this** — a short walkthrough",
+    expanded=not st.session_state.guide_seen,
+):
+    st.markdown(content.WALKTHROUGH)
+st.session_state.guide_seen = True
+
+with st.expander("📈  **What are these 10 investments?**  (yes, they are real)"):
+    st.markdown(content.ASSET_INTRO)
+    st.markdown("##### The universe")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "Ticker": a.ticker,
+                    "Name": a.display_name,
+                    "Type": a.asset_class,
+                    "What it actually holds": content.ASSET_DESCRIPTIONS.get(a.ticker, ""),
+                    "Data from": f"{a.inception:%b %Y}",
+                }
+                for a in DEFAULT_UNIVERSE.assets
+            ]
+        ).set_index("Ticker"),
+        width="stretch",
+    )
+    st.caption(
+        "Prices are real daily adjusted closes — dividends reinvested, splits "
+        "applied. Taxes are not modelled, and this baseline charges no trading "
+        "costs."
+    )
+
 # --- Section A: profile summary -------------------------------------------
 st.markdown("#### Your objective")
 a1, a2, a3, a4 = st.columns(4)

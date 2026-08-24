@@ -196,3 +196,59 @@ def test_every_period_renders_in_the_app():
     for period in PERIODS.values():
         app.selectbox[0].set_value(period.label).run()
         assert not app.exception, (period.key, [str(e.value) for e in app.exception])
+
+
+# ---------------------------------------------------------------------------
+# The newcomer guide
+# ---------------------------------------------------------------------------
+
+
+def test_the_guide_and_asset_explainer_are_present():
+    app = launch()
+    labels = [e.label for e in app.expander]
+    assert any("New here" in label for label in labels)
+    assert any("10 investments" in label for label in labels)
+
+
+def test_the_guide_opens_on_first_load_then_stays_shut():
+    """A newcomer needs it immediately; a presenter mid-demo does not."""
+    app = launch()
+    # AppTest exposes the open/closed state on the underlying proto.
+    guide = next(e for e in app.expander if "New here" in e.label)
+    assert guide.proto.expanded
+    assert app.session_state["guide_seen"] is True
+
+    app.button[0].click().run()
+    guide = next(e for e in app.expander if "New here" in e.label)
+    assert not guide.proto.expanded
+
+
+def test_every_asset_has_a_plain_language_description():
+    """The explainer must cover the whole universe, not a subset."""
+    from src.config.assets import DEFAULT_UNIVERSE
+    from src.ui import content
+
+    for asset in DEFAULT_UNIVERSE.assets:
+        description = content.ASSET_DESCRIPTIONS.get(asset.ticker)
+        assert description, f"{asset.ticker} has no description"
+        assert len(description) > 20
+
+
+def test_the_guide_states_the_assets_are_real():
+    """The honesty claims are load-bearing; assert they are actually on screen."""
+    import re
+
+    from src.ui import content
+
+    # Whitespace-normalised: these claims are prose and wrap across lines, so a
+    # raw substring match would be brittle against harmless reflowing.
+    def flat(text: str) -> str:
+        return re.sub(r"\s+", " ", text.replace("**", "")).lower()
+
+    intro, walkthrough = flat(content.ASSET_INTRO), flat(content.WALKTHROUGH)
+
+    assert "yes - these are real" in intro.replace("—", "-")
+    assert "not picked for performing well" in intro
+    assert "no real money was invested" in intro
+    assert "it is not a prediction" in walkthrough
+    assert "one run of history" in walkthrough
