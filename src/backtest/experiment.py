@@ -32,7 +32,8 @@ from src.portfolio.cvar import CVaROptimizer
 from src.portfolio.equal_weight import EqualWeightOptimizer
 from src.portfolio.markowitz import MarkowitzOptimizer
 from src.portfolio.robust_variance import RobustMinimumVarianceOptimizer
-from src.profiles.models import InvestorProfile
+from src.profiles.models import COMMON_MAX_WEIGHT, InvestorProfile, ModelChoice
+from src.profiles.presets import PROFILES
 
 EQUAL_WEIGHT = "Equal Weight"
 MARKOWITZ = "Markowitz"
@@ -108,3 +109,86 @@ def run_comparison(prices: pd.DataFrame, spec: ExperimentSpec) -> ExperimentResu
         asset_class_map=spec.universe.asset_class_map(),
     )
     return engine.run(strategies)
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic comparison
+#
+# The headline comparison runs all four models under one profile's constraints.
+# The diagnostics view asks a different question: how do the *profiles* differ
+# from each other? So each strategy here carries its own profile's return
+# target, turnover limit and model parameters -- Growth's Markowitz is a
+# genuinely different program from Balanced's Markowitz, and comparing them is
+# the point.
+#
+# All of them still run in a single engine pass, so they share one MarketDataView
+# at every decision date and remain a controlled comparison.
+# ---------------------------------------------------------------------------
+
+
+def diagnostic_label(profile: InvestorProfile) -> str:
+    """Display name pairing a profile with its model, e.g. 'Growth - Markowitz'."""
+    short = {
+        ModelChoice.MARKOWITZ: "Markowitz",
+        ModelChoice.CVAR: "CVaR 95%",
+        ModelChoice.ROBUST: "Robust Min-Variance",
+        ModelChoice.EQUAL_WEIGHT: "Equal Weight",
+    }[profile.model]
+    return f"{profile.name.split(' / ')[0]} — {short}"
+
+
+def diagnostic_options() -> dict[str, InvestorProfile | None]:
+    """Every strategy available for diagnostic comparison.
+
+    Equal Weight maps to ``None``: it uses no estimated parameters and honours
+    neither a return target nor a turnover limit, so it is not tied to a profile.
+    """
+    options: dict[str, InvestorProfile | None] = {EQUAL_WEIGHT: None}
+    for profile in PROFILES.values():
+        options[diagnostic_label(profile)] = profile
+    return options
+
+
+def build_diagnostic_strategies(
+    lookback_days: int,
+    asset_class_map: dict[str, list[str]] | None = None,
+) -> dict[str, Strategy]:
+    """One strategy per diagnostic option, each under its own profile's rules."""
+    classes = asset_class_map or {}
+    strategies: dict[str, Strategy] = {
+        EQUAL_WEIGHT: EqualWeightOptimizer(
+            constraints=ConstraintSet(max_weight=COMMON_MAX_WEIGHT),
+            asset_class_map=classes,
+            lookback_days=lookback_days,
+            name=EQUAL_WEIGHT,
+        )
+    }
+    for label, profile in diagnostic_options().items():
+        if profile is None:
+            continue
+        optimizer = profile.build_optimizer(lookback_days, classes)
+        optimizer.name = label
+        strategies[label] = optimizer
+    return strategies
+
+
+def run_diagnostics(prices: pd.DataFrame, period: EvaluationPeriod,
+                    universe: Universe, lookback_years: float = 3.0) -> ExperimentResult:
+    """Run every diagnostic strategy over one period.
+
+    Profile-independent: the result depends only on the period, so a single
+    cached run serves every profile selection in the UI.
+    """
+    settings = BacktestSettings(
+        start=period.start,
+        end=period.end,
+        lookback_years=lookback_years,
+        mode=ExperimentMode.RESEARCH,
+    )
+    engine = BacktestEngine(prices, settings)
+    return engine.run(
+        build_diagnostic_strategies(
+            lookback_days=settings.lookback_days,
+            asset_class_map=universe.asset_class_map(),
+        )
+    )

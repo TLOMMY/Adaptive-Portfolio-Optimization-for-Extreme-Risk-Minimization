@@ -154,3 +154,113 @@ def drawdown_chart(drawdowns: pd.DataFrame, highlight: str | None = None) -> go.
         )
     fig.update_yaxes(tickformat=".0%")
     return _base_layout(fig, height=320)
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic charts
+#
+# A/B here are user-chosen roles, not data-derived ranks, so binding slots 1 and
+# 2 to them is stable: changing the selection repaints by intent, never as a
+# side effect of reordering.
+# ---------------------------------------------------------------------------
+
+COMPARE_A = "#2a78d6"  # slot 1 blue
+COMPARE_B = "#eb6834"  # slot 2 orange
+
+
+def weight_comparison_chart(
+    series_a: pd.Series, label_a: str, series_b: pd.Series, label_b: str, asset: str
+) -> go.Figure:
+    """One asset's weight over time under two strategies."""
+    fig = go.Figure()
+    for series, label, color in (
+        (series_a, label_a, COMPARE_A),
+        (series_b, label_b, COMPARE_B),
+    ):
+        fig.add_trace(
+            go.Scatter(
+                x=series.index, y=series.to_numpy(), name=label, mode="lines+markers",
+                line=dict(color=color, width=2),
+                marker=dict(size=6, line=dict(width=1.5, color=SURFACE)),
+                hovertemplate="%{y:.1%}<extra>" + label + "</extra>",
+            )
+        )
+    fig.update_yaxes(tickformat=".0%", rangemode="tozero")
+    fig.update_layout(title=None)
+    return _base_layout(fig, height=330)
+
+
+def turnover_comparison_chart(
+    series_a: pd.Series, label_a: str, series_b: pd.Series, label_b: str,
+    limit_a: float | None = None, limit_b: float | None = None,
+) -> go.Figure:
+    """Realised turnover at each rebalance, with any configured caps drawn in."""
+    fig = go.Figure()
+    for series, label, color in (
+        (series_a, label_a, COMPARE_A),
+        (series_b, label_b, COMPARE_B),
+    ):
+        fig.add_trace(
+            go.Scatter(
+                x=series.index, y=series.to_numpy(), name=label, mode="lines+markers",
+                line=dict(color=color, width=2),
+                marker=dict(size=6, line=dict(width=1.5, color=SURFACE)),
+                hovertemplate="%{y:.1%}<extra>" + label + "</extra>",
+            )
+        )
+    for limit, color, label in ((limit_a, COMPARE_A, label_a), (limit_b, COMPARE_B, label_b)):
+        if limit is not None:
+            fig.add_hline(
+                y=limit, line=dict(color=color, width=1, dash="dash"),
+                annotation_text=f"{label} cap {limit:.0%}",
+                annotation_font=dict(size=10, color=TEXT_SECONDARY),
+            )
+    fig.update_yaxes(tickformat=".0%", rangemode="tozero")
+    return _base_layout(fig, height=330)
+
+
+def expected_vs_realised_chart(frame: pd.DataFrame, label: str) -> go.Figure:
+    """Decision-time expectation against the return that followed it."""
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=frame.index, y=frame["expected_return"], name="Expected (at decision)",
+            mode="lines+markers", line=dict(color=COMPARE_A, width=2),
+            marker=dict(size=6, line=dict(width=1.5, color=SURFACE)),
+            hovertemplate="%{y:.1%}<extra>Expected</extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=frame.index, y=frame["realised_annualised"],
+            name="Realised next period (annualised)",
+            mode="lines+markers", line=dict(color=COMPARE_B, width=2),
+            marker=dict(size=6, line=dict(width=1.5, color=SURFACE)),
+            hovertemplate="%{y:.1%}<extra>Realised</extra>",
+        )
+    )
+    fig.add_hline(y=0, line=dict(color=GRID, width=1))
+    fig.update_yaxes(tickformat=".0%")
+    fig.update_layout(title=dict(text=label, font=dict(size=13, color=TEXT_SECONDARY), x=0))
+    return _base_layout(fig, height=330)
+
+
+def allocation_distance_chart(distances: pd.Series) -> go.Figure:
+    """How far apart the two strategies were at each rebalance."""
+    peak = distances.idxmax()
+    fig = go.Figure(
+        go.Scatter(
+            x=distances.index, y=distances.to_numpy(), mode="lines+markers",
+            line=dict(color=COMPARE_A, width=2),
+            marker=dict(size=6, line=dict(width=1.5, color=SURFACE)),
+            hovertemplate="%{y:.1%} of the portfolio differed<extra></extra>",
+            showlegend=False,
+        )
+    )
+    fig.add_vline(
+        x=peak, line=dict(color=TEXT_SECONDARY, width=1, dash="dot"),
+        annotation_text=f"widest gap · {peak:%b %Y}",
+        annotation_font=dict(size=10, color=TEXT_SECONDARY),
+    )
+    fig.update_yaxes(tickformat=".0%", rangemode="tozero")
+    return _base_layout(fig, height=300)

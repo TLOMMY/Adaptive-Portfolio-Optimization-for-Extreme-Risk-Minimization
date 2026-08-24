@@ -14,13 +14,20 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from src.backtest.experiment import COMPARISON_ORDER, ExperimentSpec, run_comparison
+from src.backtest.experiment import (
+    COMPARISON_ORDER,
+    ExperimentSpec,
+    diagnostic_label,
+    diagnostic_options,
+    run_comparison,
+    run_diagnostics,
+)
 from src.config.assets import DEFAULT_UNIVERSE
 from src.config.periods import DEFAULT_PERIOD, PERIODS
 from src.data.csv_provider import CsvProvider
 from src.profiles.presets import DEFAULT_PROFILE, PROFILES, profile_mapping_table
 from src.risk.metrics import comparison_table, drawdown_series
-from src.ui import content
+from src.ui import content, diagnostics_panel
 from src.visualization import charts
 
 st.set_page_config(
@@ -56,6 +63,18 @@ def run(profile_key: str, period_key: str):
         universe=DEFAULT_UNIVERSE,
     )
     return run_comparison(load_prices(), spec)
+
+
+@st.cache_data(show_spinner="Preparing diagnostics…")
+def run_diagnostic_experiment(period_key: str):
+    """Every diagnostic strategy over one period.
+
+    Depends only on the period, not the selected profile, so switching profiles
+    never re-runs it. Each strategy carries its own profile's constraints, and
+    all of them share one engine pass, so they see identical data at every
+    decision date.
+    """
+    return run_diagnostics(load_prices(), PERIODS[period_key], DEFAULT_UNIVERSE)
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +354,19 @@ with st.expander(f"How {highlight} shifted its allocation over time"):
     st.plotly_chart(
         charts.allocation_history_chart(experiment[highlight].weights_history.loc[:current_date]),
         width='stretch',
+    )
+
+st.divider()
+
+# --- Strategy diagnostics --------------------------------------------------
+with st.expander("🔍  **Strategy Diagnostics** — Explain the decisions"):
+    st.markdown("### Why did these portfolios behave differently?")
+    diagnostics_panel.render(
+        experiment=run_diagnostic_experiment(st.session_state.period_key),
+        options=diagnostic_options(),
+        universe=DEFAULT_UNIVERSE,
+        default_a=diagnostic_label(profile),
+        default_b="Equal Weight",
     )
 
 st.divider()

@@ -33,7 +33,16 @@ def launch():
     """A freshly run instance of the app."""
     from streamlit.testing.v1 import AppTest
 
-    return AppTest.from_file(APP_PATH, default_timeout=300).run()
+    return AppTest.from_file(APP_PATH, default_timeout=600).run()
+
+
+def select(app, label: str):
+    """Look a selectbox up by label rather than position.
+
+    The app has several selectboxes and their order is an implementation detail;
+    addressing them by index made these tests break whenever a control was added.
+    """
+    return next(sb for sb in app.selectbox if sb.label == label)
 
 
 @pytest.fixture(scope="module")
@@ -146,7 +155,7 @@ def test_the_app_runs_without_raising():
     assert not app.exception, [str(e.value) for e in app.exception]
     assert app.title[0].value.startswith("Adaptive Investor-Specific")
     assert app.radio[0].options == [p.name for p in PROFILES.values()]
-    assert app.selectbox[0].options == [p.label for p in PERIODS.values()]
+    assert select(app, "Historical period").options == [p.label for p in PERIODS.values()]
     assert [b.label for b in app.button] == [
         "Advance quarter", "Advance year", "Run full period", "Reset",
     ]
@@ -194,7 +203,7 @@ def test_every_profile_renders_in_the_app():
 def test_every_period_renders_in_the_app():
     app = launch()
     for period in PERIODS.values():
-        app.selectbox[0].set_value(period.label).run()
+        select(app, "Historical period").set_value(period.label).run()
         assert not app.exception, (period.key, [str(e.value) for e in app.exception])
 
 
@@ -252,3 +261,67 @@ def test_the_guide_states_the_assets_are_real():
     assert "no real money was invested" in intro
     assert "it is not a prediction" in walkthrough
     assert "one run of history" in walkthrough
+
+
+# ---------------------------------------------------------------------------
+# Strategy diagnostics panel
+# ---------------------------------------------------------------------------
+
+
+def test_the_diagnostics_expander_is_present():
+    app = launch()
+    assert any("Strategy Diagnostics" in e.label for e in app.expander)
+    labels = [sb.label for sb in app.selectbox]
+    assert "Compare Strategy A" in labels
+    assert "Compare Strategy B" in labels
+
+
+def test_the_diagnostics_selectors_offer_every_strategy():
+    from src.backtest.experiment import diagnostic_options
+
+    app = launch()
+    expected = list(diagnostic_options())
+    for label in ("Compare Strategy A", "Compare Strategy B"):
+        assert select(app, label).options == expected
+
+
+def test_the_diagnostics_default_to_the_selected_profile_versus_equal_weight():
+    from src.backtest.experiment import diagnostic_label
+    from src.profiles.presets import DEFAULT_PROFILE
+
+    app = launch()
+    assert select(app, "Compare Strategy A").value == diagnostic_label(DEFAULT_PROFILE)
+    assert select(app, "Compare Strategy B").value == "Equal Weight"
+
+
+@pytest.mark.parametrize("strategy_b", [
+    "Equal Weight",
+    "Growth — Markowitz",
+    "Balanced — Markowitz",
+    "Downside Protection — CVaR 95%",
+    "Extreme Low Risk — Robust Min-Variance",
+])
+def test_diagnostics_render_for_every_pair_against_growth(strategy_b):
+    """Every supported pair must render, including a strategy against itself."""
+    app = launch()
+    select(app, "Compare Strategy A").set_value("Growth — Markowitz").run()
+    select(app, "Compare Strategy B").set_value(strategy_b).run()
+
+    assert not app.exception, [str(e.value) for e in app.exception]
+
+
+def test_selecting_the_same_strategy_twice_is_handled():
+    app = launch()
+    select(app, "Compare Strategy A").set_value("Equal Weight").run()
+    assert not app.exception
+    # Both default to Equal Weight now; the panel must say so rather than crash.
+    assert any("two different strategies" in i.value for i in app.info)
+
+
+def test_diagnostics_render_for_every_period():
+    from src.config.periods import PERIODS
+
+    app = launch()
+    for period in PERIODS.values():
+        select(app, "Historical period").set_value(period.label).run()
+        assert not app.exception, (period.key, [str(e.value) for e in app.exception])
