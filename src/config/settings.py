@@ -69,6 +69,50 @@ class DataCutoff(StrEnum):
 DEFAULT_CUTOFF = DataCutoff.INCLUSIVE
 
 
+class LookbackPolicy(StrEnum):
+    """What to do when a decision date lacks the full configured lookback.
+
+    A shorter-than-configured estimation window changes what the experiment
+    measures, so it is never entered silently.
+    """
+
+    REQUIRE = "require"
+    """Refuse to run. The offending dates are named and the experiment aborts.
+    This is the default: for a formal backtest, an unmet lookback is a
+    configuration error, not a condition to work around."""
+
+    EXCLUDE = "exclude"
+    """Drop the offending decision dates before the experiment starts and record
+    which were dropped in the results. The remaining dates all have the full
+    configured history."""
+
+
+class ExperimentMode(StrEnum):
+    """Whether the experiment window is frozen or tracks the latest data."""
+
+    RESEARCH = "research"
+    """Fixed start and end dates. Results do not change as new market data
+    arrives, so a re-run reproduces earlier numbers exactly. All reported
+    findings must come from this mode."""
+
+    DEMO = "demo"
+    """The window extends to the most recent data available. Convenient for a
+    live presentation; **not** reproducible, because the evaluation period grows
+    over time. Never use for reported results."""
+
+
+# ---------------------------------------------------------------------------
+# The frozen research window
+#
+# These dates define the formal experiment and must not be edited to chase newer
+# data. The window spans ten complete calendar years, and ends well before the
+# snapshot does so that refreshing the snapshot cannot alter published results.
+# ---------------------------------------------------------------------------
+
+RESEARCH_START = date(2016, 1, 1)
+RESEARCH_END = date(2025, 12, 31)
+
+
 class RebalanceFrequency(StrEnum):
     """Supported rebalancing cadences.  (Decision D12)"""
 
@@ -97,9 +141,16 @@ class BacktestSettings:
         First scheduled rebalance date. The engine snaps this forward to the
         first available trading day.
     end
-        Last date on which realised performance is recorded. The default is the
-        last complete trading session in the committed snapshot; it is a fixed
-        date rather than "today" so that a re-run reproduces earlier results.
+        Last date on which realised performance is recorded. Defaults to the
+        frozen ``RESEARCH_END``; it is a fixed date rather than "the latest
+        data" so that a re-run reproduces earlier results exactly.
+    mode
+        ``RESEARCH`` (frozen window, reproducible) or ``DEMO`` (window extends
+        to the latest available data, not reproducible). Construct demo settings
+        with :meth:`BacktestSettings.for_demo`.
+    lookback_policy
+        What to do when a decision date lacks the full configured lookback:
+        refuse to run, or exclude those dates before the experiment starts.
     lookback_years
         Length of the estimation window preceding each decision date.
     rebalance_frequency
@@ -119,19 +170,51 @@ class BacktestSettings:
         call sites.
     """
 
-    start: date = date(2016, 1, 1)
-    end: date = date(2026, 8, 21)
+    start: date = RESEARCH_START
+    end: date = RESEARCH_END
     lookback_years: float = 3.0
     rebalance_frequency: RebalanceFrequency = RebalanceFrequency.QUARTERLY
     cutoff: DataCutoff = DEFAULT_CUTOFF
     transaction_cost_bps: float = 0.0
     initial_capital: float = 100_000.0
     risk_horizon_days: int = 1
+    mode: ExperimentMode = ExperimentMode.RESEARCH
+    lookback_policy: LookbackPolicy = LookbackPolicy.REQUIRE
 
     @property
     def lookback_days(self) -> int:
-        """Estimation window length in trading days."""
+        """Estimation window length in trading days (counted as returns)."""
         return int(round(self.lookback_years * TRADING_DAYS_PER_YEAR))
+
+    @property
+    def required_observations(self) -> int:
+        """Price observations a decision date needs for a full estimation window.
+
+        One more than ``lookback_days``, because a return consumes two prices.
+        """
+        return self.lookback_days + 1
+
+    @property
+    def is_reproducible(self) -> bool:
+        """True when the window is frozen and results cannot drift over time."""
+        return self.mode is ExperimentMode.RESEARCH
+
+    @classmethod
+    def for_demo(cls, latest_available: date, **overrides: object) -> BacktestSettings:
+        """Settings whose window runs to the most recent data available.
+
+        Intended for a live presentation, where showing history up to the present
+        is worth more than reproducibility. Results from demo mode are not
+        reproducible -- the evaluation period grows as data arrives -- and must
+        not be reported as research findings.
+        """
+        params: dict[str, object] = {
+            "start": RESEARCH_START,
+            "end": latest_available,
+            "mode": ExperimentMode.DEMO,
+        }
+        params.update(overrides)
+        return cls(**params)  # type: ignore[arg-type]
 
     def __post_init__(self) -> None:
         if self.end <= self.start:

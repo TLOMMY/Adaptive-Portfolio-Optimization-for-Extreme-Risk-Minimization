@@ -48,8 +48,8 @@ from src.backtest.rebalance import generate_rebalance_dates
 from src.backtest.results import BacktestResult, ExperimentResult, RebalanceRecord
 from src.backtest.strategy import AllocationDecision, RebalanceContext, Strategy
 from src.config.settings import (
-    MIN_OBSERVATIONS_FOR_ESTIMATION,
     BacktestSettings,
+    LookbackPolicy,
 )
 from src.data.window import InsufficientHistoryError, MarketDataView
 
@@ -86,58 +86,77 @@ class BacktestEngine:
         self._marks = self._prices.ffill()
         self._realised_returns = self._marks.pct_change()
 
+        self.excluded_dates: list[pd.Timestamp] = []
         self.rebalance_dates = self._resolve_rebalance_dates()
 
     # -- setup ---------------------------------------------------------------
 
     def _resolve_rebalance_dates(self) -> list[pd.Timestamp]:
-        dates = generate_rebalance_dates(
+        """Decision dates that have the full configured estimation window.
+
+        A decision made from a shorter window is not the experiment that was
+        configured, so such dates are never silently kept. Depending on
+        ``lookback_policy`` the engine either refuses to run or excludes them
+        before the experiment starts, recording which were excluded.
+        """
+        scheduled = generate_rebalance_dates(
             trading_days=self._prices.index,
             start=self.settings.start,
             end=self.settings.end,
             frequency=self.settings.rebalance_frequency,
         )
-        if not dates:
+        if not scheduled:
             raise BacktestConfigurationError(
                 f"no trading days available for rebalancing between "
                 f"{self.settings.start} and {self.settings.end}"
             )
 
-        first = dates[0]
-        available = int((self._prices.index <= first).sum())
-        required = max(MIN_OBSERVATIONS_FOR_ESTIMATION, 2)
-        if available < required:
-            raise BacktestConfigurationError(
-                f"only {available} observations exist on or before the first decision "
-                f"date {first.date()}; at least {required} are required. Extend the "
-                f"price history or move the start date later."
-            )
+        required = self.settings.required_observations
+        usable, short = [], []
+        for candidate in scheduled:
+            available = int((self._prices.index <= candidate).sum())
+            (usable if available >= required else short).append((candidate, available))
 
-        window_start = self._prices.index[max(0, available - self.settings.lookback_days - 1)]
-        if available < self.settings.lookback_days + 1:
+        if short:
+            detail = ", ".join(f"{d.date()} ({n}/{required})" for d, n in short[:5])
+            more = f" and {len(short) - 5} more" if len(short) > 5 else ""
+            if self.settings.lookback_policy is LookbackPolicy.REQUIRE:
+                raise BacktestConfigurationError(
+                    f"{len(short)} decision date(s) lack the full "
+                    f"{self.settings.lookback_years}-year lookback "
+                    f"({required} observations): {detail}{more}. "
+                    "Extend the price history, move the start date later, reduce "
+                    "the lookback, or set lookback_policy=EXCLUDE to drop these dates."
+                )
+            self.excluded_dates = [d for d, _ in short]
             logger.warning(
-                "First decision date %s has %d observations but the configured lookback "
-                "requests %d; the first estimation window will be shorter than configured.",
-                first.date(),
-                available,
-                self.settings.lookback_days + 1,
+                "Excluding %d decision date(s) without the full lookback: %s%s",
+                len(short), detail, more,
             )
 
-        unusable = [
-            t for t in self.tickers if self._marks.loc[:first, t].isna().all()
-        ]
+        dates = [d for d, _ in usable]
+        if not dates:
+            raise BacktestConfigurationError(
+                f"no decision date between {self.settings.start} and {self.settings.end} "
+                f"has the required {required} observations of history"
+            )
+
+        first = dates[0]
+        unusable = [t for t in self.tickers if self._marks.loc[:first, t].isna().all()]
         if unusable:
             raise BacktestConfigurationError(
                 f"no price history on or before the first decision date {first.date()} "
                 f"for: {unusable}. Adjust the universe or the start date."
             )
 
+        window_open = self._prices.index[
+            int((self._prices.index <= first).sum()) - required
+        ]
         logger.info(
-            "Backtest: %d decision dates from %s to %s; first estimation window opens %s",
-            len(dates),
-            dates[0].date(),
-            dates[-1].date(),
-            window_start.date(),
+            "Backtest [%s]: %d decision dates from %s to %s; first estimation window "
+            "opens %s (%d observations)",
+            self.settings.mode.value,
+            len(dates), dates[0].date(), dates[-1].date(), window_open.date(), required,
         )
         return dates
 
@@ -217,10 +236,14 @@ class BacktestEngine:
                 "%s failed at %s: %s -- holding previous weights",
                 st.name, decision_date.date(), exc,
             )
+            diagnostics: dict[str, Any] = {"error": str(exc)}
+            # An optimizer may attach structured detail (e.g. return_shortfall)
+            # to the exception; keeping it makes the audit trail usable.
+            diagnostics.update(getattr(exc, "diagnostics", {}) or {})
             decision = AllocationDecision(
                 weights=weights_before if period_index else self._uniform(),
                 status=f"error: {type(exc).__name__}",
-                diagnostics={"error": str(exc)},
+                diagnostics=diagnostics,
             )
 
         st.rebalance(
@@ -267,6 +290,10 @@ class BacktestEngine:
             "lookback_days": s.lookback_days,
             "rebalance_frequency": s.rebalance_frequency.value,
             "cutoff": s.cutoff.value,
+            "mode": s.mode.value,
+            "reproducible": s.is_reproducible,
+            "lookback_policy": s.lookback_policy.value,
+            "excluded_dates": [str(d.date()) for d in self.excluded_dates],
             "transaction_cost_bps": s.transaction_cost_bps,
             "initial_capital": s.initial_capital,
             "risk_horizon_days": s.risk_horizon_days,

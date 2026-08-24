@@ -15,9 +15,13 @@ from src.config.assets import (
     Universe,
 )
 from src.config.settings import (
+    RESEARCH_END,
+    RESEARCH_START,
     TRADING_DAYS_PER_YEAR,
     BacktestSettings,
     DataCutoff,
+    ExperimentMode,
+    LookbackPolicy,
     RebalanceFrequency,
 )
 
@@ -29,6 +33,8 @@ from src.config.settings import (
 def test_default_settings_match_the_specified_experiment():
     s = BacktestSettings()
     assert s.start == date(2016, 1, 1)
+    assert s.mode is ExperimentMode.RESEARCH
+    assert s.lookback_policy is LookbackPolicy.REQUIRE
     assert s.lookback_years == 3.0
     assert s.rebalance_frequency is RebalanceFrequency.QUARTERLY
     assert s.cutoff is DataCutoff.INCLUSIVE
@@ -141,3 +147,69 @@ def test_asset_specs_are_immutable():
     asset = DEFAULT_UNIVERSE.assets[0]
     with pytest.raises(dataclasses.FrozenInstanceError):
         asset.ticker = "OTHER"  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# Reproducibility: frozen research window vs. latest-data demo mode
+# ---------------------------------------------------------------------------
+
+
+def test_the_research_window_is_frozen():
+    """The formal experiment must not track the latest available data."""
+    s = BacktestSettings()
+    assert s.start == RESEARCH_START
+    assert s.end == RESEARCH_END
+    assert s.is_reproducible is True
+
+
+def test_the_research_window_spans_ten_whole_calendar_years():
+    assert date(2016, 1, 1) == RESEARCH_START
+    assert date(2025, 12, 31) == RESEARCH_END
+
+
+def test_demo_mode_extends_to_the_latest_data_and_is_not_reproducible():
+    latest = date(2026, 8, 21)
+    s = BacktestSettings.for_demo(latest)
+
+    assert s.mode is ExperimentMode.DEMO
+    assert s.end == latest
+    assert s.start == RESEARCH_START, "demo mode changes only the end of the window"
+    assert s.is_reproducible is False
+
+
+def test_demo_mode_accepts_overrides():
+    s = BacktestSettings.for_demo(
+        date(2026, 8, 21), lookback_years=2.0, rebalance_frequency=RebalanceFrequency.MONTHLY
+    )
+    assert s.lookback_years == 2.0
+    assert s.rebalance_frequency is RebalanceFrequency.MONTHLY
+    assert s.mode is ExperimentMode.DEMO
+
+
+def test_research_and_demo_settings_are_distinguishable():
+    """Nothing downstream should have to guess which mode produced a result."""
+    research = BacktestSettings()
+    demo = BacktestSettings.for_demo(date(2026, 8, 21))
+    assert research.mode != demo.mode
+    assert research.is_reproducible and not demo.is_reproducible
+
+
+# ---------------------------------------------------------------------------
+# Lookback requirement
+# ---------------------------------------------------------------------------
+
+
+def test_required_observations_exceeds_lookback_days_by_one():
+    """A return consumes two prices, so N returns need N+1 observations."""
+    s = BacktestSettings(lookback_years=3.0)
+    assert s.required_observations == s.lookback_days + 1
+    assert s.required_observations == 3 * TRADING_DAYS_PER_YEAR + 1
+
+
+def test_lookback_policy_defaults_to_requiring_the_full_window():
+    assert BacktestSettings().lookback_policy is LookbackPolicy.REQUIRE
+
+
+def test_lookback_policy_can_be_set_to_exclude():
+    s = BacktestSettings(lookback_policy=LookbackPolicy.EXCLUDE)
+    assert s.lookback_policy is LookbackPolicy.EXCLUDE

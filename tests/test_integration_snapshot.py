@@ -40,7 +40,7 @@ def test_default_experiment_runs_end_to_end(real_prices, default_settings):
 
     assert not values.isna().any().any()
     assert (values > 0).all().all()
-    assert len(experiment.rebalance_dates) == 43  # 2016Q1 .. 2026Q3 inclusive
+    assert len(experiment.rebalance_dates) == 40  # 2016Q1 .. 2025Q4, ten frozen years
 
 
 def test_default_experiment_spans_the_specified_window(real_prices, default_settings):
@@ -84,7 +84,7 @@ def test_no_lookahead_on_real_data(real_prices, default_settings):
     strategy = RecordingStrategy()
     BacktestEngine(real_prices, default_settings).run({"recording": strategy})
 
-    assert len(strategy.seen) == 43
+    assert len(strategy.seen) == 40
     for record in strategy.seen:
         assert record["max_visible_date"] <= record["as_of"]
 

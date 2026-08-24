@@ -15,7 +15,7 @@ from conftest import FixedWeightStrategy, UniformStrategy, make_prices
 
 from src.backtest.engine import BacktestConfigurationError, BacktestEngine
 from src.backtest.strategy import AllocationDecision
-from src.config.settings import BacktestSettings, RebalanceFrequency
+from src.config.settings import BacktestSettings, LookbackPolicy, RebalanceFrequency
 
 
 @pytest.fixture
@@ -339,8 +339,53 @@ def test_insufficient_history_before_the_first_decision_is_rejected():
         end=pd.Timestamp("2016-02-01").date(),
         lookback_years=1.0,
     )
-    with pytest.raises(BacktestConfigurationError, match="observations exist"):
+    with pytest.raises(BacktestConfigurationError, match="lack the full"):
         BacktestEngine(panel, settings)
+
+
+def test_short_lookback_dates_are_excluded_under_the_exclude_policy():
+    """The EXCLUDE policy drops offending dates and records which ones."""
+    panel = make_prices(n_days=600, start="2014-01-01")
+    settings = BacktestSettings(
+        start=pd.Timestamp("2014-06-01").date(),
+        end=pd.Timestamp("2016-03-01").date(),
+        lookback_years=1.0,
+        lookback_policy=LookbackPolicy.EXCLUDE,
+    )
+    engine = BacktestEngine(panel, settings)
+
+    assert engine.excluded_dates, "expected some dates to lack a full lookback"
+    assert all(d < engine.rebalance_dates[0] for d in engine.excluded_dates)
+    for date in engine.rebalance_dates:
+        assert int((panel.index <= date).sum()) >= settings.required_observations
+
+
+def test_no_date_with_a_full_lookback_is_an_error():
+    panel = make_prices(n_days=300, start="2015-01-01")
+    settings = BacktestSettings(
+        start=pd.Timestamp("2015-06-01").date(),
+        end=pd.Timestamp("2016-01-01").date(),
+        lookback_years=5.0,
+        lookback_policy=LookbackPolicy.EXCLUDE,
+    )
+    with pytest.raises(BacktestConfigurationError, match="no decision date"):
+        BacktestEngine(panel, settings)
+
+
+def test_every_retained_decision_date_has_the_full_lookback(prices, engine_settings):
+    engine = BacktestEngine(prices, engine_settings)
+    for date in engine.rebalance_dates:
+        available = int((prices.index <= date).sum())
+        assert available >= engine_settings.required_observations
+
+
+def test_settings_summary_records_mode_and_lookback_policy(prices, engine_settings):
+    experiment = BacktestEngine(prices, engine_settings).run({"uniform": UniformStrategy()})
+    summary = experiment.settings_summary
+    assert summary["mode"] == "research"
+    assert summary["reproducible"] is True
+    assert summary["lookback_policy"] == "require"
+    assert summary["excluded_dates"] == []
 
 
 def test_window_with_no_trading_days_is_rejected(prices):
