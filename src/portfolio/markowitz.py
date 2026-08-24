@@ -62,32 +62,6 @@ DEFAULT_SOLVER = "CLARABEL"
 """Both stages use one solver so the feasibility stage and the mean-variance
 stage agree on the boundary to within the same numerical tolerance."""
 
-SHORTFALL_TOLERANCE = 1e-8
-"""Below this, a reported shortfall is solver noise rather than a real gap.
-
-An interior-point solver settles a shortfall that is exactly zero at values
-around 1e-10. Reporting that as an unattainable target would be wrong -- and
-visibly so, since the achieved return exceeds the target in those cases -- so
-sub-tolerance shortfalls are snapped to exactly zero. In annualised decimals
-1e-8 is a millionth of a percentage point, far below any meaningful difference.
-"""
-
-FEASIBILITY_SLACK = 1e-7
-"""Relative relaxation applied to an exactly-binding return target.
-
-When the target is unattainable, the closest attainable target is binding at the
-optimum and the feasible region collapses to (near) a single point. An
-interior-point solver can then return an inaccurate solution, or declare the
-region infeasible outright.
-
-The relaxation is applied *relative* to the target's magnitude,
-``FEASIBILITY_SLACK * max(1, |target|)``, rather than as a fixed absolute amount:
-an absolute slack that is comfortable for a target of 0.05 sits right on the
-solver's own tolerance for a target of 5.0, which was observed to produce
-`optimal_inaccurate` statuses. At 1e-7 relative the effective target differs
-from the attainable one by at most a ten-thousandth of a percentage point.
-"""
-
 
 class MarkowitzOptimizer(PortfolioOptimizer):
     """Mean-variance optimizer with an exact return-shortfall mechanism."""
@@ -121,71 +95,20 @@ class MarkowitzOptimizer(PortfolioOptimizer):
     ) -> OptimizationOutcome:
         mu, sigma = parameters.mu, parameters.sigma
         tickers = parameters.tickers
-        target = self.constraints.min_return
 
-        shortfall = 0.0
-        max_attainable: float | None = None
-        effective_target: float | None = None
+        # Shared with every optimizer; see PortfolioOptimizer._resolve_return_target.
+        target = self._resolve_return_target(mu, tickers, self.solver)
+        weights = self._mean_variance(mu, sigma, tickers, target.effective)
 
-        if target is not None:
-            shortfall, max_attainable = self._minimum_shortfall(mu, tickers, target)
-            # When the target is attainable the constraint is imposed as given;
-            # only a genuinely binding target needs the numerical relaxation.
-            effective_target = target - shortfall
-            if shortfall > 0.0:
-                effective_target -= FEASIBILITY_SLACK * max(1.0, abs(target))
-
-        weights = self._mean_variance(mu, sigma, tickers, effective_target)
-
-        status = "optimal_with_shortfall" if shortfall > 0.0 else "optimal"
-        diagnostics = {
-            "risk_aversion": self.risk_aversion,
-            "return_target": target,
-            # Annualised decimal, in the same units as `return_target`.
-            # 0.0 means the target was met, or that no target was set.
-            "return_shortfall": shortfall,
-        }
-        if target is not None:
-            diagnostics["max_attainable_return"] = max_attainable
-            diagnostics["effective_return_target"] = target - shortfall
+        diagnostics = {"risk_aversion": self.risk_aversion}
+        diagnostics.update(target.diagnostics())
 
         return OptimizationOutcome(
             weights=weights,
-            status=status,
+            status="optimal_with_shortfall" if target.is_binding else "optimal",
             solver=self.solver,
             diagnostics=diagnostics,
         )
-
-    # -- stage 1: how far is the target from attainable? ---------------------
-
-    def _minimum_shortfall(
-        self, mu: np.ndarray, tickers: list[str], target: float
-    ) -> tuple[float, float]:
-        r"""Minimise the nonnegative shortfall :math:`s` against the return target.
-
-        Returns ``(shortfall, max_attainable_return)``. A structurally infeasible
-        constraint set raises here -- that is a configuration error, distinct
-        from a target that is merely too ambitious.
-        """
-        x = cp.Variable(len(tickers), name="x")
-        s = cp.Variable(nonneg=True, name="shortfall")
-
-        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
-        constraints.append(mu @ x + s >= target)
-
-        problem = cp.Problem(cp.Minimize(s), constraints)
-        self._solve_problem(problem, self.solver, "shortfall stage")
-
-        if s.value is None or x.value is None:
-            raise SolverError("shortfall stage returned no solution")
-
-        shortfall = max(float(s.value), 0.0)
-        if shortfall < SHORTFALL_TOLERANCE:
-            shortfall = 0.0
-        max_attainable = float(mu @ x.value)
-        return shortfall, max_attainable
-
-    # -- stage 2: mean-variance under the attainable target ------------------
 
     def _mean_variance(
         self,

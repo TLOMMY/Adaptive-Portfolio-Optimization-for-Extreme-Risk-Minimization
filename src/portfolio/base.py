@@ -24,7 +24,7 @@ import pandas as pd
 from src.backtest.strategy import AllocationDecision, RebalanceContext
 from src.data.window import MarketDataView
 from src.estimation.parameters import EstimatedParameters, estimate_parameters
-from src.portfolio.constraints import ConstraintSet, asset_class_exposures
+from src.portfolio.constraints import ConstraintSet, asset_class_exposures, build_constraints
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,78 @@ beyond this tolerance are treated as real.
 
 CLEAN_THRESHOLD = 1e-9
 """Weights with magnitude below this are treated as zero before renormalising."""
+
+SHORTFALL_TOLERANCE = 1e-8
+"""Below this, a reported return shortfall is solver noise rather than a real gap.
+
+An interior-point solver settles a shortfall that is exactly zero at values
+around 1e-10. Reporting that as an unattainable target would be wrong -- and
+visibly so, since the achieved return then exceeds the target -- so
+sub-tolerance shortfalls are snapped to exactly zero. In annualised decimals
+1e-8 is a millionth of a percentage point, far below any meaningful difference.
+"""
+
+FEASIBILITY_SLACK = 1e-7
+"""Relative relaxation applied to an exactly-binding return target.
+
+When the target is unattainable, the closest attainable target is binding at the
+optimum and the feasible region collapses to (near) a single point. An
+interior-point solver can then return an inaccurate solution, or declare the
+region infeasible outright.
+
+The relaxation is applied *relative* to the target's magnitude,
+``FEASIBILITY_SLACK * max(1, |target|)``, rather than as a fixed absolute amount:
+an absolute slack that is comfortable for a target of 0.05 sits right on the
+solver's own tolerance for a target of 5.0, which was observed to produce
+`optimal_inaccurate` statuses. At 1e-7 relative the effective target differs
+from the attainable one by at most a ten-thousandth of a percentage point.
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class ReturnTarget:
+    """The outcome of reconciling a minimum-return requirement with feasibility.
+
+    Attributes
+    ----------
+    target
+        The requested minimum annualised return, or ``None`` if unset.
+    shortfall
+        The **minimum unavoidable shortfall**, an annualised decimal in the same
+        units as ``target``. Zero when the target is attainable or unset.
+    max_attainable
+        The highest annualised expected return any feasible portfolio can
+        deliver. ``None`` when no target was requested (it is not computed).
+    effective
+        The return constraint actually imposed on the model, or ``None`` when no
+        target was requested. Equals ``target`` when attainable, and
+        ``max_attainable`` (less a numerical relaxation) when not.
+    """
+
+    target: float | None
+    shortfall: float
+    max_attainable: float | None
+    effective: float | None
+
+    @property
+    def is_binding(self) -> bool:
+        """True when the target could not be met in full."""
+        return self.shortfall > 0.0
+
+    def diagnostics(self) -> dict[str, Any]:
+        """The audit record. ``return_shortfall`` is always present."""
+        record: dict[str, Any] = {
+            "return_target": self.target,
+            # Annualised decimal, in the same units as `return_target`.
+            # 0.0 means the target was met, or that no target was set.
+            "return_shortfall": self.shortfall,
+        }
+        if self.target is not None:
+            record["max_attainable_return"] = self.max_attainable
+            record["effective_return_target"] = (
+                None if self.max_attainable is None else self.target - self.shortfall
+            )
+        return record
 
 
 class OptimizationError(RuntimeError):
@@ -199,6 +271,72 @@ class PortfolioOptimizer(ABC):
                 raise SolverError(
                     f"asset class {cls!r} exposure {exposure:.6f} exceeds limit {limit}"
                 )
+
+    # -- shared return-target mechanism  (decision D9) ------------------------
+
+    def _resolve_return_target(
+        self, mu: np.ndarray, tickers: list[str], solver: str
+    ) -> ReturnTarget:
+        """Reconcile the configured minimum-return requirement with feasibility.
+
+        An unattainable target is never dropped. A nonnegative slack variable is
+        minimised against it, yielding the exact minimum unavoidable shortfall;
+        the model is then solved at the closest attainable target and the gap is
+        reported. See :class:`ReturnTarget`.
+
+        Shared by every optimizer so the mechanism -- and its numerical
+        tolerances -- are identical across models.
+        """
+        target = self.constraints.min_return
+        if target is None:
+            return ReturnTarget(target=None, shortfall=0.0, max_attainable=None, effective=None)
+
+        shortfall, max_attainable = self._minimum_shortfall(mu, tickers, target, solver)
+
+        effective = target - shortfall
+        if shortfall > 0.0:
+            # Only a genuinely binding target needs the numerical relaxation;
+            # an attainable one is imposed exactly as configured.
+            effective -= FEASIBILITY_SLACK * max(1.0, abs(target))
+
+        return ReturnTarget(
+            target=target,
+            shortfall=shortfall,
+            max_attainable=max_attainable,
+            effective=effective,
+        )
+
+    def _minimum_shortfall(
+        self, mu: np.ndarray, tickers: list[str], target: float, solver: str
+    ) -> tuple[float, float]:
+        r"""Minimise the nonnegative shortfall :math:`s` against a return target.
+
+        .. math::
+            \min_{x, s} \; s
+            \quad\text{s.t.}\quad
+            \mu^\top x + s \ge R_{\min}, \; s \ge 0,
+            \; \text{(structural constraints)}
+
+        Returns ``(shortfall, max_attainable_return)``. A structurally infeasible
+        constraint set raises here -- that is a configuration error, distinct
+        from a target that is merely too ambitious.
+        """
+        x = cp.Variable(len(tickers), name="x")
+        s = cp.Variable(nonneg=True, name="shortfall")
+
+        constraints = build_constraints(x, tickers, self.constraints, self.asset_class_map)
+        constraints.append(mu @ x + s >= target)
+
+        problem = cp.Problem(cp.Minimize(s), constraints)
+        self._solve_problem(problem, solver, "shortfall stage")
+
+        if s.value is None or x.value is None:
+            raise SolverError("shortfall stage returned no solution")
+
+        shortfall = max(float(s.value), 0.0)
+        if shortfall < SHORTFALL_TOLERANCE:
+            shortfall = 0.0
+        return shortfall, float(mu @ x.value)
 
     @staticmethod
     def _solve_problem(

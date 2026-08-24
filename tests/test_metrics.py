@@ -23,7 +23,10 @@ from src.risk.metrics import (
     comparison_table,
     cumulative_return,
     drawdown_series,
+    historical_cvar,
+    historical_var,
     maximum_drawdown,
+    rockafellar_uryasev_objective,
     summarize,
 )
 
@@ -274,3 +277,150 @@ def test_comparison_table_has_one_row_per_strategy(prices, phase2_settings):
 
 def test_comparison_table_of_nothing_is_empty():
     assert comparison_table({}).empty
+
+
+# ---------------------------------------------------------------------------
+# Historical VaR and CVaR
+#
+# Sign convention: inputs are RETURNS, outputs are POSITIVE LOSS MAGNITUDES.
+# ---------------------------------------------------------------------------
+
+# Ten returns; losses are the negations, so the worst loss is 0.10.
+SAMPLE = pd.Series(
+    [-0.10, -0.05, -0.02, 0.01, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08]
+)
+
+
+def test_var_is_a_hand_computed_quantile():
+    """alpha=0.8, N=10 -> m=2, so VaR is the 2nd-worst loss, 0.05."""
+    assert historical_var(SAMPLE, 0.8) == pytest.approx(0.05)
+
+
+def test_cvar_is_a_hand_computed_tail_average():
+    """alpha=0.8, N=10 -> m=2, so CVaR = mean(0.10, 0.05) = 0.075."""
+    assert historical_cvar(SAMPLE, 0.8) == pytest.approx(0.075)
+
+
+def test_var_and_cvar_are_distinct():
+    var, cvar = historical_var(SAMPLE, 0.8), historical_cvar(SAMPLE, 0.8)
+    assert cvar > var
+    assert var == pytest.approx(0.05)
+    assert cvar == pytest.approx(0.075)
+
+
+def test_cvar_is_never_below_var():
+    rng = np.random.default_rng(11)
+    for _ in range(20):
+        returns = pd.Series(rng.normal(0.0005, 0.012, 400))
+        for alpha in (0.90, 0.95, 0.99):
+            assert historical_cvar(returns, alpha) >= historical_var(returns, alpha) - 1e-12
+
+
+def test_fractional_boundary_observation_is_weighted_partially():
+    """alpha=0.95, N=10 -> m=0.5: half of one observation, not one whole one."""
+    # CVaR = (1/0.5) * (0.5 - 0) * 0.10 = 0.10, the single worst loss.
+    assert historical_cvar(SAMPLE, 0.95) == pytest.approx(0.10)
+
+    # alpha=0.75, N=10 -> m=2.5: two whole losses plus half of the third.
+    expected = (0.10 + 0.05 + 0.5 * 0.02) / 2.5
+    assert historical_cvar(SAMPLE, 0.75) == pytest.approx(expected)
+
+
+def test_cvar_equals_the_rockafellar_uryasev_minimum():
+    """The metric must agree with the expression the optimizer actually solves."""
+    losses = -SAMPLE.to_numpy()
+    grid = np.unique(
+        np.concatenate([losses, np.linspace(losses.min() - 0.05, losses.max() + 0.05, 40001)])
+    )
+    for alpha in (0.70, 0.75, 0.80, 0.90, 0.95):
+        minimum = min(rockafellar_uryasev_objective(losses, z, alpha) for z in grid)
+        assert historical_cvar(SAMPLE, alpha) == pytest.approx(minimum, abs=1e-9)
+
+
+def test_cvar_matches_rockafellar_uryasev_on_a_random_sample():
+    rng = np.random.default_rng(5)
+    returns = pd.Series(rng.normal(0.0004, 0.011, 250))
+    losses = -returns.to_numpy()
+    grid = np.unique(np.concatenate([losses, np.linspace(losses.min(), losses.max(), 20001)]))
+
+    for alpha in (0.90, 0.95, 0.99):
+        minimum = min(rockafellar_uryasev_objective(losses, z, alpha) for z in grid)
+        assert historical_cvar(returns, alpha) == pytest.approx(minimum, abs=1e-9)
+
+
+def test_the_minimiser_of_the_ru_objective_is_var():
+    losses = -SAMPLE.to_numpy()
+    alpha = 0.8
+    at_var = rockafellar_uryasev_objective(losses, historical_var(SAMPLE, alpha), alpha)
+    assert at_var == pytest.approx(historical_cvar(SAMPLE, alpha), abs=1e-12)
+
+
+def test_cvar_increases_with_confidence():
+    rng = np.random.default_rng(3)
+    returns = pd.Series(rng.normal(0.0003, 0.010, 1000))
+    values = [historical_cvar(returns, a) for a in (0.80, 0.90, 0.95, 0.99)]
+    assert values == sorted(values)
+    assert values[-1] > values[0]
+
+
+def test_tail_measures_of_an_all_gains_sample_are_negative():
+    """A distribution with no losses has a negative 'loss', i.e. a gain."""
+    gains = pd.Series([0.01, 0.02, 0.03, 0.04, 0.05])
+    assert historical_var(gains, 0.8) < 0
+    assert historical_cvar(gains, 0.8) < 0
+
+
+def test_tail_measures_are_not_annualised():
+    """Doubling the sample length must not rescale a per-period tail measure."""
+    rng = np.random.default_rng(7)
+    short = pd.Series(rng.normal(0, 0.01, 300))
+    long = pd.concat([short, pd.Series(rng.normal(0, 0.01, 300))], ignore_index=True)
+    # Same distribution, different sample size: the measure should be comparable,
+    # not scaled by any horizon factor.
+    assert historical_cvar(long, 0.95) == pytest.approx(
+        historical_cvar(short, 0.95), rel=0.35
+    )
+
+
+def test_cvar_is_not_maximum_drawdown():
+    """A monotonically rising path has zero drawdown but a real per-day CVaR."""
+    rng = np.random.default_rng(2)
+    daily = pd.Series(np.abs(rng.normal(0.001, 0.002, 300)))  # every day positive
+    path = values(list(100.0 * (1 + daily).cumprod()))
+    assert maximum_drawdown(path) == pytest.approx(0.0)
+    assert historical_cvar(daily, 0.95) != pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("bad", [0.0, 1.0, -0.1, 1.2])
+def test_invalid_confidence_is_rejected(bad):
+    with pytest.raises(ValueError, match="confidence must lie"):
+        historical_cvar(SAMPLE, bad)
+    with pytest.raises(ValueError, match="confidence must lie"):
+        historical_var(SAMPLE, bad)
+
+
+def test_non_finite_returns_are_rejected():
+    with pytest.raises(ValueError, match="non-finite"):
+        historical_cvar(pd.Series([0.01, np.inf, -0.02]))
+
+
+def test_empty_sample_is_rejected():
+    with pytest.raises(ValueError, match="empty"):
+        historical_cvar(pd.Series([], dtype="float64"))
+    with pytest.raises(ValueError, match="empty"):
+        rockafellar_uryasev_objective(np.array([]), 0.0)
+
+
+def test_summary_reports_the_tail_metrics(prices, phase2_settings):
+    from src.portfolio.equal_weight import EqualWeightOptimizer
+
+    result = BacktestEngine(prices, phase2_settings).run(
+        {"ew": EqualWeightOptimizer(lookback_days=phase2_settings.lookback_days)}
+    )["ew"]
+    summary = summarize(result, phase2_settings.rebalance_frequency)
+
+    assert summary.cvar_confidence == 0.95
+    assert summary.daily_cvar >= summary.daily_var
+    assert summary.daily_cvar == pytest.approx(
+        historical_cvar(result.daily_returns, 0.95)
+    )

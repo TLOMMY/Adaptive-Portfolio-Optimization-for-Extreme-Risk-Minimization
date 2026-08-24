@@ -22,6 +22,7 @@ from src.config.assets import DEFAULT_UNIVERSE
 from src.config.settings import DEFAULT_SNAPSHOT, BacktestSettings, RebalanceFrequency
 from src.data.csv_provider import CsvProvider
 from src.portfolio.constraints import ConstraintSet
+from src.portfolio.cvar import CVaROptimizer
 from src.portfolio.equal_weight import EqualWeightOptimizer
 from src.portfolio.markowitz import MarkowitzOptimizer
 
@@ -285,3 +286,146 @@ def test_shortfall_is_reported_across_the_research_window():
         (frame["return_shortfall"] > 0)
         == (frame["status"] == "optimal_with_shortfall")
     ).all()
+
+
+# ---------------------------------------------------------------------------
+# CVaR walk-forward  (Phase 3)
+# ---------------------------------------------------------------------------
+
+
+def make_cvar(lookback: int, **kwargs) -> CVaROptimizer:
+    return CVaROptimizer(
+        confidence=0.95,
+        lookback_days=lookback,
+        asset_class_map=DISTINCT_ASSET_CLASSES,
+        constraints=ConstraintSet(**kwargs),
+    )
+
+
+def test_cvar_walkforward_survives_a_poisoned_future(risk_prices, wf_settings):
+    """The flagship invariance check, with the CVaR optimizer in the loop."""
+    lookback = wf_settings.lookback_days
+
+    def run(panel):
+        return BacktestEngine(panel, wf_settings).run(
+            {"cvar": make_cvar(lookback, max_weight=0.5, min_return=0.02)}
+        )["cvar"]
+
+    reference = run(risk_prices)
+    assert len(reference.weights_history) >= 8
+
+    for boundary in reference.weights_history.index:
+        poisoned = risk_prices.copy()
+        poisoned.loc[poisoned.index > boundary] = 616_161.0
+        observed = run(poisoned)
+
+        pd.testing.assert_frame_equal(
+            observed.weights_history.loc[:boundary],
+            reference.weights_history.loc[:boundary],
+            obj=f"CVaR weights at or before {boundary.date()}",
+        )
+
+
+def test_cvar_walkforward_survives_a_missing_future(risk_prices, wf_settings):
+    lookback = wf_settings.lookback_days
+    full = BacktestEngine(risk_prices, wf_settings).run(
+        {"cvar": make_cvar(lookback, max_weight=0.5)}
+    )["cvar"]
+
+    for boundary in full.weights_history.index[1:5]:
+        truncated_settings = BacktestSettings(
+            start=wf_settings.start,
+            end=boundary.date(),
+            lookback_years=wf_settings.lookback_years,
+            rebalance_frequency=wf_settings.rebalance_frequency,
+            transaction_cost_bps=0.0,
+        )
+        truncated = BacktestEngine(
+            risk_prices.loc[risk_prices.index <= boundary], truncated_settings
+        ).run({"cvar": make_cvar(lookback, max_weight=0.5)})["cvar"]
+
+        pd.testing.assert_frame_equal(
+            truncated.weights_history,
+            full.weights_history.loc[: truncated.weights_history.index[-1]],
+        )
+
+
+def test_cvar_diagnostics_never_cross_the_boundary(risk_prices, wf_settings):
+    result = BacktestEngine(risk_prices, wf_settings).run(
+        {"cvar": make_cvar(wf_settings.lookback_days, max_weight=0.5)}
+    )["cvar"]
+
+    frame = result.diagnostics_frame()
+    assert (
+        pd.to_datetime(frame["scenario_window_end"]) <= frame["as_of"]
+    ).all()
+    assert (frame["data_last_date"] <= frame["as_of"]).all()
+
+
+def test_cvar_constraints_hold_at_every_rebalance(risk_prices, wf_settings):
+    result = BacktestEngine(risk_prices, wf_settings).run(
+        {
+            "cvar": make_cvar(
+                wf_settings.lookback_days,
+                max_weight=0.4,
+                asset_class_limits={"Equity": 0.5},
+            )
+        }
+    )["cvar"]
+    weights = result.weights_history
+
+    assert np.allclose(weights.sum(axis=1).to_numpy(), 1.0, atol=TOL)
+    assert (weights.to_numpy() >= -TOL).all()
+    assert (weights.to_numpy() <= 0.4 + TOL).all()
+    assert (weights[["STOCK", "WILD"]].sum(axis=1).to_numpy() <= 0.5 + TOL).all()
+    assert not any(r.status.startswith("error") for r in result.rebalances)
+
+
+def test_all_three_models_share_one_information_set(risk_prices, wf_settings):
+    """Equal weight, Markowitz and CVaR must see identical windows."""
+    lookback = wf_settings.lookback_days
+    experiment = BacktestEngine(risk_prices, wf_settings).run(
+        {
+            "ew": EqualWeightOptimizer(lookback_days=lookback),
+            "mv": MarkowitzOptimizer(2.5, lookback_days=lookback),
+            "cvar": make_cvar(lookback),
+        }
+    )
+    frames = {n: experiment[n].diagnostics_frame() for n in ("ew", "mv", "cvar")}
+    reference = frames["ew"]
+    for name, frame in frames.items():
+        assert (frame["as_of"] == reference["as_of"]).all(), name
+        assert (frame["window_start"] == reference["window_start"]).all(), name
+        assert (frame["window_end"] == reference["window_end"]).all(), name
+        assert (frame["n_observations"] == reference["n_observations"]).all(), name
+
+
+@pytest.mark.skipif(not DEFAULT_SNAPSHOT.exists(), reason="snapshot not generated")
+def test_research_experiment_runs_with_cvar():
+    prices = CsvProvider().get_adjusted_prices(DEFAULT_UNIVERSE.tickers)
+    settings = BacktestSettings()
+    classes = DEFAULT_UNIVERSE.asset_class_map()
+
+    result = BacktestEngine(prices, settings).run(
+        {
+            "CVaR": CVaROptimizer(
+                0.95,
+                lookback_days=settings.lookback_days,
+                asset_class_map=classes,
+                constraints=ConstraintSet(max_weight=0.35, asset_class_limits={"Equity": 0.7}),
+            )
+        }
+    )["CVaR"]
+
+    assert len(result.weights_history) == 40
+    assert all(r.status == "optimal" for r in result.rebalances)
+    weights = result.weights_history
+    assert np.allclose(weights.sum(axis=1).to_numpy(), 1.0, atol=TOL)
+    assert (weights.to_numpy() >= -TOL).all()
+    assert (weights.to_numpy() <= 0.35 + TOL).all()
+    assert (weights[["SPY", "IJR", "EFA", "EEM"]].sum(axis=1).to_numpy() <= 0.7 + TOL).all()
+
+    frame = result.diagnostics_frame()
+    assert (frame["n_scenarios"] == settings.lookback_days).all()
+    assert (frame["risk_horizon_days"] == 1).all()
+    assert (frame["cvar"] >= frame["var"] - 1e-12).all()

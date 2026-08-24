@@ -18,7 +18,7 @@ observes what actually happened next, and repeats.
 | 0 | Environment, repo skeleton, data snapshot | **Complete** |
 | 1 | Data pipeline, backtest engine, no-look-ahead proofs | **Complete** |
 | 2 | Estimation layer, equal-weight + Markowitz, metrics | **Complete** |
-| 3 | Scenario-based CVaR optimizer | Not started |
+| 3 | Scenario-based CVaR optimizer | **Complete** |
 | 4 | Robust minimum-variance optimizer | Not started |
 | 5 | Investor profile system | Not started |
 | 6 | Streamlit interface | Not started |
@@ -116,6 +116,7 @@ Every convention that could be defined more than one way is defined once, in
 | Annualised return | Geometric: `(V_T/V_0)^(252/n) − 1`, *n* = return count |
 | Annualised volatility | Sample stdev (`ddof=1`) of daily returns `× √252` |
 | Maximum drawdown | `min_t (V_t / peak_t − 1)`, stored **negative** |
+| VaR / CVaR | Positive **loss** magnitudes; exact empirical Rockafellar–Uryasev with fractional boundary weight; **never annualised** |
 | Return target / shortfall | Annualised decimal, both in the same units |
 | Missing quotes | Forward-filled *within* the view → zero return, never an artificial jump |
 
@@ -152,6 +153,34 @@ $$\max_x \; \mu^\top x - \lambda\, x^\top \Sigma x$$
 subject to $\mathbf{1}^\top x = 1$, $0 \le x_i \le w_{\max}$, asset-class caps
 $\sum_{i \in c} x_i \le L_c$, and an optional return target
 $\mu^\top x \ge R_{\min}$. Convex QP, solved with **CLARABEL**.
+
+### CVaR (Expected Shortfall)
+
+Rockafellar–Uryasev, with loss $L_s(x) = -r_s^\top x$, VaR threshold $z$ and
+excess-loss variables $u_s$:
+
+$$\min_{x,z,u} \; z + \frac{1}{(1-\alpha)N}\sum_{s=1}^{N} u_s
+\quad \text{s.t.} \quad u_s \ge -r_s^\top x - z, \; u_s \ge 0$$
+
+plus the same structural constraints and optional return target as Markowitz.
+Every term is linear — this is an **LP**, solved with **HiGHS**. At the optimum
+$z^\star$ is the VaR and the objective value is the CVaR.
+
+The objective penalises only the magnitude of losses in the worst
+$(1-\alpha)$ of scenarios and is indifferent to dispersion elsewhere, including
+upside dispersion — the substantive difference from a variance objective.
+
+**Scenarios**: each daily return in the lookback window is one equiprobable
+scenario (~756 at the default lookback). No bootstrap, no synthetic data, no
+distributional assumption. A `MIN_SCENARIOS = 100` guard refuses tail estimates
+built from too few points.
+
+**Units**: with `risk_horizon_days = 1` the optimized quantity is a **1-day
+historical CVaR**. It is never annualised — tail measures do not obey a
+square-root-of-time rule — and a 1-day CVaR does not describe long-horizon risk.
+Multi-day horizons are implemented via non-overlapping compounded blocks, but a
+3-year lookback only yields `756/h` scenarios, so a 21-day horizon (36 scenarios)
+correctly trips the guard.
 
 ### Equal weight
 
@@ -281,7 +310,9 @@ pytest --cov=src --cov-report=term-missing
 | `test_constraints.py` | Declaration validity, structural feasibility, the region a solver sees |
 | `test_equal_weight.py` | 1/N exactness, parameter independence, constraint conflicts |
 | `test_markowitz.py` | Constraint satisfaction, the λ trade-off, the shortfall identity |
-| `test_metrics.py` | Every metric against a hand-computed answer |
+| `test_metrics.py` | Every metric against a hand-computed answer; CVaR vs. RU minimisation |
+| `test_scenarios.py` | Scenario construction, non-overlapping blocks, MIN_SCENARIOS guard, boundary invariance |
+| `test_cvar.py` | LP feasibility, CVaR vs. independent metric, α monotonicity, shortfall, boundary invariance |
 | `test_walkforward.py` | Optimizers inside the engine: invariance, constraints at every date, frozen window |
 | `test_integration_snapshot.py` | The real frozen-window experiment end to end |
 
