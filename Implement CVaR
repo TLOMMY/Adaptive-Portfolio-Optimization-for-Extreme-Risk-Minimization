@@ -1,0 +1,92 @@
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+#from ipywidgets import interact, FloatSlider  # omit here if you use VSCode
+
+
+# -----------------------------
+# 1. Define tickers and date range
+# -----------------------------
+tickers = ["NVDA", "AMD"]
+
+start_date = datetime(2016, 1, 1)
+end_date = datetime(2019, 1, 1)
+
+print("Start date:", start_date)
+print("End date:", end_date)
+
+# -----------------------------
+# 2. Download Close prices (Adj Close does NOT exist in your environment)
+# -----------------------------
+adj_close_df = pd.DataFrame()
+
+for ticker in tickers:
+    data = yf.download(ticker, start=start_date, end=end_date)
+
+    # Flatten columns if MultiIndex
+    data.columns = [
+        "_".join([str(c) for c in col]) if isinstance(col, tuple) else col
+        for col in data.columns
+    ]
+
+    # Use Close prices (because Adj Close is missing)
+    close_col = [col for col in data.columns if "Close" in col][0]
+    adj_close_df[ticker] = data[close_col]
+
+#check Downloaded Close Prices
+print("\nDownloaded Close Prices:")
+print(adj_close_df.head())
+
+# -----------------------------
+# 3. Calculate log returns
+# -----------------------------
+log_returns = np.log(adj_close_df / adj_close_df.shift(1))
+log_returns = log_returns.dropna()
+
+print("\nLog Returns:")
+print(log_returns.head())
+
+# -----------------------------
+# 4. Annualized covariance matrix
+# -----------------------------
+cov_matrix = log_returns.cov() * 252
+print("\nAnnualized Covariance Matrix:")
+print(cov_matrix)
+
+#CVaR_optimize
+# -----------------------------
+# 5. CVaR optimization
+# -----------------------------
+from scipy.optimize import minimize
+
+def portfolio_losses(w, returns):
+    port_ret = returns @ w
+    return -port_ret
+
+def cvar_of_w(w, returns, alpha=0.05):
+    losses = portfolio_losses(w, returns)
+    VaR = np.quantile(losses, 1 - alpha)
+    CVaR = losses[losses > VaR].mean()
+    return CVaR
+
+def cvar_optimization(returns, alpha=0.05):
+    N = returns.shape[1]
+    w0 = np.ones(N) / N
+
+    bounds = [(0, 1)] * N
+    cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+
+    result = minimize(
+        lambda w: cvar_of_w(w, returns, alpha),
+        w0,
+        bounds=bounds,
+        constraints=cons
+    )
+
+    return pd.Series(result.x, index=returns.columns)
+
+weights_cvar = cvar_optimization(log_returns)
+print("\nOptimal CVaR-minimizing weights:")
+print(weights_cvar)
