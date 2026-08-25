@@ -5,7 +5,7 @@
 	import { app } from '$lib/state.svelte';
 
 	const beats = [
-		['The best time to plant a tree', 'was twenty years ago.'],
+		['The best time to start investing', 'was ten years ago.'],
 		['The second best time', 'is now.'],
 		['But what if', 'you could go back?'],
 		['Ten years.', 'One wish.']
@@ -78,6 +78,7 @@
 		position: sticky;
 		top: 0;
 		height: 100vh;
+		height: 100dvh;
 		display: grid;
 		place-items: center;
 		text-align: center;

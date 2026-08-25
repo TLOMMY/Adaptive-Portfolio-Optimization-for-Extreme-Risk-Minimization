@@ -81,11 +81,13 @@
 	// design inputs are ratios of the viewport height.
 	const PORTAL = $derived(Math.round(Math.max(72, Math.min(150, vh * 0.16))));
 	let capH = $state<Record<string, number>>({}); // measured caption heights, per event
+	const phone = $derived(vw < 640);
 	const ui = $derived({
 		vh,
 		portalPx: PORTAL,
 		captions: capH,
 		marginPx: Math.round(vh * 0.035) + 8,
+		footPx: phone ? 64 : 0, // on phones the Arrive footer takes a bigger share of the screen; keep portals clear of it
 		gapPx: 10,
 		nearLane: Math.round(vh * 0.24),
 		farLane: Math.round(vh * 0.42)
@@ -110,13 +112,9 @@
 				[e.side, true],
 				[other, true]
 			];
-			let pick = lanes[0];
-			for (const l of lanes) {
-				if (x - (lastX[l.join()] ?? -Infinity) >= minGap) {
-					pick = l;
-					break;
-				}
-			}
+			// the first lane with room; when every lane is crowded, the one that has been quiet longest
+			const gap = (l: (typeof lanes)[number]) => x - (lastX[l.join()] ?? -Infinity);
+			let pick = lanes.find((l) => gap(l) >= minGap) ?? lanes.reduce((a, b) => (gap(b) > gap(a) ? b : a));
 			lastX[pick.join()] = x;
 			return { ...e, x, side: pick[0], far: pick[1] };
 		});
@@ -253,7 +251,7 @@
 					{@const near = dist < 0.25 || hovered === e.date}
 					{@const sp = e.image ? null : spark(e.date)}
 					{@const R = (PORTAL / 2) * (hovered === e.date ? Math.max(a.s, 0.95) * 1.04 : a.s)}
-					{@const capW = e.far ? 11 * 16 : 15 * 16}
+					{@const capW = Math.min(e.far ? 11 * 16 : 15 * 16, vw * (e.far ? 0.42 : 0.52))}
 					{@const onScreen = a.x - R > 0 && a.x + R < vw}
 					<!-- captions are kept inside the viewport only while their lens is inside it; an exiting
 					     portal takes its caption with it and fades, rather than leaving the title behind -->
@@ -265,7 +263,7 @@
 						class:far={e.far}
 						style:left={`${a.x}px`}
 						style:top={`${a.y}px`}
-						style:opacity={Math.max(0.25, 1 - dist * 0.7)}
+						style:opacity={Math.max(0.25, 1 - dist * 0.7) * edgeFade(a, R)}
 						style:z-index={hovered === e.date ? 50 : Math.round(a.s * 10)}
 						onmouseenter={() => (hovered = e.date)}
 						onmouseleave={() => (hovered = null)}
@@ -323,6 +321,7 @@
 		position: sticky;
 		top: 0;
 		height: 100vh;
+		height: 100dvh; /* phones: the bottom edge (and the Arrive button) stays clear of the browser bar */
 		overflow: hidden;
 	}
 	.river {
@@ -454,13 +453,13 @@
 	}
 	.caption {
 		position: absolute;
-		width: 15rem;
+		width: min(15rem, 52vw);
 		transform: translateX(-50%);
 		text-align: center;
 		padding: 0.6rem 0.4rem;
 	}
 	.event.far .caption {
-		width: 11rem;
+		width: min(11rem, 42vw);
 		transform: translateY(-50%);
 		text-align: left;
 		padding: 0.2rem 0.4rem;
@@ -508,7 +507,7 @@
 		right: 2rem;
 		text-align: right;
 		transition: opacity 0.8s;
-		z-index: 3;
+		z-index: 60; /* above every portal, including a hovered (frozen) one at 50 */
 	}
 	.arrive {
 		padding: 0.8rem 2.2rem;

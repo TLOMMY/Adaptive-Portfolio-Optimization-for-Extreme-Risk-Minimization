@@ -29,11 +29,12 @@
 	</svg>
 
 	<header class="gz-masthead">
-		<div class="gz-ears">
-			<span>{@html earLeft}</span>
-			<span class="right">Vol. I · No. {number}<br /><em>{earRight}</em></span>
+		<!-- ears sit either side of the title, as on a printed masthead; on narrow paper they move above it -->
+		<div class="gz-top">
+			<span class="gz-ear">{@html earLeft}</span>
+			<h1 class="gz-title">The Archive Gazette</h1>
+			<span class="gz-ear right">Vol. I · No. {number}<br /><em>{earRight}</em></span>
 		</div>
-		<h1 class="gz-title">The Archive Gazette</h1>
 		<p class="gz-motto">All the numbers that were fit to print, as they stood on the last day of 2015</p>
 		<div class="gz-dateline">
 			<span>Friday, 1 January 2016</span>

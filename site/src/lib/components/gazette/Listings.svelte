@@ -44,11 +44,11 @@
 						<strong>{a.name}</strong>
 						{#if assetNotes[a.ticker]}<span class="wire">{assetNotes[a.ticker]}</span>{/if}
 					</td>
-					<td class="num" class:gz-neg={st.return_2015 < 0}>{signedPct(st.return_2015)}</td>
-					<td class="num" class:gz-neg={st.return_3y < 0}>{signedPct(st.return_3y)}</td>
-					<td class="num gz-neg">{pct(st.drawdown_3y)}</td>
-					<td class="spark"><Sparkline values={st.spark} width={96} height={26} /></td>
-					<td class="buy">
+					<td class="num y1" data-label="2015" class:gz-neg={st.return_2015 < 0}>{signedPct(st.return_2015)}</td>
+					<td class="num y3" data-label="3 yrs" class:gz-neg={st.return_3y < 0}>{signedPct(st.return_3y)}</td>
+					<td class="num dd gz-neg" data-label="Worst fall">{pct(st.drawdown_3y)}</td>
+					<td class="spark" data-label="2013–15"><Sparkline values={st.spark} width={96} height={26} /></td>
+					<td class="buy" data-label="Your order ($)">
 						<label>
 							<span>$</span>
 							<input

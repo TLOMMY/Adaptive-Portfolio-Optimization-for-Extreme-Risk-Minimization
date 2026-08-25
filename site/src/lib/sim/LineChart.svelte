@@ -27,7 +27,10 @@
 	let width = $state(800);
 	// the right gutter holds the end labels; widen it for long series names
 	const longest = $derived(Math.max(8, ...series.map((s) => s.name.length + 9)));
-	const m = $derived({ top: 12, right: Math.min(260, 60 + longest * 6.2), bottom: 24, left: 62 });
+	// on a narrow chart the end labels drop the series names (the legend above carries them) so
+	// the plot keeps at least half the width
+	const narrow = $derived(width < 560);
+	const m = $derived({ top: 12, right: narrow ? 70 : Math.min(260, 60 + longest * 6.2), bottom: 24, left: 62 });
 	const parsed = $derived(series.map((s) => ({ ...s, times: s.dates.map((d) => Date.parse(d)) })));
 	const x = $derived(scaleTime().domain(xDomain).range([m.left, width - m.right]));
 	const allValues = $derived(parsed.flatMap((s) => s.values).filter((v) => Number.isFinite(v) && (!log || v > 0)));
@@ -67,7 +70,7 @@
 			height - m.bottom - 4
 		)
 	);
-	const years = $derived(x.ticks(Math.min(10, Math.max(2, Math.round(width / 90)))));
+	const years = $derived(x.ticks(Math.min(10, Math.max(2, Math.round((width - m.left - m.right) / 70)))));
 </script>
 
 <div class="wrap" bind:clientWidth={width}>
@@ -91,7 +94,7 @@
 		{#each endLabels as l (l.name)}
 			<circle cx={l.x} cy={y(parsed.find((s) => s.name === l.name)!.values.at(-1)!)} r="3" fill={l.color} />
 			<text x={width - m.right + 8} y={l.y} dy="0.35em" class="label" fill={l.color}>
-				{l.text} <tspan class="who">{l.name}</tspan>
+				{l.text}{#if !narrow} <tspan class="who">{l.name}</tspan>{/if}
 			</text>
 		{/each}
 	</svg>

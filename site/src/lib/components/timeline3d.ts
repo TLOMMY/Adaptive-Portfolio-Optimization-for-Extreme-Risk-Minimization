@@ -35,6 +35,7 @@ export interface UiMetrics {
 	portalPx: number; // lens diameter at scale 1, px
 	captions: Record<string, number>; // measured caption height per event id, px
 	marginPx: number; // keep-out band at the top and bottom edges
+	footPx?: number; // extra keep-out at the bottom (the Arrive footer on small screens)
 	gapPx: number; // between the thread and the nearest portal edge
 	nearLane: number; // preferred distance from the thread to a near-lane tip, px
 	farLane: number; // and to a far-lane tip
@@ -100,17 +101,19 @@ const TINT = {
 };
 
 // a bag of line segments with per-vertex colour
-class Bag {
+interface Sink {
+	polyline(pts: V3[], cols: RGB[]): void;
+}
+class Bag implements Sink {
 	pos: number[] = [];
 	col: number[] = [];
+	segment(a: V3, b: V3, ca: RGB, cb: RGB) {
+		this.pos.push(a.x, a.y, a.z, b.x, b.y, b.z);
+		this.col.push(ca[0], ca[1], ca[2], cb[0], cb[1], cb[2]);
+	}
 	polyline(pts: V3[], cols: RGB[]) {
 		for (let i = 0; i < pts.length - 1; i++) {
-			const a = pts[i],
-				b = pts[i + 1];
-			this.pos.push(a.x, a.y, a.z, b.x, b.y, b.z);
-			const ca = cols[Math.min(i, cols.length - 1)],
-				cb = cols[Math.min(i + 1, cols.length - 1)];
-			this.col.push(ca[0], ca[1], ca[2], cb[0], cb[1], cb[2]);
+			this.segment(pts[i], pts[i + 1], cols[Math.min(i, cols.length - 1)], cols[Math.min(i + 1, cols.length - 1)]);
 		}
 	}
 	segments(): number {
@@ -121,6 +124,41 @@ class Bag {
 		g.setPositions(new Float32Array(this.pos));
 		g.setColors(new Float32Array(this.col));
 		return g;
+	}
+}
+// The same, but each segment lands in a bag for its slice of x. Every slice becomes its own object
+// with a bounding sphere, so the renderer skips the slices outside the view: only the part of the
+// ten-year thread that is actually on screen is drawn. Nothing about what is drawn changes.
+class ChunkedBag implements Sink {
+	bags: Bag[];
+	constructor(
+		private x0: number,
+		private size: number,
+		n: number
+	) {
+		this.bags = Array.from({ length: n }, () => new Bag());
+	}
+	polyline(pts: V3[], cols: RGB[]) {
+		for (let i = 0; i < pts.length - 1; i++) {
+			const a = pts[i],
+				b = pts[i + 1];
+			const k = Math.max(0, Math.min(this.bags.length - 1, Math.floor(((a.x + b.x) / 2 - this.x0) / this.size)));
+			this.bags[k].segment(a, b, cols[Math.min(i, cols.length - 1)], cols[Math.min(i + 1, cols.length - 1)]);
+		}
+	}
+	// one culled object per non-empty slice
+	objects(mat: LineMaterial): LineSegments2[] {
+		return this.bags
+			.filter((b) => b.segments() > 0)
+			.map((b) => {
+				const g = b.geometry();
+				g.computeBoundingSphere();
+				// the GPU wobble moves vertices by up to ~9 units, and a fat line is a few pixels wide
+				g.boundingSphere!.radius += 16;
+				const o = new LineSegments2(g, mat);
+				o.frustumCulled = true;
+				return o;
+			});
 	}
 }
 
@@ -135,7 +173,7 @@ function perpendiculars(dir: V3): [V3, V3] {
 
 // a frayed, lightning-like branch. Returns the tip. With `target` the tip lands exactly there
 // (the bend is applied sideways, perpendicular to the chord, so it cannot move the tip).
-function growBranch(bag: Bag, origin: V3, dir: V3, away: V3, len: number, level: number, bright: number, r: () => number, target?: V3): V3 {
+function growBranch(bag: Sink, origin: V3, dir: V3, away: V3, len: number, level: number, bright: number, r: () => number, target?: V3): V3 {
 	const n = level === 0 ? 26 : level === 1 ? 14 : 8;
 	if (target) {
 		dir = V().subVectors(target, origin).normalize();
@@ -342,11 +380,13 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	const mats = [coreMat, fineMat, twigMat, arriveMat];
 
 	// --- trunk ---
-	const core = new Bag(),
-		fine = new Bag();
 	const X0 = -420,
 		X1 = trackW + 4200, // the thread runs on into the future: the opening flight races in along it
 		DX = 6;
+	const CHUNK = 300; // world units per culled slice (about nine months)
+	const nChunks = Math.ceil((X1 - X0) / CHUNK) + 1;
+	const core = new ChunkedBag(X0, CHUNK, nChunks),
+		fine = new ChunkedBag(X0, CHUNK, nChunks);
 	const endFade = (x: number) => smooth(X0, X0 + 260, x) * smooth(X1, X1 - 260, x);
 	const NS = 96;
 	for (let i = 0; i < NS; i++) {
@@ -390,7 +430,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		obj.frustumCulled = false;
 		return { e, obj, s: e.side === 'above' ? 1 : -1, far: !!e.far };
 	});
-	const twigs = new Bag();
+	const twigs = new ChunkedBag(X0, CHUNK, nChunks);
 	for (let i = 0; i < 46; i++) {
 		const x = r() * trackW;
 		const s = r() < 0.5 ? 1 : -1;
@@ -443,17 +483,14 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		for (let i = 0; i < NA; i++) for (const f of fib) arrive.polyline([f.pts[i], f.pts[i + 1]], [f.cols[i], f.cols[i + 1]]);
 	}
 
-	const coreObj = new LineSegments2(core.geometry(), coreMat);
-	const fineObj = new LineSegments2(fine.geometry(), fineMat);
-	const twigObj = new LineSegments2(twigs.geometry(), twigMat);
+	const trunkObjs = [...core.objects(coreMat), ...fine.objects(fineMat), ...twigs.objects(twigMat)];
+	for (const o of trunkObjs) scene.add(o);
 	const arriveGeo = arrive.geometry();
 	const arriveObj = new LineSegments2(arriveGeo, arriveMat);
 	arriveGeo.instanceCount = 0;
 	arriveObj.visible = false;
-	for (const o of [coreObj, fineObj, twigObj, arriveObj]) {
-		o.frustumCulled = false;
-		scene.add(o);
-	}
+	arriveObj.frustumCulled = false;
+	scene.add(arriveObj);
 	for (const b of branches) scene.add(b.obj);
 
 	// the traveller
@@ -584,6 +621,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		uGainA.value = uGain.value * (1 + 14 * burn);
 		bloom.strength = 0.6 + 1.6 * burn + 0.9 * speed;
 		(trails.uniforms as { damp: { value: number } }).damp.value = 0.92 * Math.pow(speed, 0.6);
+		trails.enabled = speed > 0; // at damp 0 the pass is an identity copy; skip the full-screen blit
 
 		traveller.position.copy(wobble(centre(f.centreX), t));
 		const pulse = (0.85 + 0.15 * Math.sin(t * 3)) * (1 - smooth(0.12, 0.32, L));
@@ -614,7 +652,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 			const inward = b.far ? Math.max(R, capH / 2) : R;
 			// screen offset from the thread: the lane's preferred distance, clamped so the whole box
 			// stays inside the viewport (screen y grows downward; b.s = +1 means above the thread)
-			const room = b.s > 0 ? py - ui.marginPx - outward : h - ui.marginPx - py - outward;
+			const room = b.s > 0 ? py - ui.marginPx - outward : h - ui.marginPx - (ui.footPx ?? 0) - py - outward;
 			const minOff = ui.gapPx + inward;
 			const off = clamp(b.far ? ui.farLane : ui.nearLane, Math.min(minOff, room), Math.max(minOff, room));
 			const tipX = px + (b.far ? 0.55 : 0.4) * off;
@@ -656,7 +694,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	function dispose() {
 		renderer.dispose();
 		composer.dispose();
-		for (const o of [coreObj, fineObj, twigObj, arriveObj]) o.geometry.dispose();
+		for (const o of [...trunkObjs, arriveObj]) o.geometry.dispose();
 		for (const b of branches) b.obj.geometry.dispose();
 		for (const m of mats) m.dispose();
 		spriteTex.dispose();

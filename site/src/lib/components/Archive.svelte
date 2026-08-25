@@ -63,9 +63,12 @@
 	const over = $derived(remaining() < 0);
 	const investedIn = (tickers: string[]) => tickers.reduce((s, t) => s + (app.allocations[t] ?? 0), 0);
 
+	let nav: HTMLOListElement;
 	function goStep(i: number) {
 		step = Math.max(0, Math.min(steps.length - 1, i));
 		window.scrollTo({ top: 0 });
+		// on phones the editions are a horizontal strip: keep the current one in view
+		nav?.querySelector('.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 	}
 	const name = (t: string) => universe.assets.find((a) => a.ticker === t)?.name ?? t;
 </script>
@@ -84,7 +87,7 @@
 		</div>
 		<nav aria-label="Editions">
 			<p class="label">Editions · {step + 1} of {steps.length}</p>
-			<ol>
+			<ol bind:this={nav}>
 				{#each steps as s, i (s.title)}
 					{@const inv = investedIn(
 						s.kind === 'sector' ? pickable.filter((a) => a.sector === s.title).map((a) => a.ticker) : s.kind === 'funds' ? pickable.filter((a) => a.kind === 'etf').map((a) => a.ticker) : []
@@ -162,30 +165,6 @@
 		max-width: 82rem;
 		margin: 0 auto;
 		padding: 1.5rem 1.5rem 5rem;
-	}
-	@media (max-width: 60rem) {
-		.archive {
-			grid-template-columns: 1fr;
-		}
-	}
-	.page {
-		min-width: 0;
-	}
-	.panel {
-		position: sticky;
-		top: 1rem;
-		align-self: start;
-		display: flex;
-		flex-direction: column;
-		gap: 1.2rem;
-		max-height: calc(100vh - 2rem);
-		overflow-y: auto;
-	}
-	@media (max-width: 60rem) {
-		.panel {
-			position: static;
-			max-height: none;
-		}
 	}
 	.money {
 		border: 1px solid rgba(233, 223, 204, 0.3);
@@ -328,5 +307,66 @@
 	}
 	.btn.ghost {
 		opacity: 0.7;
+	}
+	@media (max-width: 60rem) {
+		.archive {
+			grid-template-columns: 1fr;
+		}
+	}
+	.page {
+		min-width: 0;
+	}
+	.panel {
+		position: sticky;
+		top: 1rem;
+		align-self: start;
+		display: flex;
+		flex-direction: column;
+		gap: 1.2rem;
+		max-height: calc(100vh - 2rem);
+		overflow-y: auto;
+	}
+	@media (max-width: 60rem) {
+		.archive {
+			padding: 1rem 0.75rem 4rem;
+			gap: 1.2rem;
+		}
+		.panel {
+			position: static;
+			max-height: none;
+			overflow: visible;
+			gap: 0.8rem;
+		}
+		/* the fourteen editions become one scrollable strip so the paper starts above the fold */
+		.panel ol {
+			display: flex;
+			gap: 0.25rem;
+			overflow-x: auto;
+			scrollbar-width: none;
+		}
+		.panel ol::-webkit-scrollbar {
+			display: none;
+		}
+		.panel li {
+			flex: none;
+		}
+		.panel li button {
+			grid-template-columns: auto auto auto;
+			white-space: nowrap;
+			border-left: 0;
+			border-bottom: 2px solid rgba(233, 223, 204, 0.15);
+			padding: 0.3rem 0.6rem;
+			font-size: 0.88rem;
+		}
+		.panel li button.active {
+			border-bottom-color: var(--desk-accent);
+		}
+		.steps {
+			flex-direction: row;
+		}
+		.steps .btn {
+			flex: 1;
+			width: auto;
+		}
 	}
 </style>
