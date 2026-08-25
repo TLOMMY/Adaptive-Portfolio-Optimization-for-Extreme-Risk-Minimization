@@ -4,6 +4,10 @@ This is Bowen's Day 1 implementation slice. It is deliberately model-independent
 
 Day 2 adds `data_pipeline.py` and `day2_baseline.py`: cached adjusted-close CSV input, optional Yahoo Finance downloading, multiple market-period windows, and a runnable equal-weight baseline.
 
+The integration adapters in `models/` use CVXPY with CLARABEL/HiGHS and accept
+the same profile configuration shape. They enforce continuous portfolio
+constraints and raise an explicit error for infeasible profiles.
+
 ## Input contract
 
 Use a `pandas.DataFrame` with:
@@ -70,7 +74,9 @@ The backtester normalizes and validates the weights, then evaluates them on the 
 - no transaction costs yet;
 - explicit windows so different market periods can be added later.
 
-Yeshwanth should own changes to these conventions. Bowen owns the executable framework and tests.
+Yeshwanth owns the final web/export conventions; Bowen owns the executable
+framework, adapters, and tests. The exact static JSON contract is documented
+in `yesh_backend_contract.md`.
 
 ## Day 2 baseline
 

@@ -240,7 +240,11 @@ def run_backtest(
             window.test_start,
             window.test_end,
         )
-        raw_weights = fit_model(train, profile_config)
+        model_config = dict(profile_config or {})
+        # Static windows have no prior live portfolio. Equal weight is the
+        # explicit starting point for any optional turnover constraint.
+        model_config.setdefault("current_weights", equal_weight_weights(train.columns))
+        raw_weights = fit_model(train, model_config)
         weights = normalize_weights(raw_weights, train.columns)
         metrics = evaluate_weights(
             weights,

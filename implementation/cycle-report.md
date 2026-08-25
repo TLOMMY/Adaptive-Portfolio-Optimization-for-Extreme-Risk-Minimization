@@ -22,3 +22,11 @@
 ## Next cycle
 
 Integrate Yeshwanth's convention sheet and Mana's selected optimizer adapter, then run a first unseen-period comparison against equal weight.
+
+## Integration update
+
+- Refactored Mana's MVO and CVaR concepts into common model adapters.
+- Added Kenta profile-export adaptation.
+- Passed the synthetic multi-period benchmark and nine unit tests.
+- Proceed to real-data final integration; target-return and turnover are now
+  enforced by the CVXPY adapters, while cardinality remains in Yesh's MILP.
