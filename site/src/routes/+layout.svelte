@@ -17,7 +17,7 @@
 	<title>{title}</title>
 	<meta name="description" content={description} />
 	<meta name="theme-color" content="#0b0d12" />
-	<link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+	<link rel="icon" href={`${base}/favicon.png`} type="image/png" sizes="64x64" />
 	<link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
 	<link rel="manifest" href={`${base}/manifest.webmanifest`} />
 	<meta property="og:type" content="website" />
