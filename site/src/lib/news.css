@@ -1,0 +1,447 @@
+/* The Archive Gazette: newspaper typography shared by every page of the paper.
+   Global (imported from app.css) so page components can compose it. All classes are prefixed gz-. */
+
+.gz-paper {
+	position: relative;
+	background: var(--news);
+	color: var(--news-ink);
+	font-family: var(--news-serif);
+	padding: 1.6rem 2.2rem 1.8rem;
+	max-width: 64rem;
+	margin: 0 auto;
+	transform: rotate(-0.4deg);
+	box-shadow:
+		0 1px 0 rgba(255, 255, 255, 0.25) inset,
+		0 18px 40px rgba(0, 0, 0, 0.55),
+		0 2px 6px rgba(0, 0, 0, 0.4);
+	overflow: hidden;
+}
+.gz-grain {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0.12;
+	pointer-events: none;
+	mix-blend-mode: multiply;
+}
+.gz-paper > :not(.gz-grain) {
+	position: relative;
+}
+
+/* ---- masthead ---- */
+.gz-masthead {
+	text-align: center;
+	border-bottom: 1px solid var(--news-rule);
+	padding-bottom: 0.4rem;
+	margin-bottom: 1rem;
+}
+.gz-ears {
+	display: flex;
+	justify-content: space-between;
+	font-family: var(--news-cond);
+	font-size: 0.68rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--news-ink-soft);
+	text-align: left;
+	line-height: 1.35;
+}
+.gz-ears .right {
+	text-align: right;
+}
+.gz-ears em {
+	font-style: normal;
+	color: var(--news-ink);
+}
+.gz-title {
+	font-family: var(--blackletter);
+	font-weight: 400;
+	font-size: clamp(2.6rem, 6vw, 4.4rem);
+	letter-spacing: 0.01em;
+	margin: -1.4rem 0 0;
+	line-height: 1.1;
+}
+.gz-motto {
+	font-style: italic;
+	font-size: 0.85rem;
+	margin: 0 0 0.5rem;
+	color: var(--news-ink-soft);
+}
+.gz-dateline {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	border-top: 3px double var(--news-rule);
+	border-bottom: 1px solid var(--news-rule);
+	padding: 0.25rem 0;
+	font-family: var(--news-cond);
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/* ---- stories ---- */
+.gz-lead {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 15rem;
+	gap: 1.6rem;
+	border-bottom: 1px solid var(--news-rule);
+	padding-bottom: 1.2rem;
+}
+@media (max-width: 48rem) {
+	.gz-lead {
+		grid-template-columns: 1fr;
+	}
+}
+.gz-headline {
+	font-family: var(--news-cond);
+	font-weight: 600;
+	font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+	line-height: 1.05;
+	margin: 0 0 0.4rem;
+	text-wrap: balance;
+}
+.gz-headline.small {
+	font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+}
+.gz-deck {
+	font-size: 1.05rem;
+	font-style: italic;
+	margin: 0 0 0.4rem;
+	line-height: 1.35;
+}
+.gz-byline {
+	font-family: var(--news-cond);
+	font-size: 0.68rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--news-ink-soft);
+	margin: 0 0 0.6rem;
+	border-bottom: 1px solid var(--news-rule);
+	padding-bottom: 0.3rem;
+}
+.gz-columns {
+	column-count: 2;
+	column-gap: 1.6rem;
+	column-rule: 1px solid rgba(43, 36, 29, 0.35);
+}
+.gz-columns.single {
+	column-count: 1;
+}
+@media (max-width: 48rem) {
+	.gz-columns {
+		column-count: 1;
+	}
+}
+.gz-body {
+	margin: 0;
+	font-size: 0.95rem;
+	line-height: 1.45;
+	text-align: justify;
+	hyphens: auto;
+}
+.gz-body.dropcap::first-letter {
+	float: left;
+	font-size: 3.3em;
+	line-height: 0.8;
+	padding: 0.08em 0.12em 0 0;
+	font-weight: 700;
+}
+
+/* ---- boxes ---- */
+.gz-box {
+	border: 1px solid var(--news-rule);
+	padding: 0.6rem 0.8rem 0.5rem;
+	align-self: start;
+}
+.gz-box h3,
+.gz-section-head {
+	font-family: var(--news-cond);
+	font-weight: 500;
+	font-size: 0.78rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin: 0 0 0.4rem;
+	border-bottom: 3px double var(--news-rule);
+	padding-bottom: 0.2rem;
+}
+.gz-box table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+}
+.gz-box th {
+	text-align: left;
+	font-weight: 400;
+	font-style: italic;
+	padding: 0.3rem 0;
+	border-bottom: 1px dotted rgba(43, 36, 29, 0.4);
+	vertical-align: top;
+	color: var(--news-ink-soft);
+}
+.gz-box td {
+	text-align: right;
+	padding: 0.3rem 0 0.3rem 0.5rem;
+	border-bottom: 1px dotted rgba(43, 36, 29, 0.4);
+	font-family: var(--news-cond);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.gz-box small {
+	font-size: 0.75rem;
+}
+.gz-fine {
+	font-size: 0.78rem;
+	line-height: 1.3;
+	color: var(--news-ink-soft);
+	margin: 0.5rem 0 0;
+}
+.gz-neg {
+	color: var(--news-red);
+}
+.gz-notice {
+	border: 3px double var(--news-rule);
+	padding: 0.8rem 1rem;
+	margin: 1rem 0 0;
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+.gz-notice h3 {
+	font-family: var(--news-cond);
+	font-weight: 600;
+	font-size: 0.8rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin: 0 0 0.3rem;
+	text-align: center;
+}
+.gz-notice p {
+	margin: 0.3rem 0;
+}
+.gz-notice ol {
+	margin: 0.3rem 0 0;
+	padding-left: 1.3rem;
+}
+
+/* ---- listings table ---- */
+.gz-listings {
+	margin-top: 1rem;
+}
+.gz-section-head span {
+	background: var(--news-ink);
+	color: var(--news);
+	padding: 0.1rem 0.4rem;
+	margin-right: 0.5rem;
+}
+.gz-stocks {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.85rem;
+}
+.gz-stocks thead th {
+	font-family: var(--news-cond);
+	font-weight: 500;
+	font-size: 0.66rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	text-align: left;
+	padding: 0.3rem 0.4rem;
+	border-bottom: 1px solid var(--news-rule);
+	color: var(--news-ink-soft);
+}
+.gz-stocks td {
+	padding: 0.45rem 0.4rem;
+	border-bottom: 1px dotted rgba(43, 36, 29, 0.45);
+	vertical-align: middle;
+}
+.gz-stocks tr.held td {
+	background: rgba(143, 42, 28, 0.06);
+}
+.gz-stocks .tk {
+	font-family: var(--news-cond);
+	letter-spacing: 0.05em;
+	width: 3.5rem;
+}
+.gz-stocks .co strong {
+	font-weight: 700;
+	display: block;
+}
+.gz-stocks .wire {
+	display: block;
+	font-size: 0.84rem;
+	font-style: italic;
+	color: var(--news-ink);
+	opacity: 0.8;
+	line-height: 1.3;
+}
+.gz-stocks .num {
+	text-align: right;
+	font-family: var(--news-cond);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.gz-stocks .spark {
+	width: 6.5rem;
+	text-align: right;
+}
+.gz-stocks .buy {
+	width: 6.5rem;
+}
+.gz-stocks .buy label {
+	display: flex;
+	align-items: baseline;
+	gap: 0.2rem;
+	font-family: var(--news-cond);
+	border: 1px solid var(--news-ink);
+	padding: 0.15rem 0.4rem;
+	background: rgba(255, 255, 255, 0.35);
+}
+.gz-stocks .buy input {
+	width: 100%;
+	border: none;
+	background: transparent;
+	font: inherit;
+	font-family: var(--news-cond);
+	font-size: 0.95rem;
+	color: var(--news-red);
+	outline: none;
+	text-align: right;
+}
+.gz-stocks .buy label:focus-within {
+	outline: 2px solid var(--news-red);
+	outline-offset: 1px;
+}
+.gz-stocks tr.held .buy label {
+	background: rgba(143, 42, 28, 0.1);
+}
+
+/* ---- classifieds ---- */
+.gz-ads {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+	gap: 0;
+	border-top: 1px solid var(--news-rule);
+	border-left: 1px solid var(--news-rule);
+	margin-top: 0.8rem;
+}
+.gz-ad {
+	position: relative;
+	border-right: 1px solid var(--news-rule);
+	border-bottom: 1px solid var(--news-rule);
+	padding: 0.9rem 1rem 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	text-align: left;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.gz-ad:hover {
+	background: rgba(43, 36, 29, 0.04);
+}
+.gz-ad.chosen {
+	background: rgba(143, 42, 28, 0.07);
+}
+.gz-ad .who {
+	display: flex;
+	gap: 0.8rem;
+	align-items: center;
+}
+.gz-ad .portrait {
+	flex: none;
+	width: 64px;
+	height: 64px;
+	border: 1px solid var(--news-ink);
+	padding: 2px;
+	background: var(--news);
+}
+.gz-ad .name {
+	font-family: var(--news-cond);
+	font-weight: 600;
+	font-size: 1.15rem;
+	line-height: 1.1;
+}
+.gz-ad .type {
+	font-family: var(--news-cond);
+	font-size: 0.66rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--news-ink-soft);
+}
+.gz-ad .copy {
+	font-style: italic;
+	font-size: 0.92rem;
+	line-height: 1.4;
+	margin: 0;
+}
+.gz-ad .vitals {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8rem;
+	margin: 0.2rem 0 0.6rem;
+}
+.gz-ad .vitals th {
+	text-align: left;
+	font-family: var(--news-cond);
+	font-weight: 500;
+	font-size: 0.66rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--news-ink-soft);
+	padding: 0.22rem 0.6rem 0.22rem 0;
+	border-bottom: 1px dotted rgba(43, 36, 29, 0.4);
+	white-space: nowrap;
+	vertical-align: top;
+	width: 6.5rem;
+}
+.gz-ad .vitals td {
+	padding: 0.22rem 0;
+	border-bottom: 1px dotted rgba(43, 36, 29, 0.4);
+	font-family: var(--news-cond);
+	font-variant-numeric: tabular-nums;
+}
+.gz-ad .stamp {
+	align-self: flex-start;
+	margin-top: auto;
+	font-family: var(--news-cond);
+	font-size: 0.72rem;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	border: 2px solid var(--news-ink);
+	padding: 0.2rem 0.6rem;
+	color: var(--news-ink);
+}
+.gz-ad.chosen .stamp {
+	border-color: var(--news-red);
+	color: var(--news-red);
+	transform: rotate(-4deg);
+}
+
+/* ---- colophon ---- */
+.gz-colophon {
+	margin-top: 1.2rem;
+	border-top: 3px double var(--news-rule);
+	padding-top: 0.5rem;
+	font-size: 0.7rem;
+	color: var(--news-ink-soft);
+}
+.gz-colophon summary {
+	cursor: pointer;
+	font-family: var(--news-cond);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.gz-colophon ul {
+	padding-left: 1.2rem;
+	margin: 0.3rem 0;
+	word-break: break-all;
+}
+.gz-colophon a {
+	color: inherit;
+}
+.gz-colophon p {
+	margin: 0.4rem 0 0;
+}

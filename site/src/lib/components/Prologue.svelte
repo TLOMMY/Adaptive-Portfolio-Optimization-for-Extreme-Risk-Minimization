@@ -2,8 +2,7 @@
 	// Scroll-driven prologue: each beat is a full screen; its text fades in as it
 	// reaches the middle of the viewport and out as it leaves.
 	import { onMount } from 'svelte';
-	import { app, go } from '$lib/state.svelte';
-	import Starfield from './Starfield.svelte';
+	import { app } from '$lib/state.svelte';
 
 	const beats = [
 		['The best time to plant a tree', 'was twenty years ago.'],
@@ -13,7 +12,7 @@
 	];
 
 	let amountText = $state('100,000');
-	let warping = $state(false);
+	const warping = $derived(app.warp);
 	let scrollY = $state(0);
 	let vh = $state(800);
 
@@ -44,11 +43,9 @@
 	function wish() {
 		const n = Number(amountText.replace(/[^0-9.]/g, ''));
 		if (n >= 100) app.amount = Math.round(n);
-		warping = true;
+		app.warp = true;
 	}
 </script>
-
-<Starfield warp={warping} ondark={() => go('rewind')} />
 
 <div class="prologue" class:warping style:height={`${total * vh}px`}>
 	<div class="pin">

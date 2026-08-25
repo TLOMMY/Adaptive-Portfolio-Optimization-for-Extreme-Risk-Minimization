@@ -9,7 +9,7 @@
 	import type { MarketEvent, Prices } from '$lib/data';
 	import type { Anchor } from './timeline3d';
 
-	let { events, prices = null }: { events: MarketEvent[]; prices?: Prices | null } = $props();
+	let { events, prices = null, onlit }: { events: MarketEvent[]; prices?: Prices | null; onlit?: () => void } = $props();
 
 	const T0 = Date.UTC(2016, 0, 1);
 	const T1 = Date.UTC(2026, 0, 1);
@@ -23,7 +23,7 @@
 	let scrollY = $state(0);
 	let vh = $state(800);
 	let vw = $state(1200);
-	let veil = $state(1);
+	let lit = $state(false); // the fibres fade in once the first frame has rendered
 	let hovered = $state<string | null>(null);
 	let leaving = $state(0);
 	let intro = $state(0);
@@ -77,7 +77,19 @@
 	const label = $derived(new Date(nowMs).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }));
 	const arrived = $derived(progress > 0.985);
 
-	const PORTAL = $derived(Math.round(Math.max(96, Math.min(150, vh * 0.16))));
+	// Layout is done in screen space from measured sizes (see timeline3d.ts frame()). The only
+	// design inputs are ratios of the viewport height.
+	const PORTAL = $derived(Math.round(Math.max(72, Math.min(150, vh * 0.16))));
+	let capH = $state<Record<string, number>>({}); // measured caption heights, per event
+	const ui = $derived({
+		vh,
+		portalPx: PORTAL,
+		captions: capH,
+		marginPx: Math.round(vh * 0.035) + 8,
+		gapPx: 10,
+		nearLane: Math.round(vh * 0.24),
+		farLane: Math.round(vh * 0.42)
+	});
 
 	interface Placed extends MarketEvent {
 		x: number;
@@ -124,6 +136,13 @@
 		return { d: 'M' + pts.join('L'), up: vals[vals.length - 1] >= vals[0] };
 	}
 
+	// portals scroll in and out at the sides; they dissolve at the left and right edges rather than
+	// being cut off. Vertical fit is not a fade but a layout fact: see frame() in timeline3d.ts.
+	function edgeFade(a: Anchor, r: number): number {
+		const m = Math.min(a.x - r, vw - a.x - r); // distance from the lens's edge to the nearer side
+		return Math.max(0, Math.min(1, m / 140)); // fully gone by the time the lens touches the edge
+	}
+
 	// hovering freezes a portal in place (until the user scrolls again)
 	let frozen: { id: string; a: Anchor; y: number } | null = null;
 	function anchorOf(e: Placed): Anchor | undefined {
@@ -139,6 +158,8 @@
 
 	function arrive() {
 		if (leaving > 0) return;
+		// bring the traveller exactly to 1 January 2016 so the branch peels off under it
+		window.scrollTo({ top: scrollLen, behavior: 'smooth' });
 		const t0 = performance.now();
 		const DUR = 4600;
 		const step = (t: number) => {
@@ -160,9 +181,8 @@
 		onResize();
 		window.addEventListener('scroll', onScroll, { passive: true });
 		window.addEventListener('resize', onResize);
-		setTimeout(() => (veil = 0), 100);
-		const INTRO = 5200;
-		const born = performance.now();
+		const INTRO = 7000;
+		let born = 0; // set on the first rendered frame, so the flight always plays in full
 
 		let raf = 0;
 		let tl: ReturnType<typeof import('./timeline3d').createTimeline> | undefined;
@@ -183,10 +203,15 @@
 			// dev: window.__tlo = { intro, leaving, progress } pins a state for screenshots
 			const frame = (t: number) => {
 				const o = import.meta.env.DEV ? (window as unknown as { __tlo?: { intro?: number; leaving?: number; progress?: number } }).__tlo : undefined;
+				if (!born) {
+					born = t;
+					lit = true;
+					onlit?.();
+				}
 				intro = o?.intro ?? Math.min(1, (t - born) / INTRO);
 				if (o?.leaving !== undefined) leaving = o.leaving;
 				if (o?.progress !== undefined) scrollY = o.progress * scrollLen;
-				const out = t3.frame({ t, centreX, leaving, intro });
+				const out = t3.frame({ t, centreX, leaving, intro, ui });
 				anchors = Object.fromEntries(out.anchors);
 				yearAnchors = out.years;
 				raf = requestAnimationFrame(frame);
@@ -205,7 +230,7 @@
 
 <div class="track" style:height={`${scrollLen + vh}px`}>
 	<div class="viewport">
-		<canvas bind:this={canvas} class="river" style:width={`${vw}px`} style:height={`${vh}px`}></canvas>
+		<canvas bind:this={canvas} class="river" class:lit style:width={`${vw}px`} style:height={`${vh}px`}></canvas>
 
 		<header class="now" style:opacity={Math.min(1 - Math.min(1, leaving * 3), Math.max(0, (intro - 0.8) * 5))}>
 			<p class="mono small">travelling back</p>
@@ -228,6 +253,12 @@
 					{@const near = dist < 0.25 || hovered === e.date}
 					{@const sp = e.image ? null : spark(e.date)}
 					{@const R = (PORTAL / 2) * (hovered === e.date ? Math.max(a.s, 0.95) * 1.04 : a.s)}
+					{@const capW = e.far ? 11 * 16 : 15 * 16}
+					{@const onScreen = a.x - R > 0 && a.x + R < vw}
+					<!-- captions are kept inside the viewport only while their lens is inside it; an exiting
+					     portal takes its caption with it and fades, rather than leaving the title behind -->
+					{@const flip = onScreen && e.far && a.x + R + 8 + capW > vw - 8}
+					{@const shift = onScreen && !e.far ? Math.min(0, vw - 8 - (a.x + capW / 2)) + Math.max(0, 8 - (a.x - capW / 2)) : 0}
 					<div
 						class="event {e.side}"
 						class:hovered={hovered === e.date}
@@ -255,10 +286,13 @@
 						</div>
 						<!-- caption sits outside the scaled lens so text stays readable -->
 						<div
+							bind:clientHeight={capH[e.date]}
 							class="caption"
+							class:flip
 							style:top={e.far ? '0' : e.side === 'below' ? `${R - 2}px` : 'auto'}
 							style:bottom={!e.far && e.side === 'above' ? `${R - 2}px` : 'auto'}
-							style:left={e.far ? `${R + 8}px` : '0'}
+							style:left={e.far ? (flip ? 'auto' : `${R + 8}px`) : `${shift}px`}
+							style:right={flip ? `${R + 8}px` : 'auto'}
 						>
 							<p class="mono when">{new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
 							<h3>{e.title}</h3>
@@ -275,7 +309,6 @@
 			<button class="arrive" onclick={arrive}>Arrive</button>
 		</footer>
 		<p class="hint mono" style:opacity={progress < 0.02 && intro >= 1 ? 0.7 : 0}>scroll to travel</p>
-		<div class="veil" style:opacity={veil}></div>
 		<div class="wash" style:opacity={wash}></div>
 	</div>
 </div>
@@ -296,19 +329,16 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
+		opacity: 0;
+		transition: opacity 1.2s ease-out;
 	}
-	.veil {
-		position: absolute;
-		inset: 0;
-		background: #05030a;
-		z-index: 6;
-		pointer-events: none;
-		transition: opacity 1.4s ease-out;
+	.river.lit {
+		opacity: 1;
 	}
 	.wash {
 		position: absolute;
 		inset: 0;
-		background: var(--paper);
+		background: var(--desk);
 		z-index: 7;
 		pointer-events: none;
 	}
@@ -434,6 +464,9 @@
 		transform: translateY(-50%);
 		text-align: left;
 		padding: 0.2rem 0.4rem;
+	}
+	.event.far .caption.flip {
+		text-align: right;
 	}
 	.event.far h3 {
 		font-size: 0.95rem;

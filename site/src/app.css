@@ -1,3 +1,4 @@
+@import './lib/news.css';
 /* Design tokens. Two worlds: the paper archive (2016) and the dark journey. */
 :root {
 	--paper: #f3ecdc;
@@ -16,6 +17,20 @@
 	--serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
 	--mono: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
 	--sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	/* the desk world: a dark wooden surface on which newspapers are laid */
+	--desk: #1c1a17; /* a single flat colour: the paper is the only bright object */
+	--desk-2: #1c1a17;
+	--desk-ink: #e9dfcc;
+	--desk-ink-soft: #a6988a;
+	--desk-accent: #d9714f; /* a warm newsprint red-orange for the panel's highlights */
+	--news: #f1ead9;
+	--news-ink: #1b1611;
+	--news-ink-soft: #55493d;
+	--news-rule: #2b241d;
+	--news-red: #8f2a1c;
+	--blackletter: 'UnifrakturMaguntia', 'Old English Text MT', serif;
+	--news-serif: 'Old Standard TT', 'Iowan Old Style', Georgia, serif;
+	--news-cond: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif;
 }
 
 * {
@@ -35,6 +50,17 @@ body {
 body[data-world='night'] {
 	background: var(--night);
 	color: var(--glow);
+}
+body[data-world='desk'] {
+	background: var(--desk);
+	color: var(--desk-ink);
+}
+body[data-world='desk'] .muted {
+	color: var(--desk-ink-soft);
+}
+body[data-world='desk'] .btn:hover {
+	background: var(--desk-ink);
+	color: var(--desk);
 }
 h1,
 h2,

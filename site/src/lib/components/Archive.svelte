@@ -11,9 +11,11 @@
 		type ProfileMeta,
 		type Universe
 	} from '$lib/data';
-	import { money, pct, signedPct } from '$lib/format';
-	import Avatar from './Avatar.svelte';
-	import Sparkline from './Sparkline.svelte';
+	import { money } from '$lib/format';
+	import FrontPage from './gazette/FrontPage.svelte';
+	import SectorPage from './gazette/SectorPage.svelte';
+	import FundsPage from './gazette/FundsPage.svelte';
+	import ClassifiedsPage from './gazette/ClassifiedsPage.svelte';
 
 	let { universe, prices }: { universe: Universe; prices: Prices } = $props();
 
@@ -69,403 +71,256 @@
 </script>
 
 <section class="archive">
-	<header>
-		<p class="eyebrow mono">1 January 2016 · The Archive</p>
-		<h1>You have {money(app.amount)}. Where does it go?</h1>
-		<p class="muted lede">
-			Read the year that has just ended, sector by sector, and put money into any company or fund you like.
-			Whatever you leave over sits in cash earning the Treasury-bill rate. Your picks are bought once and held
-			for ten years. Then choose an adviser whose portfolio will run alongside yours from the same {money(app.amount)}.
-			Everything on these pages was known on 31 December 2015 and nothing later.
-		</p>
-	</header>
-
-	<div class="ledger mono" class:over>
-		<span>Invested {money(allocated())}</span>
-		<span>Cash {money(remaining())}</span>
-		<span class="steps">Step {step + 1} of {steps.length}</span>
-	</div>
-
-	<nav class="rail mono" aria-label="Sections">
-		{#each steps as s, i (s.title)}
-			<button class:active={i === step} class:done={i < step} onclick={() => goStep(i)}>
-				{s.title}
-				{#if s.kind === 'sector' || s.kind === 'funds'}
+	<aside class="panel">
+		<p class="deskline">1 January 2016 · The Archive</p>
+		<div class="money" class:over>
+			<div><span>Invested</span><strong>{money(allocated())}</strong></div>
+			<div><span>Cash left</span><strong>{money(remaining())}</strong></div>
+			<div class="bar"><i style:width={`${Math.min(100, Math.max(0, (allocated() / app.amount) * 100))}%`}></i></div>
+			{#if over}<p class="warn">You have allocated more than you have.</p>{/if}
+			{#if allocated() > 0}
+				<button class="clear" onclick={() => { for (const k of Object.keys(app.allocations)) delete app.allocations[k]; }}>Clear all orders</button>
+			{/if}
+		</div>
+		<nav aria-label="Editions">
+			<p class="label">Editions · {step + 1} of {steps.length}</p>
+			<ol>
+				{#each steps as s, i (s.title)}
 					{@const inv = investedIn(
-						s.kind === 'sector' ? pickable.filter((a) => a.sector === s.title).map((a) => a.ticker) : pickable.filter((a) => a.kind === 'etf').map((a) => a.ticker)
+						s.kind === 'sector' ? pickable.filter((a) => a.sector === s.title).map((a) => a.ticker) : s.kind === 'funds' ? pickable.filter((a) => a.kind === 'etf').map((a) => a.ticker) : []
 					)}
-					{#if inv > 0}<em>{money(inv)}</em>{/if}
-				{/if}
-			</button>
-		{/each}
-	</nav>
+					<li>
+						<button class:active={i === step} class:done={i < step} onclick={() => goStep(i)}>
+							<span class="n">{i + 1}</span>
+							<span class="t">{s.kind === 'overview' ? 'Where things stand' : s.kind === 'adviser' ? 'Your adviser' : s.title === 'Telecommunication Services' ? 'Telecommunications' : s.title}</span>
+							{#if inv > 0}<span class="inv">{money(inv)}</span>{/if}
+						</button>
+					</li>
+				{/each}
+			</ol>
+		</nav>
+		<div class="steps">
+			{#if step > 0}<button class="btn ghost" onclick={() => goStep(step - 1)}>Back</button>{/if}
+			{#if current.kind === 'adviser'}
+				<button class="btn" disabled={over} onclick={() => go('journey')}>Begin the ten years</button>
+			{:else}
+				<button class="btn" onclick={() => goStep(step + 1)}>
+					{current.kind === 'overview' ? 'Start choosing' : step === steps.length - 2 ? 'Choose an adviser' : 'Next edition'}
+				</button>
+			{/if}
+		</div>
+	</aside>
 
+	<div class="page">
 	{#if !archive || !notes}
 		<p class="muted">Opening the year-end papers…</p>
 	{:else if current.kind === 'overview'}
-		<article class="paper">
-			<p class="eyebrow mono">The year 2015, as it stood on 31 December</p>
-			<h2>{notes.year.headline}</h2>
-			<p class="body">{notes.year.body}</p>
-			<div class="figures mono">
-				<div><span>S&amp;P 500, 2015</span><strong>{signedPct(archive.assets.SPY.return_2015)}</strong></div>
-				<div><span>Worst fall during 2015</span><strong>{pct(archive.assets.SPY.drawdown_2015)}</strong></div>
-				<div><span>US bonds (AGG), 2015</span><strong>{signedPct(archive.assets.AGG.return_2015)}</strong></div>
-				<div><span>Gold (GLD), 2015</span><strong>{signedPct(archive.assets.GLD.return_2015)}</strong></div>
-				<div><span>Cash rate (3-month T-bill)</span><strong>{pct(archive.tbill_rate_annual, 2)} a year</strong></div>
-				<div><span>S&amp;P 500, 2013–2015</span><strong>{signedPct(archive.assets.SPY.return_3y)}</strong></div>
-			</div>
-			<details class="sources"><summary class="mono">Sources</summary>
-				<ul>{#each notes.year.sources as s (s)}<li><a href={s} target="_blank" rel="noreferrer">{s}</a></li>{/each}</ul>
-			</details>
-			<p class="muted small">Returns include dividends. "Worst fall" is the largest drop from a previous high during the year, a measure called the maximum drawdown.</p>
-		</article>
-	{:else if current.kind === 'sector' || current.kind === 'funds'}
-		<article class="paper">
-			<p class="eyebrow mono">{current.kind === 'sector' ? 'Sector' : 'Beyond stocks'} · {sectorAssets.length} choices</p>
-			{#if current.kind === 'sector' && sectorNote && sectorStats}
-				<h2>{sectorNote.headline}</h2>
-				<p class="body">{sectorNote.body}</p>
-				<div class="figures mono">
-					<div><span>Average return, 2015</span><strong>{signedPct(sectorStats.return_2015)}</strong></div>
-					<div><span>Best in 2015</span><strong>{name(sectorStats.best_2015.ticker)} {signedPct(sectorStats.best_2015.return)}</strong></div>
-					<div><span>Worst in 2015</span><strong>{name(sectorStats.worst_2015.ticker)} {signedPct(sectorStats.worst_2015.return)}</strong></div>
-					<div><span>Average return, 2013–2015</span><strong>{signedPct(sectorStats.return_3y)}</strong></div>
-				</div>
-				<details class="sources"><summary class="mono">Sources</summary>
-					<ul>{#each sectorNote.sources as s (s)}<li><a href={s} target="_blank" rel="noreferrer">{s}</a></li>{/each}</ul>
-				</details>
-			{:else if current.kind === 'funds'}
-				<h2>Somewhere to hide</h2>
-				<p class="body">
-					{notes.sectors.Bonds.body} {notes.sectors.Gold.body} Anything you do not invest stays in cash at
-					{pct(archive.tbill_rate_annual, 2)} a year.
-				</p>
-			{/if}
-		</article>
-
-		<div class="cards">
-			{#each sectorAssets as a (a.ticker)}
-				{@const st = archive.assets[a.ticker]}
-				<label class="card" class:held={(app.allocations[a.ticker] ?? 0) > 0}>
-					<span class="top">
-						<span class="ticker mono">{a.ticker}</span>
-						<Sparkline values={st.spark} />
-					</span>
-					<span class="name">{a.name}</span>
-					{#if notes.assets[a.ticker]}<span class="note">{notes.assets[a.ticker]}</span>{/if}
-					<span class="stats mono">
-						<span>2015 <strong class:neg={st.return_2015 < 0}>{signedPct(st.return_2015)}</strong></span>
-						<span>3 yrs <strong class:neg={st.return_3y < 0}>{signedPct(st.return_3y)}</strong></span>
-						<span>worst fall <strong>{pct(st.drawdown_3y)}</strong></span>
-					</span>
-					<span class="field mono">
-						$<input
-							inputmode="numeric"
-							value={app.allocations[a.ticker] ?? ''}
-							placeholder="0"
-							onchange={(e) => setDollars(a.ticker, (e.target as HTMLInputElement).value)}
-						/>
-					</span>
-				</label>
-			{/each}
-		</div>
+		<FrontPage note={notes.year} {archive} amount={app.amount} editions={stockSectors.length} />
+	{:else if current.kind === 'sector' && sectorNote && sectorStats}
+		<SectorPage
+			sector={current.title}
+			edition={step}
+			editions={stockSectors.length}
+			note={sectorNote}
+			stats={sectorStats}
+			assets={sectorAssets}
+			assetStats={archive.assets}
+			assetNotes={notes.assets}
+			allocations={app.allocations}
+			onallocate={setDollars}
+		/>
+	{:else if current.kind === 'funds'}
+		<FundsPage
+			bonds={notes.sectors.Bonds}
+			gold={notes.sectors.Gold}
+			{archive}
+			assets={sectorAssets}
+			assetStats={archive.assets}
+			assetNotes={notes.assets}
+			allocations={app.allocations}
+			onallocate={setDollars}
+			number={step + 1}
+		/>
 	{:else}
-		<article class="paper">
-			<p class="eyebrow mono">Hire an adviser</p>
-			<h2>Who manages the other {money(app.amount)}?</h2>
-			<p class="body">
-				Each adviser is a set of rules, not a person: how long the money is for, the largest average loss they
-				will accept on a bad day, how many holdings they keep, and what they refuse to own. The loss limit is the
-				daily CVaR, the average loss on the worst 5% of days, and it tightens as the horizon shrinks.
-			</p>
-		</article>
-		<div class="cards advisers">
-			{#each advisers as p (p.key)}
-				{@const avoids = [...Object.entries(p.sector_cap).filter(([, v]) => v === 0).map(([k]) => k), ...p.exclude.map(name)]}
-				{@const caps = Object.entries(p.sector_cap).filter(([, v]) => v > 0)}
-				<button class="card adviser" class:chosen={app.adviser === p.key} onclick={() => (app.adviser = p.key)}>
-					<span class="who">
-						<Avatar profileKey={p.key} />
-						<span>
-							<span class="name">{p.name}</span>
-							<span class="type mono">{p.archetype} · risk tolerance {p.risk_tolerance.toLowerCase()}</span>
-						</span>
-					</span>
-					<span class="tagline">“{p.personality}”</span>
-					<span class="rules mono">
-						<span>horizon <strong>{p.horizon_years} years</strong></span>
-						<span>loss limit <strong>{pct(p.cvar_start)} → {pct(p.cvar_end)}</strong> a day</span>
-						<span>holdings <strong>≤ {p.max_holdings}</strong></span>
-						<span>cash <strong>≥ {pct(p.cash_min, 0)}</strong></span>
-						{#if avoids.length}<span>avoids <strong>{avoids.join(', ')}</strong></span>{/if}
-						{#if caps.length}<span>sector caps <strong>{caps.map(([k, v]) => `${k} ≤ ${pct(v, 0)}`).join(', ')}</strong></span>{/if}
-					</span>
-				</button>
-			{/each}
-		</div>
+		<ClassifiedsPage
+			{advisers}
+			chosen={app.adviser}
+			onchoose={(k) => (app.adviser = k)}
+			amount={app.amount}
+			number={step + 1}
+			nameOf={name}
+		/>
 	{/if}
-
-	<footer>
-		{#if step > 0}<button class="btn ghost" onclick={() => goStep(step - 1)}>Back</button>{/if}
-		{#if current.kind === 'adviser'}
-			<button class="btn" disabled={over} onclick={() => go('journey')}>Begin the ten years</button>
-		{:else}
-			<button class="btn" onclick={() => goStep(step + 1)}>
-				{current.kind === 'overview' ? 'Start choosing' : step === steps.length - 2 ? 'Choose an adviser' : 'Next sector'}
-			</button>
-		{/if}
-		{#if over}<p class="muted">You have allocated more than you have.</p>{/if}
-	</footer>
+	</div>
 </section>
 
 <style>
 	.archive {
-		max-width: 64rem;
-		margin: 0 auto;
-		padding: 3rem 1.5rem 5rem;
-	}
-	.eyebrow {
-		font-size: 0.7rem;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--stamp);
-		margin: 0 0 0.5rem;
-	}
-	h1 {
-		font-size: 2.2rem;
-	}
-	h2 {
-		font-size: 1.6rem;
-		margin: 0.2rem 0 0.6rem;
-	}
-	.lede {
-		max-width: 46rem;
-	}
-	.ledger {
-		position: sticky;
-		top: 0;
-		display: flex;
+		display: grid;
+		grid-template-columns: 15rem minmax(0, 1fr);
 		gap: 2rem;
-		padding: 0.6rem 0;
-		background: var(--paper);
-		border-top: 1px solid var(--rule);
-		border-bottom: 1px solid var(--rule);
-		margin: 1.5rem 0 1rem;
-		z-index: 2;
-		font-size: 0.85rem;
+		max-width: 82rem;
+		margin: 0 auto;
+		padding: 1.5rem 1.5rem 5rem;
 	}
-	.ledger .steps {
-		margin-left: auto;
-		color: var(--ink-soft);
+	@media (max-width: 60rem) {
+		.archive {
+			grid-template-columns: 1fr;
+		}
 	}
-	.ledger.over {
-		color: var(--stamp);
+	.page {
+		min-width: 0;
 	}
-	.rail {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.3rem;
-		margin-bottom: 1.5rem;
-	}
-	.rail button {
-		border: 1px solid var(--rule);
-		background: transparent;
-		color: var(--ink-soft);
-		font-size: 0.62rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		padding: 0.3rem 0.6rem;
-		border-radius: 2px;
-	}
-	.rail button.done {
-		color: var(--ink);
-	}
-	.rail button.active {
-		background: var(--ink);
-		color: var(--paper);
-		border-color: var(--ink);
-	}
-	.rail em {
-		font-style: normal;
-		margin-left: 0.4rem;
-		opacity: 0.8;
-	}
-	.paper {
-		border: 1px solid var(--rule);
-		background: var(--paper-deep);
-		padding: 1.4rem 1.6rem;
-		margin-bottom: 1.2rem;
-	}
-	.body {
-		max-width: 60ch;
-		margin: 0 0 1rem;
-	}
-	.figures {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-		gap: 0.6rem 1.2rem;
-		font-size: 0.78rem;
-		margin: 0.8rem 0;
-	}
-	.figures div {
+	.panel {
+		position: sticky;
+		top: 1rem;
+		align-self: start;
 		display: flex;
 		flex-direction: column;
-		border-top: 1px solid var(--rule);
-		padding-top: 0.35rem;
+		gap: 1.2rem;
+		max-height: calc(100vh - 2rem);
+		overflow-y: auto;
 	}
-	.figures span {
-		font-size: 0.62rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--ink-soft);
+	@media (max-width: 60rem) {
+		.panel {
+			position: static;
+			max-height: none;
+		}
 	}
-	.figures strong {
-		font-weight: 500;
-		font-size: 1rem;
-	}
-	.sources {
-		font-size: 0.75rem;
-		margin-top: 0.6rem;
-	}
-	.sources summary {
-		cursor: pointer;
-		color: var(--ink-soft);
-		font-size: 0.62rem;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-	}
-	.sources ul {
-		padding-left: 1.2rem;
-		margin: 0.4rem 0 0;
-		word-break: break-all;
-	}
-	.sources a {
-		color: var(--ink-soft);
-	}
-	.small {
-		font-size: 0.8rem;
-	}
-	.cards {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-		gap: 0.7rem;
-	}
-	.card {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		border: 1px solid var(--rule);
-		background: var(--paper-deep);
+	.money {
+		border: 1px solid rgba(233, 223, 204, 0.3);
 		padding: 0.8rem 0.9rem;
-		text-align: left;
-		color: inherit;
-	}
-	.card.held {
-		border-color: var(--ink);
-	}
-	.top {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.ticker {
-		font-size: 0.7rem;
-		color: var(--ink-soft);
-	}
-	.name {
-		font-size: 1.05rem;
-	}
-	.note {
-		font-size: 0.82rem;
-		color: var(--ink-soft);
-		font-style: italic;
-	}
-	.stats {
-		display: flex;
-		gap: 0.8rem;
-		flex-wrap: wrap;
-		font-size: 0.62rem;
-		color: var(--ink-soft);
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		margin-top: 0.2rem;
-	}
-	.stats strong {
-		font-weight: 500;
-		color: var(--ink);
-		text-transform: none;
-		letter-spacing: 0;
-		font-size: 0.78rem;
-	}
-	.stats strong.neg {
-		color: var(--stamp);
-	}
-	.field {
-		margin-top: 0.4rem;
-		display: flex;
-		align-items: baseline;
-		gap: 0.2rem;
-	}
-	.field input {
-		width: 100%;
-		border: none;
-		border-bottom: 1px solid var(--rule);
-		background: transparent;
-		font: inherit;
-		outline: none;
-	}
-	.advisers {
-		grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-	}
-	.adviser {
-		cursor: pointer;
-		gap: 0.7rem;
-	}
-	.adviser.chosen {
-		outline: 2px solid var(--stamp);
-	}
-	.who {
-		display: flex;
-		gap: 0.8rem;
-		align-items: center;
-	}
-	.who > span {
-		display: flex;
-		flex-direction: column;
-	}
-	.type {
-		font-size: 0.62rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--ink-soft);
-	}
-	.tagline {
-		font-style: italic;
-		font-size: 0.95rem;
-	}
-	.rules {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.25rem 0.8rem;
-		font-size: 0.62rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--ink-soft);
+		gap: 0.4rem 0.8rem;
 	}
-	.rules strong {
-		font-weight: 500;
-		color: var(--ink);
-		text-transform: none;
-		letter-spacing: 0;
-		font-size: 0.75rem;
-	}
-	footer {
-		margin-top: 2.5rem;
+	.money > div:not(.bar) {
 		display: flex;
-		justify-content: center;
-		gap: 1rem;
-		flex-wrap: wrap;
+		flex-direction: column;
+	}
+	.money span {
+		font-family: var(--news-cond);
+		font-size: 0.66rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--desk-ink-soft);
+	}
+	.money strong {
+		font-family: var(--news-cond);
+		font-weight: 500;
+		font-size: 1.45rem;
+		letter-spacing: 0.01em;
+		color: var(--desk-ink);
+		font-variant-numeric: tabular-nums;
+	}
+	.money.over strong {
+		color: var(--desk-accent);
+	}
+	.bar {
+		grid-column: 1 / -1;
+		height: 4px;
+		background: rgba(233, 223, 204, 0.15);
+	}
+	.bar i {
+		display: block;
+		height: 100%;
+		background: var(--desk-accent);
+	}
+	.clear {
+		grid-column: 1 / -1;
+		justify-self: start;
+		background: none;
+		border: none;
+		padding: 0;
+		font-family: var(--news-cond);
+		font-size: 0.68rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--desk-ink-soft);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+		cursor: pointer;
+	}
+	.clear:hover {
+		color: var(--desk-accent);
+	}
+	.warn {
+		grid-column: 1 / -1;
+		margin: 0;
+		font-family: var(--news-serif);
+		font-size: 0.82rem;
+		color: var(--desk-accent);
+	}
+	.panel .label {
+		font-family: var(--news-cond);
+		font-size: 0.66rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--desk-ink-soft);
+		margin: 0 0 0.3rem;
+	}
+	.panel ol {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.panel li button {
+		width: 100%;
+		display: grid;
+		grid-template-columns: 1.4rem 1fr auto;
+		gap: 0.5rem;
+		align-items: baseline;
+		border: none;
+		border-left: 2px solid rgba(233, 223, 204, 0.15);
+		background: transparent;
+		color: var(--desk-ink-soft);
+		text-align: left;
+		padding: 0.3rem 0.5rem;
+		font-family: var(--news-serif);
+		font-size: 0.95rem;
+	}
+	.panel li button:hover {
+		color: var(--desk-ink);
+		border-left-color: rgba(233, 223, 204, 0.5);
+	}
+	.panel li button.done {
+		color: var(--desk-ink);
+	}
+	.panel li button.active {
+		color: var(--desk-ink);
+		background: rgba(233, 223, 204, 0.1);
+		border-left-color: var(--desk-accent);
+	}
+	.panel .n {
+		font-family: var(--news-cond);
+		font-size: 0.72rem;
+		color: var(--desk-ink-soft);
+	}
+	.panel .inv {
+		font-family: var(--news-cond);
+		font-size: 0.78rem;
+		color: var(--desk-accent);
+	}
+	.steps {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.steps .btn {
+		width: 100%;
+		white-space: nowrap;
+		font-family: var(--news-cond);
+		font-size: 0.82rem;
+		letter-spacing: 0.12em;
+	}
+	.deskline {
+		font-family: var(--news-cond);
+		font-size: 0.72rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--desk-accent);
+		margin: 0;
+		white-space: nowrap;
 	}
 	.btn:disabled {
 		opacity: 0.4;

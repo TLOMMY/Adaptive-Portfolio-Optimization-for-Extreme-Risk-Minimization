@@ -14,6 +14,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 export interface EventSpec {
@@ -28,6 +29,16 @@ export interface TimelineOpts {
 	events: EventSpec[];
 	yearXs: number[];
 }
+/** Measured facts about the DOM portals, supplied every frame; the branch layout is derived from them. */
+export interface UiMetrics {
+	vh: number; // viewport height, px
+	portalPx: number; // lens diameter at scale 1, px
+	captions: Record<string, number>; // measured caption height per event id, px
+	marginPx: number; // keep-out band at the top and bottom edges
+	gapPx: number; // between the thread and the nearest portal edge
+	nearLane: number; // preferred distance from the thread to a near-lane tip, px
+	farLane: number; // and to a far-lane tip
+}
 export interface Anchor {
 	x: number; // screen px
 	y: number;
@@ -39,6 +50,7 @@ export interface Frame {
 	centreX: number; // world x under the traveller
 	leaving: number; // 0..1 arrival sequence
 	intro: number; // 0..1 opening flight: along the line, then swing out to the side
+	ui: UiMetrics;
 }
 
 type V3 = THREE.Vector3;
@@ -121,26 +133,39 @@ function perpendiculars(dir: V3): [V3, V3] {
 	return [p1, p2];
 }
 
-// a frayed, lightning-like branch. Returns the tip.
-function growBranch(bag: Bag, origin: V3, dir: V3, away: V3, len: number, level: number, bright: number, r: () => number): V3 {
+// a frayed, lightning-like branch. Returns the tip. With `target` the tip lands exactly there
+// (the bend is applied sideways, perpendicular to the chord, so it cannot move the tip).
+function growBranch(bag: Bag, origin: V3, dir: V3, away: V3, len: number, level: number, bright: number, r: () => number, target?: V3): V3 {
 	const n = level === 0 ? 26 : level === 1 ? 14 : 8;
+	if (target) {
+		dir = V().subVectors(target, origin).normalize();
+		len = target.distanceTo(origin);
+	}
 	const [p1, p2] = perpendiculars(dir);
-	const bend = V()
-		.copy(away)
-		.multiplyScalar(0.55)
-		.addScaledVector(p1, (r() - 0.5) * 0.6)
-		.addScaledVector(p2, (r() - 0.5) * 0.6)
-		.normalize()
-		.multiplyScalar(0.38);
+	const bend = target
+		? V()
+				.addScaledVector(p1, (r() - 0.5) * 0.6)
+				.addScaledVector(p2, (r() - 0.5) * 0.6)
+				.normalize()
+				.multiplyScalar(0.22)
+		: V()
+				.copy(away)
+				.multiplyScalar(0.55)
+				.addScaledVector(p1, (r() - 0.5) * 0.6)
+				.addScaledVector(p2, (r() - 0.5) * 0.6)
+				.normalize()
+				.multiplyScalar(0.38);
 	const ph = r() * 6.28,
 		ph2 = r() * 6.28;
+	// the sideways bend rises and falls (u(1-u)) when a target is set, so it is zero at both ends
+	const bendAt = (u: number) => (target ? 4 * u * (1 - u) : u * u);
 	const base = (u: number) =>
 		V()
 			.copy(origin)
 			.addScaledVector(dir, u * len)
-			.addScaledVector(bend, u * u * len)
-			.addScaledVector(p1, len * 0.03 * Math.sin(u * 7 + ph))
-			.addScaledVector(p2, len * 0.03 * Math.sin(u * 5 + ph2));
+			.addScaledVector(bend, bendAt(u) * len)
+			.addScaledVector(p1, len * 0.03 * Math.sin(u * 7 + ph) * (target ? Math.sin(u * Math.PI) : 1))
+			.addScaledVector(p2, len * 0.03 * Math.sin(u * 5 + ph2) * (target ? Math.sin(u * Math.PI) : 1));
 	const nf = level === 0 ? 5 : level === 1 ? 3 : 1;
 	for (let f = 0; f < nf; f++) {
 		const pf = r() * 6.28,
@@ -199,12 +224,15 @@ function growBranch(bag: Bag, origin: V3, dir: V3, away: V3, len: number, level:
 }
 
 // --- the arrival branch: a bezier leaving the trunk toward the camera ----------------
+// Control points are relative to the trunk's centre line at x = 0 (1 January 2016), so the
+// root sits inside the bundle rather than at the world origin ~23 units away from it.
 const ARRIVE = {
 	p0: V(0, 0, 0),
 	p1: V(-150, 28, 70),
 	p2: V(-270, 95, 400),
 	p3: V(-320, 130, 950)
 };
+const C0 = centre(0);
 function bez(u: number, out = V()): V3 {
 	const { p0, p1, p2, p3 } = ARRIVE;
 	const v = 1 - u;
@@ -213,6 +241,7 @@ function bez(u: number, out = V()): V3 {
 	out.addScaledVector(p1, 3 * v * v * u);
 	out.addScaledVector(p2, 3 * v * u * u);
 	out.addScaledVector(p3, u * u * u);
+	out.add(C0);
 	return out;
 }
 
@@ -247,6 +276,10 @@ void main() {
 	gl_FragColor = vec4(pow(c, vec3(2.2)), 1.0);
 }`;
 
+// camera pose while travelling: behind-left of the traveller, looking at it
+const CAM = V(-240, 50, 690);
+const FOV = 40;
+
 export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	const { trackW, rough, events, yearXs } = opts;
 	const r = rng(7);
@@ -257,7 +290,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	const scene = new THREE.Scene();
 	const fogColor = new THREE.Color('#0a1633');
 	scene.fog = new THREE.Fog(fogColor, 700, 1900);
-	const camera = new THREE.PerspectiveCamera(40, 1, 1, 6000);
+	const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 6000);
 	scene.add(camera);
 
 	// backdrop, attached to the camera
@@ -312,7 +345,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	const core = new Bag(),
 		fine = new Bag();
 	const X0 = -420,
-		X1 = trackW + 420,
+		X1 = trackW + 4200, // the thread runs on into the future: the opening flight races in along it
 		DX = 6;
 	const endFade = (x: number) => smooth(X0, X0 + 260, x) * smooth(X1, X1 - 260, x);
 	const NS = 96;
@@ -344,17 +377,20 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	}
 
 	// --- branches ---
+	// Each event's branch is a unit-length geometry (origin to (0, 100, 0)) in its own object. Every
+	// frame the portal's screen position is chosen from measured DOM sizes, unprojected to the
+	// thread's depth, and the object is rotated and scaled to land its tip there. So the layout is
+	// done in screen space and the 3D branch follows it, whatever the viewport or perspective.
+	const UNIT = 100;
+	const branches = events.map((e, i) => {
+		const rr = rng(11 + i);
+		const bag = new Bag();
+		growBranch(bag, V(0, 0, 0), V(0, 1, 0), V(0, 1, 0), UNIT, 0, 2.6, rr, V(0, UNIT, 0));
+		const obj = new LineSegments2(bag.geometry(), twigMat);
+		obj.frustumCulled = false;
+		return { e, obj, s: e.side === 'above' ? 1 : -1, far: !!e.far };
+	});
 	const twigs = new Bag();
-	const tips = new Map<string, { p: V3; far: boolean }>();
-	for (const e of events) {
-		const s = e.side === 'above' ? 1 : -1;
-		const far = !!e.far;
-		// far lane: a longer branch whose portal sits beyond the near lane's captions
-		const dir = (far ? V(0.55, 0.8 * s, (r() - 0.5) * 0.3) : V(0.78, 0.55 * s, (r() - 0.5) * 0.4)).normalize();
-		const origin = centre(e.x);
-		origin.y += 3 * s;
-		tips.set(e.id, { p: growBranch(twigs, origin, dir, V(0, s, 0), far ? 190 + 15 * r() : 85 + 30 * r(), 0, 2.6, r), far });
-	}
 	for (let i = 0; i < 46; i++) {
 		const x = r() * trackW;
 		const s = r() < 0.5 ? 1 : -1;
@@ -418,6 +454,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		o.frustumCulled = false;
 		scene.add(o);
 	}
+	for (const b of branches) scene.add(b.obj);
 
 	// the traveller
 	const spriteTex = (() => {
@@ -440,11 +477,15 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 	// post
 	const composer = new EffectComposer(renderer);
 	composer.addPass(new RenderPass(scene, camera));
+	// motion blur on the cheap: each frame keeps a fading copy of the last; the damping
+	// (trail length) follows the camera's speed and is zero once we have stopped
+	const trails = new AfterimagePass(0);
+	composer.addPass(trails);
 	const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.6, 0.4, 0.5);
 	composer.addPass(bloom);
 	composer.addPass(new OutputPass());
 	// dev hook for live tuning from the console
-	if (import.meta.env.DEV) (window as unknown as { __tl: unknown }).__tl = { bloom, uGain, mats, renderer, camera, scene, traveller };
+	if (import.meta.env.DEV) (window as unknown as { __tl: unknown }).__tl = { bloom, trails, uGain, mats, renderer, camera, scene, traveller, branches, centre };
 
 	let w = 1,
 		h = 1;
@@ -467,8 +508,6 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		bg.scale.set(hh * camera.aspect * 1.15, hh * 1.15, 1);
 	}
 
-	// camera pose while travelling: behind-left of the traveller, looking at it
-	const CAM = V(-240, 50, 690);
 	const refDist = CAM.length();
 	const TH_F = Math.atan2(CAM.z, -CAM.x); // angle of the side pose around the trunk
 	const D_F = Math.hypot(CAM.x, CAM.z);
@@ -477,15 +516,36 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		tmp = V(),
 		tmp2 = V();
 
-	// opening flight: start far behind on the line looking along it, close in,
-	// then arc out around the traveller until the line lies across the screen
-	function introPose(cx: number, intro: number) {
-		const e = easeInOut(Math.min(1, intro));
-		const o = easeInOut(smooth(0.3, 1, intro));
-		const D = 1500 * (1 - e) + D_F * e;
-		const th = TH_F * o;
-		camPos.set(cx - D * Math.cos(th) - 30 * (1 - o), 24 + (CAM.y - 24) * o, D * Math.sin(th) + 40 * (1 - o));
-		look.set(cx + 420 * (1 - o), 0, 0);
+	// opening flight. We come in from far along the future extension of the thread, hugging it
+	// (just above and beside the fibres, looking along them), already at full speed. The run
+	// eases out to a stop exactly at 2026 while the camera swings out from the hugging pose to
+	// the resting side pose. At first the camera looks far down the thread, so the fibres
+	// converge on the centre of the screen where the star streaks converge; the gaze then
+	// shortens onto the traveller. Returns the normalised speed for blur and bloom.
+	const easeOut = (u: number) => 1 - Math.pow(1 - u, 3);
+	const RUN = 3600; // how far along the future extension we start
+	const HUG = V(0, 34, 26); // camera offset from the thread while hugging it
+	const hugPos = V(),
+		hugLook = V();
+	function runOffset(u: number): number {
+		return RUN * (1 - easeOut(Math.min(1, u / 0.78)));
+	}
+	function introPose(cx: number, intro: number): number {
+		const u = Math.min(1, intro);
+		const off = runOffset(u);
+		const speed = Math.min(1, Math.abs(runOffset(u) - runOffset(Math.max(0, u - 0.01))) / (RUN * 0.03));
+		// hugging pose: follow the thread's own centre line
+		const c = centre(cx + off);
+		hugPos.copy(c).add(HUG);
+		const gaze = 1400 * (1 - smooth(0, 0.35, u)) + 260; // far down the thread at first, then the traveller
+		hugLook.copy(centre(cx + off - gaze));
+		// resting pose
+		tmp.copy(CAM).setX(CAM.x + cx);
+		tmp2.set(cx, 0, 0);
+		const o = easeInOut(smooth(0.62, 1, u));
+		camPos.copy(hugPos).lerp(tmp, o);
+		look.copy(hugLook).lerp(tmp2, o);
+		return speed * (1 - o);
 	}
 
 	function frame(f: Frame): { anchors: Map<string, Anchor>; years: Anchor[] } {
@@ -499,7 +559,8 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		arriveObj.visible = L > 0;
 		arriveGeo.instanceCount = Math.floor(g * NA) * NF;
 
-		if (f.intro < 1) introPose(f.centreX, f.intro);
+		let speed = 0;
+		if (f.intro < 1) speed = introPose(f.centreX, f.intro);
 		else {
 			camPos.copy(CAM).setX(CAM.x + f.centreX);
 			look.set(f.centreX, 0, 0);
@@ -509,21 +570,20 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 			const m = smooth(0.15, 0.5, L);
 			const uC = easeInOut(Math.max(0, Math.min(1, (L - 0.42) / 0.58))) * 0.9;
 			bez(uC, tmp);
-			tmp.x += f.centreX;
 			tmp.y += 4;
 			tmp.z += 3;
 			camPos.lerp(tmp, m);
 			bez(Math.min(1, uC + 0.12), tmp2);
-			tmp2.x += f.centreX;
 			look.lerp(tmp2, m);
 		}
 		camera.position.copy(camPos);
 		camera.lookAt(look);
 
-		// the fibres burn brighter as we fly into them
+		// the fibres burn brighter as we fly into them; speed streaks and glows during the opening run
 		const burn = smooth(0.45, 1, L);
 		uGainA.value = uGain.value * (1 + 14 * burn);
-		bloom.strength = 0.6 + 1.6 * burn;
+		bloom.strength = 0.6 + 1.6 * burn + 0.9 * speed;
+		(trails.uniforms as { damp: { value: number } }).damp.value = 0.92 * Math.pow(speed, 0.6);
 
 		traveller.position.copy(wobble(centre(f.centreX), t));
 		const pulse = (0.85 + 0.15 * Math.sin(t * 3)) * (1 - smooth(0.12, 0.32, L));
@@ -532,6 +592,47 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		composer.render();
 
 		const anchors = new Map<string, Anchor>();
+		const ui = f.ui;
+		const UP = V(0, 1, 0);
+		const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+		for (const b of branches) {
+			// the thread's own point for this event, on screen
+			const P = wobble(centre(b.e.x), t);
+			P.y += 3 * b.s;
+			tmp.copy(P);
+			const d = tmp.distanceTo(camera.position);
+			tmp.project(camera);
+			const ndcZ = tmp.z;
+			const px = ((tmp.x + 1) / 2) * w;
+			const py = ((1 - tmp.y) / 2) * h;
+			// the DOM scales the lens by distance (and shrinks far-lane lenses); mirror that here
+			const sc = Math.max(0.5, Math.min(1.05, refDist / d)) * (b.far ? 0.6 : 1);
+			const R = (ui.portalPx / 2) * sc;
+			const capH = ui.captions[b.e.id] ?? 0;
+			// how far the portal's box reaches beyond its centre, away from the thread and towards it
+			const outward = b.far ? Math.max(R, capH / 2) : R + capH;
+			const inward = b.far ? Math.max(R, capH / 2) : R;
+			// screen offset from the thread: the lane's preferred distance, clamped so the whole box
+			// stays inside the viewport (screen y grows downward; b.s = +1 means above the thread)
+			const room = b.s > 0 ? py - ui.marginPx - outward : h - ui.marginPx - py - outward;
+			const minOff = ui.gapPx + inward;
+			const off = clamp(b.far ? ui.farLane : ui.nearLane, Math.min(minOff, room), Math.max(minOff, room));
+			const tipX = px + (b.far ? 0.55 : 0.4) * off;
+			const tipY = py - b.s * off;
+			// back to world space at the thread's depth, then pose the branch to reach it
+			tmp2.set((tipX / w) * 2 - 1, 1 - (tipY / h) * 2, ndcZ).unproject(camera);
+			b.obj.position.copy(P);
+			const dir = tmp.copy(tmp2).sub(P);
+			const len = dir.length();
+			b.obj.quaternion.setFromUnitVectors(UP, dir.normalize());
+			b.obj.scale.setScalar(len / UNIT);
+			anchors.set(b.e.id, {
+				x: tipX,
+				y: tipY,
+				s: sc,
+				visible: ndcZ < 1 && tipX + R > 0 && tipX - R < w // the lens is at least partly on screen
+			});
+		}
 		const proj = (p: V3): Anchor => {
 			tmp.copy(p);
 			wobble(tmp, t);
@@ -541,14 +642,9 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 				x: ((tmp.x + 1) / 2) * w,
 				y: ((1 - tmp.y) / 2) * h,
 				s: Math.max(0.5, Math.min(1.05, refDist / d)),
-				visible: tmp.z < 1 && Math.abs(tmp.x) < 1.5 && Math.abs(tmp.y) < 1.5
+				visible: tmp.z < 1 && Math.abs(tmp.x) < 1.25 && Math.abs(tmp.y) < 1.15
 			};
 		};
-		for (const [id, tip] of tips) {
-			const a = proj(tip.p);
-			if (tip.far) a.s *= 0.6;
-			anchors.set(id, a);
-		}
 		const years = yearXs.map((x) => {
 			const c = centre(x);
 			c.y -= 20 + 18 * rough(x);
@@ -561,6 +657,7 @@ export function createTimeline(canvas: HTMLCanvasElement, opts: TimelineOpts) {
 		renderer.dispose();
 		composer.dispose();
 		for (const o of [coreObj, fineObj, twigObj, arriveObj]) o.geometry.dispose();
+		for (const b of branches) b.obj.geometry.dispose();
 		for (const m of mats) m.dispose();
 		spriteTex.dispose();
 		bgMat.dispose();

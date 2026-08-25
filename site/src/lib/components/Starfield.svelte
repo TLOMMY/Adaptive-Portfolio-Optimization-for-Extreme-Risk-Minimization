@@ -3,10 +3,11 @@
 	// Warp: stars rush toward the viewer, streak, and the screen burns to white.
 	import { onMount } from 'svelte';
 
+	// warp: accelerate to full speed, then call ondark once the streaks are at full speed; the
+	// canvas keeps streaking after that so the next stage can fade in underneath it.
 	let { warp = false, ondark }: { warp?: boolean; ondark?: () => void } = $props();
 
 	let canvas: HTMLCanvasElement;
-	let dark = $state(0); // 0..1 overlay opacity during warp
 
 	interface Star {
 		x: number; // -1..1 (relative to centre)
@@ -65,8 +66,7 @@
 			if (warpStart) {
 				const e = (t - warpStart) / 1000;
 				speed = Math.min(6, 0.15 * Math.exp(1.6 * e)); // exponential acceleration
-				dark = Math.max(0, Math.min(1, (e - 1.6) / 0.8));
-				if (dark >= 1 && ondark) {
+				if (e >= 2.3 && ondark) {
 					ondark();
 					ondark = undefined;
 				}
@@ -160,22 +160,14 @@
 </script>
 
 <canvas bind:this={canvas} class="stars" aria-hidden="true"></canvas>
-<div class="dark" style:opacity={dark} aria-hidden="true"></div>
 
 <style>
-	.stars,
-	.dark {
+	.stars {
 		position: fixed;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
-	}
-	.stars {
 		z-index: 0;
-	}
-	.dark {
-		z-index: 5;
-		background: #05030a;
 	}
 </style>
