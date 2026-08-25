@@ -1,0 +1,13 @@
+category,model,score_return_requirement,score_risk_protection,score_liquidity_turnover,weight_return_requirement,weight_risk_protection,weight_liquidity_turnover,objective,risk_aversion,target_annual_return,max_turnover,long_only,fully_invested,required_market_inputs,confidence_level,covariance_uncertainty_radius
+Growth,markowitz_mean_variance,3,2,1,0.5,0.333333,0.166667,maximize_mean_variance_utility,5.0,0.12,1.0,True,True,expected_annual_returns|annual_covariance_matrix|current_weights,,
+Growth,cvar_optimization,3,2,1,0.5,0.333333,0.166667,minimize_cvar,,0.12,1.0,True,True,historical_or_simulated_return_scenarios|current_weights,0.95,
+Growth,robust_minimum_variance,3,2,1,0.5,0.333333,0.166667,minimize_worst_case_variance,,0.12,1.0,True,True,expected_annual_returns|annual_covariance_matrix|current_weights|uncertainty_set_calibration_data,,0.1
+Balanced,markowitz_mean_variance,2,2,2,0.333333,0.333333,0.333333,maximize_mean_variance_utility,5.0,0.08,0.5,True,True,expected_annual_returns|annual_covariance_matrix|current_weights,,
+Balanced,cvar_optimization,2,2,2,0.333333,0.333333,0.333333,minimize_cvar,,0.08,0.5,True,True,historical_or_simulated_return_scenarios|current_weights,0.95,
+Balanced,robust_minimum_variance,2,2,2,0.333333,0.333333,0.333333,minimize_worst_case_variance,,0.08,0.5,True,True,expected_annual_returns|annual_covariance_matrix|current_weights|uncertainty_set_calibration_data,,0.1
+Retirement,markowitz_mean_variance,1,3,3,0.142857,0.428571,0.428571,maximize_mean_variance_utility,10.0,0.04,0.2,True,True,expected_annual_returns|annual_covariance_matrix|current_weights,,
+Retirement,cvar_optimization,1,3,3,0.142857,0.428571,0.428571,minimize_cvar,,0.04,0.2,True,True,historical_or_simulated_return_scenarios|current_weights,0.99,
+Retirement,robust_minimum_variance,1,3,3,0.142857,0.428571,0.428571,minimize_worst_case_variance,,0.04,0.2,True,True,expected_annual_returns|annual_covariance_matrix|current_weights|uncertainty_set_calibration_data,,0.2
+Extreme Low Risk,markowitz_mean_variance,1,3,2,0.166667,0.5,0.333333,maximize_mean_variance_utility,10.0,0.04,0.5,True,True,expected_annual_returns|annual_covariance_matrix|current_weights,,
+Extreme Low Risk,cvar_optimization,1,3,2,0.166667,0.5,0.333333,minimize_cvar,,0.04,0.5,True,True,historical_or_simulated_return_scenarios|current_weights,0.99,
+Extreme Low Risk,robust_minimum_variance,1,3,2,0.166667,0.5,0.333333,minimize_worst_case_variance,,0.04,0.5,True,True,expected_annual_returns|annual_covariance_matrix|current_weights|uncertainty_set_calibration_data,,0.2
