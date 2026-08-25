@@ -63,12 +63,11 @@
 	const over = $derived(remaining() < 0);
 	const investedIn = (tickers: string[]) => tickers.reduce((s, t) => s + (app.allocations[t] ?? 0), 0);
 
-	let nav: HTMLOListElement;
+	const shortTitle = (s: { kind: string; title: string }) =>
+		s.kind === 'overview' ? 'Where things stand' : s.kind === 'adviser' ? 'Your adviser' : s.title === 'Telecommunication Services' ? 'Telecommunications' : s.title;
 	function goStep(i: number) {
 		step = Math.max(0, Math.min(steps.length - 1, i));
 		window.scrollTo({ top: 0 });
-		// on phones the editions are a horizontal strip: keep the current one in view
-		nav?.querySelector('.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 	}
 	const name = (t: string) => universe.assets.find((a) => a.ticker === t)?.name ?? t;
 </script>
@@ -87,7 +86,16 @@
 		</div>
 		<nav aria-label="Editions">
 			<p class="label">Editions · {step + 1} of {steps.length}</p>
-			<ol bind:this={nav}>
+			<!-- narrow screens: one native dropdown instead of the list -->
+			<select class="pick" aria-label="Edition" value={step} onchange={(e) => goStep(Number((e.target as HTMLSelectElement).value))}>
+				{#each steps as s, i (s.title)}
+					{@const inv = investedIn(
+						s.kind === 'sector' ? pickable.filter((a) => a.sector === s.title).map((a) => a.ticker) : s.kind === 'funds' ? pickable.filter((a) => a.kind === 'etf').map((a) => a.ticker) : []
+					)}
+					<option value={i}>{i + 1} · {shortTitle(s)}{inv > 0 ? ` · ${money(inv)}` : ''}</option>
+				{/each}
+			</select>
+			<ol>
 				{#each steps as s, i (s.title)}
 					{@const inv = investedIn(
 						s.kind === 'sector' ? pickable.filter((a) => a.sector === s.title).map((a) => a.ticker) : s.kind === 'funds' ? pickable.filter((a) => a.kind === 'etf').map((a) => a.ticker) : []
@@ -95,23 +103,14 @@
 					<li>
 						<button class:active={i === step} class:done={i < step} onclick={() => goStep(i)}>
 							<span class="n">{i + 1}</span>
-							<span class="t">{s.kind === 'overview' ? 'Where things stand' : s.kind === 'adviser' ? 'Your adviser' : s.title === 'Telecommunication Services' ? 'Telecommunications' : s.title}</span>
+							<span class="t">{shortTitle(s)}</span>
 							{#if inv > 0}<span class="inv">{money(inv)}</span>{/if}
 						</button>
 					</li>
 				{/each}
 			</ol>
 		</nav>
-		<div class="steps">
-			{#if step > 0}<button class="btn ghost" onclick={() => goStep(step - 1)}>Back</button>{/if}
-			{#if current.kind === 'adviser'}
-				<button class="btn" disabled={over} onclick={() => go('journey')}>Begin the ten years</button>
-			{:else}
-				<button class="btn" onclick={() => goStep(step + 1)}>
-					{current.kind === 'overview' ? 'Start choosing' : step === steps.length - 2 ? 'Choose an adviser' : 'Next edition'}
-				</button>
-			{/if}
-		</div>
+		<div class="steps wide">{@render stepButtons()}</div>
 	</aside>
 
 	<div class="page">
@@ -155,7 +154,20 @@
 		/>
 	{/if}
 	</div>
+	<!-- on phones the same buttons sit in a bar at the bottom of the screen -->
+	<div class="steps narrow">{@render stepButtons()}</div>
 </section>
+
+{#snippet stepButtons()}
+	{#if step > 0}<button class="btn ghost" onclick={() => goStep(step - 1)}>Back</button>{/if}
+	{#if current.kind === 'adviser'}
+		<button class="btn" disabled={over} onclick={() => go('journey')}>Begin the ten years</button>
+	{:else}
+		<button class="btn" onclick={() => goStep(step + 1)}>
+			{current.kind === 'overview' ? 'Start choosing' : step === steps.length - 2 ? 'Choose an adviser' : 'Next edition'}
+		</button>
+	{/if}
+{/snippet}
 
 <style>
 	.archive {
@@ -165,6 +177,19 @@
 		max-width: 82rem;
 		margin: 0 auto;
 		padding: 1.5rem 1.5rem 5rem;
+	}
+	.page {
+		min-width: 0;
+	}
+	.panel {
+		position: sticky;
+		top: 1rem;
+		align-self: start;
+		display: flex;
+		flex-direction: column;
+		gap: 1.2rem;
+		max-height: calc(100vh - 2rem);
+		overflow-y: auto;
 	}
 	.money {
 		border: 1px solid rgba(233, 223, 204, 0.3);
@@ -308,61 +333,99 @@
 	.btn.ghost {
 		opacity: 0.7;
 	}
+	.steps.narrow,
+	.pick {
+		display: none;
+	}
 	@media (max-width: 60rem) {
 		.archive {
 			grid-template-columns: 1fr;
+			padding: 0 0.75rem 5.5rem; /* room for the bottom bar */
+			gap: 1rem;
 		}
-	}
-	.page {
-		min-width: 0;
-	}
-	.panel {
-		position: sticky;
-		top: 1rem;
-		align-self: start;
-		display: flex;
-		flex-direction: column;
-		gap: 1.2rem;
-		max-height: calc(100vh - 2rem);
-		overflow-y: auto;
-	}
-	@media (max-width: 60rem) {
-		.archive {
-			padding: 1rem 0.75rem 4rem;
-			gap: 1.2rem;
-		}
+		/* a compact bar pinned to the top: cash on one line, the editions as a scrollable strip */
 		.panel {
-			position: static;
+			position: sticky;
+			top: 0;
+			z-index: 4;
+			min-width: 0; /* the strip scrolls inside the panel instead of widening the page */
 			max-height: none;
 			overflow: visible;
-			gap: 0.8rem;
+			gap: 0.35rem;
+			margin: 0 -0.75rem;
+			padding: 0.5rem 0.75rem 0.6rem;
+			background: var(--desk);
+			border-bottom: 1px solid rgba(233, 223, 204, 0.15);
 		}
-		/* the fourteen editions become one scrollable strip so the paper starts above the fold */
-		.panel ol {
-			display: flex;
-			gap: 0.25rem;
-			overflow-x: auto;
-			scrollbar-width: none;
-		}
-		.panel ol::-webkit-scrollbar {
+		.deskline {
 			display: none;
 		}
-		.panel li {
-			flex: none;
+		.money {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			gap: 0.2rem 1.2rem;
+			border: 0;
+			padding: 0;
 		}
-		.panel li button {
-			grid-template-columns: auto auto auto;
-			white-space: nowrap;
-			border-left: 0;
-			border-bottom: 2px solid rgba(233, 223, 204, 0.15);
-			padding: 0.3rem 0.6rem;
-			font-size: 0.88rem;
-		}
-		.panel li button.active {
-			border-bottom-color: var(--desk-accent);
-		}
-		.steps {
+		.money > div:not(.bar) {
 			flex-direction: row;
+			align-items: baseline;
+			gap: 0.45rem;
+		}
+		.money strong {
+			font-size: 1.15rem;
+		}
+		.bar {
+			flex-basis: 100%;
+			height: 3px;
+		}
+		.warn,
+		.clear {
+			flex-basis: 100%;
+		}
+		.panel .label {
+			display: none;
+		}
+		.panel ol {
+			display: none;
+		}
+		.pick {
+			display: block;
+			width: 100%;
+			appearance: none;
+			-webkit-appearance: none;
+			margin: 0.2rem 0 0;
+			padding: 0.5rem 2.2rem 0.5rem 0.7rem;
+			border: 1px solid rgba(233, 223, 204, 0.3);
+			border-left: 2px solid var(--desk-accent);
+			background: rgba(233, 223, 204, 0.06)
+				url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23a6988a' stroke-width='1.5'/></svg>")
+				no-repeat right 0.8rem center;
+			color: var(--desk-ink);
+			font-family: var(--news-serif);
+			font-size: 1rem;
+			line-height: 1.3;
+		}
+		.pick:focus-visible {
+			outline: 1px solid var(--desk-accent);
+			outline-offset: 1px;
+		}
+		.steps.wide {
+			display: none;
+		}
+		.steps.narrow {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 4;
+			display: flex;
+			flex-direction: row;
+			gap: 0.5rem;
+			padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+			background: var(--desk);
+			border-top: 1px solid rgba(233, 223, 204, 0.15);
 		}
 		.steps .btn {
 			flex: 1;

@@ -40,9 +40,35 @@
 
 	const wishPose = $derived(pose(beats.length));
 
+	// The amount box accepts whole dollars only: digits are kept, everything else dropped (a pasted
+	// "$1,000.50" becomes 1,000), leading zeros are trimmed, and it stops at nine digits. Commas are
+	// regrouped on every keystroke and the caret is put back where it was among the digits.
+	const MIN = 100,
+		MAX_DIGITS = 9;
+	const group = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+	function typed(e: Event) {
+		const el = e.target as HTMLInputElement;
+		const raw = el.value;
+		const caret = el.selectionStart ?? raw.length;
+		const digitsBefore = raw.slice(0, caret).replace(/\D/g, '').length;
+		const whole = raw.split('.')[0]; // drop any cents
+		const digits = whole.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, MAX_DIGITS);
+		amountText = group(digits);
+		// the box is rewritten even when the state did not change (a rejected letter must not linger)
+		el.value = amountText;
+		let pos = 0,
+			seen = 0;
+		while (pos < amountText.length && seen < digitsBefore) if (/\d/.test(amountText[pos++])) seen++;
+		el.setSelectionRange(pos, pos);
+	}
+	const amount = $derived(Number(amountText.replace(/\D/g, '')) || 0);
+	const valid = $derived(amount >= MIN);
+	// long amounts shrink a little so nine digits still fit on a narrow phone
+	const shrink = $derived(Math.min(1, 8 / Math.max(8, amountText.length)));
+
 	function wish() {
-		const n = Number(amountText.replace(/[^0-9.]/g, ''));
-		if (n >= 100) app.amount = Math.round(n);
+		if (!valid || warping) return;
+		app.amount = amount;
 		app.warp = true;
 	}
 </script>
@@ -59,11 +85,22 @@
 		<div class="text wish" style:opacity={wishPose.opacity} style:transform={`scale(${wishPose.scale})`} style:pointer-events={wishPose.opacity > 0.5 ? 'auto' : 'none'}>
 			<p class="line small">I wish I could go back to the first of January, 2016,</p>
 			<p class="line small">with</p>
-			<label class="amount mono">
-				<span>$</span><input bind:value={amountText} inputmode="numeric" aria-label="amount to invest" />
+			<label class="amount mono" style:font-size={`calc(clamp(2.4rem, 6vw, 4.5rem) * ${shrink})`}>
+				<span>$</span><input
+					value={amountText}
+					oninput={typed}
+					onkeydown={(e) => e.key === 'Enter' && wish()}
+					inputmode="numeric"
+					autocomplete="off"
+					enterkeyhint="go"
+					aria-label="amount to invest"
+					aria-invalid={!valid}
+					style:width={`${Math.max(1, amountText.length) + 0.8}ch`}
+				/>
 			</label>
 			<p class="line small">to invest.</p>
-			<button class="wishbtn" onclick={wish} disabled={warping}>Make the wish</button>
+			<p class="note mono" style:opacity={valid ? 0 : 0.7}>at least ${MIN.toLocaleString()}</p>
+			<button class="wishbtn" onclick={wish} disabled={warping || !valid}>Make the wish</button>
 		</div>
 	</div>
 	<p class="hint mono" style:opacity={scrollY < 40 ? 0.7 : 0}>scroll</p>
@@ -114,10 +151,20 @@
 		background: transparent;
 		border: 0;
 		outline: 0;
-		width: 8ch;
+		padding: 0;
+		min-width: 1.4ch;
+		caret-color: #ece7d8;
+	}
+	.note {
+		font-size: 0.65rem;
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		color: #ece7d8;
+		margin: 0.4rem 0 0;
+		transition: opacity 0.3s;
 	}
 	.wishbtn {
-		margin-top: 2.2rem;
+		margin-top: 1.4rem;
 		padding: 0.8rem 2rem;
 		border: 1px solid rgba(236, 231, 216, 0.7);
 		background: rgba(236, 231, 216, 0.06);
@@ -136,6 +183,7 @@
 	}
 	.wishbtn:disabled {
 		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.hint {
 		position: fixed;
