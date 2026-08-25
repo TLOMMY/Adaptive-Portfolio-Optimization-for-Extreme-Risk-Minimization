@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/
+.ipynb_checkpoints/
+.DS_Store
+site/node_modules/
+site/build/
+site/.svelte-kit/

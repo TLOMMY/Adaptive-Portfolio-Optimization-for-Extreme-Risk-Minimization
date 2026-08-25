@@ -1,0 +1,243 @@
+[
+ {
+  "date": "2016-01-20",
+  "kind": "market",
+  "title": "Oil below $30",
+  "blurb": "Crude hits a 12-year low; energy stocks and markets slump to start the year.",
+  "side": "below",
+  "image": "2016-01-20.jpg",
+  "credit": "Photo: Arne Hückelheim · CC BY-SA 3.0"
+ },
+ {
+  "date": "2016-06-24",
+  "kind": "market",
+  "title": "Brexit vote",
+  "blurb": "The UK votes to leave the EU. Global markets drop sharply, then recover within weeks.",
+  "side": "above",
+  "image": "2016-06-24.jpg",
+  "credit": "Photo: Derek Bennett · CC BY 2.0"
+ },
+ {
+  "date": "2016-07-06",
+  "kind": "world",
+  "title": "Pokémon Go",
+  "blurb": "Nintendo's shares nearly double in a fortnight on an app it didn't even make.",
+  "side": "below",
+  "image": "2016-07-06.jpg",
+  "credit": "Photo: ProtoplasmaKid · CC BY 4.0"
+ },
+ {
+  "date": "2016-11-09",
+  "kind": "market",
+  "title": "US election",
+  "blurb": "Donald Trump wins. Futures plunge overnight, then stocks rally on tax-cut hopes.",
+  "side": "above",
+  "image": "2016-11-09.jpg",
+  "credit": "Photo: Max Goldberg from USA · CC BY 2.0"
+ },
+ {
+  "date": "2017-06-01",
+  "kind": "world",
+  "title": "Amazon buys Whole Foods",
+  "blurb": "Grocers' shares fall 5–10% in a day on the news. Retail fears 'the Amazon effect'.",
+  "side": "below",
+  "image": "2017-06-01.jpg",
+  "credit": "Photo: Infrogmation of New Orleans · CC BY-SA 3.0"
+ },
+ {
+  "date": "2017-12-17",
+  "kind": "world",
+  "title": "Bitcoin at $19,000",
+  "blurb": "Crypto mania peaks; a year later Bitcoin is down 80%.",
+  "side": "above",
+  "image": "2017-12-17.jpg",
+  "credit": "Photo: Shixart1985 · CC BY 2.0"
+ },
+ {
+  "date": "2017-12-22",
+  "kind": "market",
+  "title": "Tax cuts signed",
+  "blurb": "US corporate tax rate cut from 35% to 21%, capping a year of almost uninterrupted gains.",
+  "side": "below",
+  "image": "2017-12-22.jpg",
+  "credit": "Photo: Diliff · CC BY 2.5"
+ },
+ {
+  "date": "2018-02-05",
+  "kind": "market",
+  "title": "Volmageddon",
+  "blurb": "The VIX doubles in a day and the Dow drops 1,175 points, its biggest points fall ever at the time.",
+  "side": "above",
+  "image": "2018-02-05.jpg",
+  "credit": "Photo: Carol M. Highsmith · Public domain"
+ },
+ {
+  "date": "2018-03-22",
+  "kind": "world",
+  "title": "Trade war begins",
+  "blurb": "The US announces tariffs on $50bn of Chinese goods; China retaliates.",
+  "side": "below",
+  "image": "2018-03-22.jpg",
+  "credit": "Photo: Downtowngal · CC BY-SA 4.0"
+ },
+ {
+  "date": "2018-12-24",
+  "kind": "market",
+  "title": "Christmas Eve low",
+  "blurb": "Rate hikes and trade-war fears drag the S&P 500 almost 20% below its high.",
+  "side": "above",
+  "image": "2018-12-24.jpg",
+  "credit": "Photo: Carlos Delgado · CC BY-SA 3.0"
+ },
+ {
+  "date": "2019-08-14",
+  "kind": "market",
+  "title": "Yield curve inverts",
+  "blurb": "Long-term bond yields fall below short-term ones, a classic recession warning.",
+  "side": "below",
+  "image": "2019-08-14.jpg",
+  "credit": "Photo: AgnosticPreachersKid · CC BY-SA 3.0"
+ },
+ {
+  "date": "2019-12-10",
+  "kind": "world",
+  "title": "Aramco IPO",
+  "blurb": "Saudi Aramco lists as the world's most valuable company at $1.7 trillion.",
+  "side": "above",
+  "image": "2019-12-10.jpg",
+  "credit": "Photo: WhisperToMe · CC0"
+ },
+ {
+  "date": "2020-03-16",
+  "kind": "market",
+  "title": "COVID crash",
+  "blurb": "Markets fall 34% in five weeks. Trading halts four times. The fastest bear market in history.",
+  "side": "below",
+  "image": "2020-03-16.jpg",
+  "credit": "Photo: NatalieWynnePace · CC BY 4.0"
+ },
+ {
+  "date": "2020-04-20",
+  "kind": "world",
+  "title": "Oil goes negative",
+  "blurb": "With storage full, a barrel of US crude trades at −$37. Sellers pay buyers to take it.",
+  "side": "above",
+  "image": "2020-04-20.jpg",
+  "credit": "Photo: Tony Webster · CC BY 4.0"
+ },
+ {
+  "date": "2020-11-09",
+  "kind": "market",
+  "title": "Vaccine day",
+  "blurb": "Pfizer announces a 90% effective vaccine. Beaten-down sectors surge.",
+  "side": "below",
+  "image": "2020-11-09.jpg",
+  "credit": "Photo: U.S. Secretary of Defense · Public domain"
+ },
+ {
+  "date": "2021-01-27",
+  "kind": "market",
+  "title": "GameStop mania",
+  "blurb": "Retail traders squeeze hedge funds; meme stocks and crypto boom.",
+  "side": "above",
+  "image": "2021-01-27.jpg",
+  "credit": "Photo: Dwight Burdette · CC BY 3.0"
+ },
+ {
+  "date": "2021-03-23",
+  "kind": "world",
+  "title": "Ever Given blocks Suez",
+  "blurb": "One ship halts 12% of world trade for six days.",
+  "side": "below",
+  "image": "2021-03-23.jpg",
+  "credit": "Photo: Contains modified Copernicus Sentinel data [2021], processed by Pierre Markuse · CC BY 2.0"
+ },
+ {
+  "date": "2022-02-24",
+  "kind": "world",
+  "title": "Russia invades Ukraine",
+  "blurb": "Energy and grain prices spike; European markets fall.",
+  "side": "above",
+  "image": "2022-02-24.jpg",
+  "credit": "Photo: spoilt.exile · CC BY-SA 2.0"
+ },
+ {
+  "date": "2022-03-16",
+  "kind": "market",
+  "title": "Rate hikes begin",
+  "blurb": "The Fed starts its fastest hiking cycle in 40 years to fight 8% inflation. Stocks and bonds both fall.",
+  "side": "below",
+  "image": "2022-03-16.jpg",
+  "credit": "Photo: Federalreserve · Public domain"
+ },
+ {
+  "date": "2022-10-12",
+  "kind": "market",
+  "title": "Bear market low",
+  "blurb": "The S&P 500 bottoms 25% below its peak; tech stocks are down far more.",
+  "side": "above",
+  "image": "2022-10-12.jpg",
+  "credit": "Photo: Tdorante10 · CC BY-SA 4.0"
+ },
+ {
+  "date": "2022-11-11",
+  "kind": "world",
+  "title": "FTX collapses",
+  "blurb": "A $32bn crypto exchange goes bankrupt in a week.",
+  "side": "below",
+  "image": "2022-11-11.jpg",
+  "credit": "Photo: Phillip Pessar · CC BY 2.0"
+ },
+ {
+  "date": "2022-11-30",
+  "kind": "world",
+  "title": "ChatGPT launches",
+  "blurb": "A hundred million users in two months. The AI era begins.",
+  "side": "above"
+ },
+ {
+  "date": "2023-03-10",
+  "kind": "market",
+  "title": "SVB collapses",
+  "blurb": "Silicon Valley Bank fails in 48 hours, the largest bank failure since 2008.",
+  "side": "below",
+  "image": "2023-03-10.jpg",
+  "credit": "Photo: Minh Nguyen · CC BY-SA 4.0"
+ },
+ {
+  "date": "2023-05-25",
+  "kind": "market",
+  "title": "AI boom",
+  "blurb": "Nvidia's forecast stunned Wall Street; the AI rally begins in earnest.",
+  "side": "above",
+  "image": "2023-05-25.jpg",
+  "credit": "Photo: Dicklyon · CC BY-SA 4.0"
+ },
+ {
+  "date": "2024-03-01",
+  "kind": "world",
+  "title": "Nvidia at $2 trillion",
+  "blurb": "The chipmaker adds a trillion dollars of value in nine months.",
+  "side": "below",
+  "image": "2024-03-01.jpg",
+  "credit": "Photo: Will Buckner · CC BY 2.0"
+ },
+ {
+  "date": "2024-08-05",
+  "kind": "market",
+  "title": "Yen carry unwind",
+  "blurb": "Japan's Nikkei drops 12% in a day; a brief global scare.",
+  "side": "above",
+  "image": "2024-08-05.jpg",
+  "credit": "Photo: Lombroso · CC BY-SA 4.0"
+ },
+ {
+  "date": "2025-04-03",
+  "kind": "market",
+  "title": "Tariff shock",
+  "blurb": "Sweeping US tariffs trigger the worst two-day fall since 2020, followed by a sharp rebound.",
+  "side": "below",
+  "image": "2025-04-03.jpg",
+  "credit": "Photo: Downtowngal · CC BY-SA 4.0"
+ }
+]

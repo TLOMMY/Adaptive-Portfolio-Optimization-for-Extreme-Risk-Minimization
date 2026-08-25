@@ -1,0 +1,331 @@
+{
+ "assets": [
+  {
+   "ticker": "AAPL",
+   "name": "Apple",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "ORCL",
+   "name": "Oracle",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "CSCO",
+   "name": "Cisco",
+   "sector": "Information Technology",
+   "kind": "stock"
+  },
+  {
+   "ticker": "JNJ",
+   "name": "Johnson & Johnson",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PFE",
+   "name": "Pfizer",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "MRK",
+   "name": "Merck",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "GILD",
+   "name": "Gilead Sciences",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "AMGN",
+   "name": "Amgen",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "UNH",
+   "name": "UnitedHealth",
+   "sector": "Health Care",
+   "kind": "stock"
+  },
+  {
+   "ticker": "BRK-B",
+   "name": "Berkshire Hathaway",
+   "sector": "Financials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "JPM",
+   "name": "JPMorgan Chase",
+   "sector": "Financials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "WFC",
+   "name": "Wells Fargo",
+   "sector": "Financials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "BAC",
+   "name": "Bank of America",
+   "sector": "Financials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "C",
+   "name": "Citigroup",
+   "sector": "Financials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "HD",
+   "name": "Home Depot",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "Comcast",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "MCD",
+   "name": "McDonald's",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "NKE",
+   "name": "Nike",
+   "sector": "Consumer Discretionary",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PG",
+   "name": "Procter & Gamble",
+   "sector": "Consumer Staples",
+   "kind": "stock"
+  },
+  {
+   "ticker": "KO",
+   "name": "Coca-Cola",
+   "sector": "Consumer Staples",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PEP",
+   "name": "PepsiCo",
+   "sector": "Consumer Staples",
+   "kind": "stock"
+  },
+  {
+   "ticker": "WMT",
+   "name": "Walmart",
+   "sector": "Consumer Staples",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PM",
+   "name": "Philip Morris",
+   "sector": "Consumer Staples",
+   "kind": "stock"
+  },
+  {
+   "ticker": "XOM",
+   "name": "Exxon Mobil",
+   "sector": "Energy",
+   "kind": "stock"
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron",
+   "sector": "Energy",
+   "kind": "stock"
+  },
+  {
+   "ticker": "SLB",
+   "name": "Schlumberger",
+   "sector": "Energy",
+   "kind": "stock"
+  },
+  {
+   "ticker": "COP",
+   "name": "ConocoPhillips",
+   "sector": "Energy",
+   "kind": "stock"
+  },
+  {
+   "ticker": "GE",
+   "name": "General Electric",
+   "sector": "Industrials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "BA",
+   "name": "Boeing",
+   "sector": "Industrials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "MMM",
+   "name": "3M",
+   "sector": "Industrials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "UNP",
+   "name": "Union Pacific",
+   "sector": "Industrials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "HON",
+   "name": "Honeywell",
+   "sector": "Industrials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PPG",
+   "name": "PPG Industries",
+   "sector": "Materials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "ECL",
+   "name": "Ecolab",
+   "sector": "Materials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "SHW",
+   "name": "Sherwin-Williams",
+   "sector": "Materials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "APD",
+   "name": "Air Products",
+   "sector": "Materials",
+   "kind": "stock"
+  },
+  {
+   "ticker": "NEE",
+   "name": "NextEra Energy",
+   "sector": "Utilities",
+   "kind": "stock"
+  },
+  {
+   "ticker": "DUK",
+   "name": "Duke Energy",
+   "sector": "Utilities",
+   "kind": "stock"
+  },
+  {
+   "ticker": "SO",
+   "name": "Southern Company",
+   "sector": "Utilities",
+   "kind": "stock"
+  },
+  {
+   "ticker": "D",
+   "name": "Dominion Energy",
+   "sector": "Utilities",
+   "kind": "stock"
+  },
+  {
+   "ticker": "SPG",
+   "name": "Simon Property",
+   "sector": "Real Estate",
+   "kind": "stock"
+  },
+  {
+   "ticker": "AMT",
+   "name": "American Tower",
+   "sector": "Real Estate",
+   "kind": "stock"
+  },
+  {
+   "ticker": "PSA",
+   "name": "Public Storage",
+   "sector": "Real Estate",
+   "kind": "stock"
+  },
+  {
+   "ticker": "CCI",
+   "name": "Crown Castle",
+   "sector": "Real Estate",
+   "kind": "stock"
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T",
+   "sector": "Telecommunication Services",
+   "kind": "stock"
+  },
+  {
+   "ticker": "VZ",
+   "name": "Verizon",
+   "sector": "Telecommunication Services",
+   "kind": "stock"
+  },
+  {
+   "ticker": "AGG",
+   "name": "iShares Core US Aggregate Bond",
+   "sector": "Bonds",
+   "kind": "etf"
+  },
+  {
+   "ticker": "GLD",
+   "name": "SPDR Gold Shares",
+   "sector": "Gold",
+   "kind": "etf"
+  },
+  {
+   "ticker": "CASH",
+   "name": "Cash (T-bills)",
+   "sector": "Cash",
+   "kind": "cash"
+  }
+ ],
+ "benchmark": "SPY",
+ "start": "2016-01-04",
+ "end": "2025-12-31"
+}

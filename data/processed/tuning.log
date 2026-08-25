@@ -1,0 +1,37 @@
+72 backtests on 2011-04-01..2015-12-31
+
+== builder: 26/36 configs kept the risk promise; best:
+profile           builder
+lookback_days         756
+shrink                0.5
+drift_trigger         0.2
+vol_trigger           2.0
+solves                 23
+cagr              0.15162
+sharpe           1.251674
+max_drawdown    -0.115566
+cvar             0.016388
+avg_limit        0.017753
+cvar_ratio       0.923107
+turnover         7.820326
+
+== preserver: 18/36 configs kept the risk promise; best:
+profile          preserver
+lookback_days          756
+shrink                0.75
+drift_trigger          0.1
+vol_trigger           99.0
+solves                  19
+cagr               0.08328
+sharpe            1.244567
+max_drawdown     -0.072356
+cvar              0.008994
+avg_limit         0.008872
+cvar_ratio        1.013812
+turnover          3.787263
+
+marginal means of Sharpe by setting:
+  lookback_days {504: 1.009, 756: 1.13}
+  shrink {0.5: 1.029, 0.75: 1.093, 1.0: 1.087}
+  drift_trigger {0.1: 1.08, 0.2: 1.059}
+  vol_trigger {1.5: 1.063, 2.0: 1.082, 99.0: 1.064}

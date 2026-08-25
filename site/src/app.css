@@ -1,0 +1,85 @@
+/* Design tokens. Two worlds: the paper archive (2016) and the dark journey. */
+:root {
+	--paper: #f3ecdc;
+	--paper-deep: #e6dcc3;
+	--ink: #1d1a14;
+	--ink-soft: #5a5244;
+	--rule: #b9ad92;
+	--stamp: #a8321f;
+	--night: #0b0d12;
+	--night-2: #141821;
+	--glow: #e8e2d0;
+	--glow-soft: #9aa0ad;
+	--you: #e0a742;
+	--adviser: #5fb3a1;
+	--market: #8b90a0;
+	--serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+	--mono: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+	--sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+}
+body {
+	font-family: var(--serif);
+	color: var(--ink);
+	background: var(--paper);
+	line-height: 1.5;
+}
+body[data-world='night'] {
+	background: var(--night);
+	color: var(--glow);
+}
+h1,
+h2,
+h3 {
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	margin: 0 0 0.5em;
+}
+button {
+	font: inherit;
+	cursor: pointer;
+}
+.stage {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 1.5rem;
+}
+.btn {
+	border: 1px solid currentColor;
+	background: transparent;
+	color: inherit;
+	padding: 0.7rem 1.6rem;
+	border-radius: 2px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	font-size: 0.8rem;
+}
+.btn:hover {
+	background: var(--ink);
+	color: var(--paper);
+}
+body[data-world='night'] .btn:hover {
+	background: var(--glow);
+	color: var(--night);
+}
+.mono {
+	font-family: var(--mono);
+	font-variant-numeric: tabular-nums;
+}
+.muted {
+	color: var(--ink-soft);
+}
+body[data-world='night'] .muted {
+	color: var(--glow-soft);
+}
