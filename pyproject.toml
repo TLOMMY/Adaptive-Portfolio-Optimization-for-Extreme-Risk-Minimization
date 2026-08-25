@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "ampl-module-base>=20260809",
     "ampl-module-highs>=20260813",
+    "ampl-module-gurobi",
     "amplpy>=0.15",
     "numpy",
     "pandas",
@@ -43,3 +44,4 @@ explicit = true
 [tool.uv.sources]
 ampl-module-base = { index = "ampl" }
 ampl-module-highs = { index = "ampl" }
+ampl-module-gurobi = { index = "ampl" }

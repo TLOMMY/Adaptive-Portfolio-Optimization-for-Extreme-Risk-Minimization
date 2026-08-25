@@ -1,0 +1,925 @@
+{
+ "start": "2016-01-04",
+ "end": "2025-12-31",
+ "benchmark": "SPY",
+ "story_model": "cvar",
+ "profiles": [
+  {
+   "key": "preserver",
+   "name": "The Preserver",
+   "tagline": "Would rather miss a rally than sit through a crash.",
+   "archetype": "Capital preservation",
+   "personality": "I have seen two crashes up close and I will not put you through a third; sleep matters more than bragging rights.",
+   "risk_tolerance": "Low",
+   "horizon_years": 10,
+   "cvar_start": 0.01,
+   "cvar_end": 0.005,
+   "max_holdings": 20,
+   "w_max": 0.08,
+   "cash_min": 0.1,
+   "sector_cap": {
+    "Information Technology": 0.2,
+    "Energy": 0.1
+   },
+   "exclude": []
+  },
+  {
+   "key": "steady",
+   "name": "The Steady Hand",
+   "tagline": "Balanced growth, no heroics.",
+   "archetype": "Balanced",
+   "personality": "I keep a little of everything, trim what runs ahead, and never make a decision in a hurry.",
+   "risk_tolerance": "Moderate",
+   "horizon_years": 10,
+   "cvar_start": 0.015,
+   "cvar_end": 0.007,
+   "max_holdings": 15,
+   "w_max": 0.1,
+   "cash_min": 0.05,
+   "sector_cap": {},
+   "exclude": []
+  },
+  {
+   "key": "builder",
+   "name": "The Builder",
+   "tagline": "Growth first, with a seatbelt.",
+   "archetype": "Growth",
+   "personality": "Ten years is long enough to be brave, so I lean into stocks, but I always know exactly how much a bad month can cost you.",
+   "risk_tolerance": "High",
+   "horizon_years": 10,
+   "cvar_start": 0.02,
+   "cvar_end": 0.01,
+   "max_holdings": 12,
+   "w_max": 0.12,
+   "cash_min": 0.02,
+   "sector_cap": {},
+   "exclude": []
+  },
+  {
+   "key": "maverick",
+   "name": "The Maverick",
+   "tagline": "Concentrated bets, stomach of steel.",
+   "archetype": "Aggressive growth",
+   "personality": "Eight names, big positions, no cash sitting idle; if you cannot watch a 30% fall without flinching, hire someone else.",
+   "risk_tolerance": "Very high",
+   "horizon_years": 10,
+   "cvar_start": 0.028,
+   "cvar_end": 0.014,
+   "max_holdings": 8,
+   "w_max": 0.2,
+   "cash_min": 0.0,
+   "sector_cap": {},
+   "exclude": []
+  },
+  {
+   "key": "sprinter",
+   "name": "The Sprinter",
+   "tagline": "Needs the money in three years.",
+   "archetype": "Short horizon",
+   "personality": "You need this money soon, so every month that passes I take a little more off the table.",
+   "risk_tolerance": "Moderate",
+   "horizon_years": 3,
+   "cvar_start": 0.015,
+   "cvar_end": 0.004,
+   "max_holdings": 12,
+   "w_max": 0.1,
+   "cash_min": 0.1,
+   "sector_cap": {},
+   "exclude": []
+  },
+  {
+   "key": "ethical",
+   "name": "The Ethical Investor",
+   "tagline": "Growth, but not from oil or tobacco.",
+   "archetype": "Values-led growth",
+   "personality": "I invest the way you would if you had the time: growth, yes, but nothing you would be embarrassed to own.",
+   "risk_tolerance": "High",
+   "horizon_years": 10,
+   "cvar_start": 0.018,
+   "cvar_end": 0.009,
+   "max_holdings": 15,
+   "w_max": 0.1,
+   "cash_min": 0.02,
+   "sector_cap": {
+    "Energy": 0.0
+   },
+   "exclude": [
+    "PM"
+   ]
+  }
+ ],
+ "models": [
+  {
+   "key": "cvar",
+   "name": "CVaR limit",
+   "blurb": "Maximises expected return while keeping the average loss on the worst 5% of historical days under the investor's limit, which tightens as the horizon shrinks.",
+   "solver": "highs"
+  },
+  {
+   "key": "markowitz",
+   "name": "Markowitz",
+   "blurb": "Classic mean-variance: maximises expected return subject to a cap on portfolio variance, using the plain sample covariance of the last three years.",
+   "solver": "gurobi"
+  },
+  {
+   "key": "markowitz_lw",
+   "name": "Markowitz + Ledoit-Wolf",
+   "blurb": "Mean-variance with a Ledoit-Wolf shrunk covariance, which pulls the noisy sample covariance toward a simpler structure before optimising.",
+   "solver": "gurobi"
+  },
+  {
+   "key": "robust",
+   "name": "Robust mean-variance",
+   "blurb": "Assumes the expected-return estimates are wrong by up to one standard error in the least favourable direction and maximises that worst case, under the same variance cap.",
+   "solver": "gurobi"
+  },
+  {
+   "key": "equal",
+   "name": "Equal weight (1/N)",
+   "blurb": "Puts the same amount in every allowed stock and fund and rebalances back to equal whenever a trigger fires; no estimates, no optimisation.",
+   "solver": null
+  }
+ ],
+ "runs": [
+  {
+   "profile": "preserver",
+   "model": "cvar",
+   "file": "runs/preserver__cvar.json",
+   "solves": 47,
+   "total_cost": 909.67,
+   "avg_cvar_limit": 0.007548,
+   "metrics": {
+    "cagr": 0.061596,
+    "volatility": 0.068762,
+    "sharpe": 0.59501,
+    "sortino": 0.646865,
+    "max_drawdown": -0.178722,
+    "cvar_95_daily": 0.009926,
+    "end_value": 181405.440115
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "preserver",
+   "model": "markowitz",
+   "file": "runs/preserver__markowitz.json",
+   "solves": 47,
+   "total_cost": 808.36,
+   "avg_cvar_limit": 0.007548,
+   "metrics": {
+    "cagr": 0.065088,
+    "volatility": 0.07265,
+    "sharpe": 0.612298,
+    "sortino": 0.660291,
+    "max_drawdown": -0.182189,
+    "cvar_95_daily": 0.010444,
+    "end_value": 187445.943537
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "preserver",
+   "model": "markowitz_lw",
+   "file": "runs/preserver__markowitz_lw.json",
+   "solves": 47,
+   "total_cost": 804.98,
+   "avg_cvar_limit": 0.007548,
+   "metrics": {
+    "cagr": 0.064386,
+    "volatility": 0.072696,
+    "sharpe": 0.602843,
+    "sortino": 0.653859,
+    "max_drawdown": -0.181977,
+    "cvar_95_daily": 0.010493,
+    "end_value": 186212.996112
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "preserver",
+   "model": "robust",
+   "file": "runs/preserver__robust.json",
+   "solves": 47,
+   "total_cost": 847.05,
+   "avg_cvar_limit": 0.007548,
+   "metrics": {
+    "cagr": 0.063048,
+    "volatility": 0.070666,
+    "sharpe": 0.600293,
+    "sortino": 0.641957,
+    "max_drawdown": -0.180613,
+    "cvar_95_daily": 0.010239,
+    "end_value": 183888.042168
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "preserver",
+   "model": "equal",
+   "file": "runs/preserver__equal.json",
+   "solves": 49,
+   "total_cost": 909.4,
+   "avg_cvar_limit": 0.007549,
+   "metrics": {
+    "cagr": 0.128524,
+    "volatility": 0.158391,
+    "sharpe": 0.709588,
+    "sortino": 0.839708,
+    "max_drawdown": -0.330371,
+    "cvar_95_daily": 0.023694,
+    "end_value": 333990.485144
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "steady",
+   "model": "cvar",
+   "file": "runs/steady__cvar.json",
+   "solves": 47,
+   "total_cost": 1289.7,
+   "avg_cvar_limit": 0.011076,
+   "metrics": {
+    "cagr": 0.089582,
+    "volatility": 0.099688,
+    "sharpe": 0.698386,
+    "sortino": 0.772437,
+    "max_drawdown": -0.237685,
+    "cvar_95_daily": 0.01419,
+    "end_value": 235187.996401
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "steady",
+   "model": "markowitz",
+   "file": "runs/steady__markowitz.json",
+   "solves": 47,
+   "total_cost": 1149.44,
+   "avg_cvar_limit": 0.011076,
+   "metrics": {
+    "cagr": 0.08422,
+    "volatility": 0.1031,
+    "sharpe": 0.630625,
+    "sortino": 0.708827,
+    "max_drawdown": -0.223282,
+    "cvar_95_daily": 0.015058,
+    "end_value": 223877.247921
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "steady",
+   "model": "markowitz_lw",
+   "file": "runs/steady__markowitz_lw.json",
+   "solves": 47,
+   "total_cost": 1161.0,
+   "avg_cvar_limit": 0.011076,
+   "metrics": {
+    "cagr": 0.084448,
+    "volatility": 0.103769,
+    "sharpe": 0.629262,
+    "sortino": 0.708776,
+    "max_drawdown": -0.223326,
+    "cvar_95_daily": 0.015186,
+    "end_value": 224349.254299
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "steady",
+   "model": "robust",
+   "file": "runs/steady__robust.json",
+   "solves": 47,
+   "total_cost": 1108.23,
+   "avg_cvar_limit": 0.011076,
+   "metrics": {
+    "cagr": 0.073936,
+    "volatility": 0.097854,
+    "sharpe": 0.561532,
+    "sortino": 0.615602,
+    "max_drawdown": -0.224309,
+    "cvar_95_daily": 0.014282,
+    "end_value": 203544.973548
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "steady",
+   "model": "equal",
+   "file": "runs/steady__equal.json",
+   "solves": 49,
+   "total_cost": 909.4,
+   "avg_cvar_limit": 0.011078,
+   "metrics": {
+    "cagr": 0.128524,
+    "volatility": 0.158391,
+    "sharpe": 0.709588,
+    "sortino": 0.839708,
+    "max_drawdown": -0.330371,
+    "cvar_95_daily": 0.023694,
+    "end_value": 333990.485144
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "builder",
+   "model": "cvar",
+   "file": "runs/builder__cvar.json",
+   "solves": 49,
+   "total_cost": 1655.85,
+   "avg_cvar_limit": 0.015063,
+   "metrics": {
+    "cagr": 0.104771,
+    "volatility": 0.127422,
+    "sharpe": 0.680109,
+    "sortino": 0.778917,
+    "max_drawdown": -0.274224,
+    "cvar_95_daily": 0.018922,
+    "end_value": 270057.914365
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "builder",
+   "model": "markowitz",
+   "file": "runs/builder__markowitz.json",
+   "solves": 48,
+   "total_cost": 1490.14,
+   "avg_cvar_limit": 0.015042,
+   "metrics": {
+    "cagr": 0.106878,
+    "volatility": 0.135448,
+    "sharpe": 0.661867,
+    "sortino": 0.751578,
+    "max_drawdown": -0.286636,
+    "cvar_95_daily": 0.020197,
+    "end_value": 275246.733406
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "builder",
+   "model": "markowitz_lw",
+   "file": "runs/builder__markowitz_lw.json",
+   "solves": 48,
+   "total_cost": 1515.19,
+   "avg_cvar_limit": 0.015043,
+   "metrics": {
+    "cagr": 0.10788,
+    "volatility": 0.13627,
+    "sharpe": 0.665306,
+    "sortino": 0.760726,
+    "max_drawdown": -0.285114,
+    "cvar_95_daily": 0.020327,
+    "end_value": 277746.063332
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "builder",
+   "model": "robust",
+   "file": "runs/builder__robust.json",
+   "solves": 48,
+   "total_cost": 1332.64,
+   "avg_cvar_limit": 0.015042,
+   "metrics": {
+    "cagr": 0.088111,
+    "volatility": 0.108949,
+    "sharpe": 0.635514,
+    "sortino": 0.732545,
+    "max_drawdown": -0.224378,
+    "cvar_95_daily": 0.015965,
+    "end_value": 232022.544145
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "builder",
+   "model": "equal",
+   "file": "runs/builder__equal.json",
+   "solves": 49,
+   "total_cost": 909.4,
+   "avg_cvar_limit": 0.015097,
+   "metrics": {
+    "cagr": 0.128524,
+    "volatility": 0.158391,
+    "sharpe": 0.709588,
+    "sortino": 0.839708,
+    "max_drawdown": -0.330371,
+    "cvar_95_daily": 0.023694,
+    "end_value": 333990.485144
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "maverick",
+   "model": "cvar",
+   "file": "runs/maverick__cvar.json",
+   "solves": 49,
+   "total_cost": 2403.37,
+   "avg_cvar_limit": 0.021067,
+   "metrics": {
+    "cagr": 0.146226,
+    "volatility": 0.165353,
+    "sharpe": 0.780858,
+    "sortino": 0.967729,
+    "max_drawdown": -0.290645,
+    "cvar_95_daily": 0.02429,
+    "end_value": 390181.744031
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "maverick",
+   "model": "markowitz",
+   "file": "runs/maverick__markowitz.json",
+   "solves": 50,
+   "total_cost": 2285.4,
+   "avg_cvar_limit": 0.02101,
+   "metrics": {
+    "cagr": 0.144098,
+    "volatility": 0.171728,
+    "sharpe": 0.747451,
+    "sortino": 0.915779,
+    "max_drawdown": -0.305826,
+    "cvar_95_daily": 0.025547,
+    "end_value": 383002.639215
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "maverick",
+   "model": "markowitz_lw",
+   "file": "runs/maverick__markowitz_lw.json",
+   "solves": 49,
+   "total_cost": 2266.0,
+   "avg_cvar_limit": 0.021108,
+   "metrics": {
+    "cagr": 0.146131,
+    "volatility": 0.172978,
+    "sharpe": 0.753608,
+    "sortino": 0.918089,
+    "max_drawdown": -0.319446,
+    "cvar_95_daily": 0.025768,
+    "end_value": 389856.472204
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "maverick",
+   "model": "robust",
+   "file": "runs/maverick__robust.json",
+   "solves": 49,
+   "total_cost": 1326.2,
+   "avg_cvar_limit": 0.021089,
+   "metrics": {
+    "cagr": 0.076088,
+    "volatility": 0.115985,
+    "sharpe": 0.507713,
+    "sortino": 0.612821,
+    "max_drawdown": -0.25458,
+    "cvar_95_daily": 0.017565,
+    "end_value": 207636.382411
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "maverick",
+   "model": "equal",
+   "file": "runs/maverick__equal.json",
+   "solves": 49,
+   "total_cost": 909.4,
+   "avg_cvar_limit": 0.021136,
+   "metrics": {
+    "cagr": 0.128524,
+    "volatility": 0.158391,
+    "sharpe": 0.709588,
+    "sortino": 0.839708,
+    "max_drawdown": -0.330371,
+    "cvar_95_daily": 0.023694,
+    "end_value": 333990.485144
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "sprinter",
+   "model": "cvar",
+   "file": "runs/sprinter__cvar.json",
+   "solves": 15,
+   "total_cost": 446.47,
+   "avg_cvar_limit": 0.009284,
+   "metrics": {
+    "cagr": 0.081042,
+    "volatility": 0.071714,
+    "sharpe": 0.975025,
+    "sortino": 1.205055,
+    "max_drawdown": -0.085539,
+    "cvar_95_daily": 0.011227,
+    "end_value": 126115.620277
+   },
+   "benchmark_metrics": {
+    "cagr": 0.100328,
+    "volatility": 0.1316,
+    "sharpe": 0.712088,
+    "sortino": 0.844617,
+    "max_drawdown": -0.193489,
+    "cvar_95_daily": 0.02202,
+    "end_value": 133227.695351
+   }
+  },
+  {
+   "profile": "sprinter",
+   "model": "markowitz",
+   "file": "runs/sprinter__markowitz.json",
+   "solves": 15,
+   "total_cost": 419.74,
+   "avg_cvar_limit": 0.009284,
+   "metrics": {
+    "cagr": 0.071881,
+    "volatility": 0.072878,
+    "sharpe": 0.84377,
+    "sortino": 1.037337,
+    "max_drawdown": -0.093855,
+    "cvar_95_daily": 0.011286,
+    "end_value": 122935.705949
+   },
+   "benchmark_metrics": {
+    "cagr": 0.100328,
+    "volatility": 0.1316,
+    "sharpe": 0.712088,
+    "sortino": 0.844617,
+    "max_drawdown": -0.193489,
+    "cvar_95_daily": 0.02202,
+    "end_value": 133227.695351
+   }
+  },
+  {
+   "profile": "sprinter",
+   "model": "markowitz_lw",
+   "file": "runs/sprinter__markowitz_lw.json",
+   "solves": 15,
+   "total_cost": 417.51,
+   "avg_cvar_limit": 0.009284,
+   "metrics": {
+    "cagr": 0.072433,
+    "volatility": 0.072803,
+    "sharpe": 0.851631,
+    "sortino": 1.051956,
+    "max_drawdown": -0.090128,
+    "cvar_95_daily": 0.011232,
+    "end_value": 123125.888274
+   },
+   "benchmark_metrics": {
+    "cagr": 0.100328,
+    "volatility": 0.1316,
+    "sharpe": 0.712088,
+    "sortino": 0.844617,
+    "max_drawdown": -0.193489,
+    "cvar_95_daily": 0.02202,
+    "end_value": 133227.695351
+   }
+  },
+  {
+   "profile": "sprinter",
+   "model": "robust",
+   "file": "runs/sprinter__robust.json",
+   "solves": 15,
+   "total_cost": 407.0,
+   "avg_cvar_limit": 0.009284,
+   "metrics": {
+    "cagr": 0.072472,
+    "volatility": 0.07073,
+    "sharpe": 0.874992,
+    "sortino": 1.096246,
+    "max_drawdown": -0.078188,
+    "cvar_95_daily": 0.010958,
+    "end_value": 123139.247436
+   },
+   "benchmark_metrics": {
+    "cagr": 0.100328,
+    "volatility": 0.1316,
+    "sharpe": 0.712088,
+    "sortino": 0.844617,
+    "max_drawdown": -0.193489,
+    "cvar_95_daily": 0.02202,
+    "end_value": 133227.695351
+   }
+  },
+  {
+   "profile": "sprinter",
+   "model": "equal",
+   "file": "runs/sprinter__equal.json",
+   "solves": 15,
+   "total_cost": 298.39,
+   "avg_cvar_limit": 0.009284,
+   "metrics": {
+    "cagr": 0.113563,
+    "volatility": 0.110124,
+    "sharpe": 0.93598,
+    "sortino": 1.128607,
+    "max_drawdown": -0.138374,
+    "cvar_95_daily": 0.018038,
+    "end_value": 137818.219828
+   },
+   "benchmark_metrics": {
+    "cagr": 0.100328,
+    "volatility": 0.1316,
+    "sharpe": 0.712088,
+    "sortino": 0.844617,
+    "max_drawdown": -0.193489,
+    "cvar_95_daily": 0.02202,
+    "end_value": 133227.695351
+   }
+  },
+  {
+   "profile": "ethical",
+   "model": "cvar",
+   "file": "runs/ethical__cvar.json",
+   "solves": 47,
+   "total_cost": 1499.62,
+   "avg_cvar_limit": 0.013594,
+   "metrics": {
+    "cagr": 0.105275,
+    "volatility": 0.116683,
+    "sharpe": 0.735157,
+    "sortino": 0.848135,
+    "max_drawdown": -0.265633,
+    "cvar_95_daily": 0.017024,
+    "end_value": 271290.619621
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "ethical",
+   "model": "markowitz",
+   "file": "runs/ethical__markowitz.json",
+   "solves": 48,
+   "total_cost": 1351.32,
+   "avg_cvar_limit": 0.013539,
+   "metrics": {
+    "cagr": 0.104509,
+    "volatility": 0.123496,
+    "sharpe": 0.69577,
+    "sortino": 0.791242,
+    "max_drawdown": -0.253385,
+    "cvar_95_daily": 0.018336,
+    "end_value": 269418.816906
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "ethical",
+   "model": "markowitz_lw",
+   "file": "runs/ethical__markowitz_lw.json",
+   "solves": 48,
+   "total_cost": 1324.15,
+   "avg_cvar_limit": 0.013539,
+   "metrics": {
+    "cagr": 0.106289,
+    "volatility": 0.12433,
+    "sharpe": 0.704953,
+    "sortino": 0.795869,
+    "max_drawdown": -0.25687,
+    "cvar_95_daily": 0.018507,
+    "end_value": 273788.22009
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "ethical",
+   "model": "robust",
+   "file": "runs/ethical__robust.json",
+   "solves": 48,
+   "total_cost": 1221.29,
+   "avg_cvar_limit": 0.013538,
+   "metrics": {
+    "cagr": 0.086028,
+    "volatility": 0.105957,
+    "sharpe": 0.632332,
+    "sortino": 0.707027,
+    "max_drawdown": -0.229503,
+    "cvar_95_daily": 0.015387,
+    "end_value": 227621.294102
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  },
+  {
+   "profile": "ethical",
+   "model": "equal",
+   "file": "runs/ethical__equal.json",
+   "solves": 50,
+   "total_cost": 927.99,
+   "avg_cvar_limit": 0.013509,
+   "metrics": {
+    "cagr": 0.12855,
+    "volatility": 0.159108,
+    "sharpe": 0.70724,
+    "sortino": 0.838751,
+    "max_drawdown": -0.330844,
+    "cvar_95_daily": 0.023793,
+    "end_value": 334068.452735
+   },
+   "benchmark_metrics": {
+    "cagr": 0.148924,
+    "volatility": 0.180073,
+    "sharpe": 0.744238,
+    "sortino": 0.893802,
+    "max_drawdown": -0.337173,
+    "cvar_95_daily": 0.027652,
+    "end_value": 400253.257444
+   }
+  }
+ ]
+}

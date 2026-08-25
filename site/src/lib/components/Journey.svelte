@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, go } from '$lib/state.svelte';
-	import { loadProfile, type MarketEvent, type Prices, type ProfileResult, type Universe } from '$lib/data';
+	import { loadIndex, loadRun, type MarketEvent, type Prices, type RunResult, type Universe } from '$lib/data';
 	import { buyAndHold, series } from '$lib/sim';
 	import { buildLetters, type Letter } from '$lib/letters';
 	import { longDate, money, signedPct } from '$lib/format';
@@ -10,13 +10,14 @@
 
 	let { universe, prices, events }: { universe: Universe; prices: Prices; events: MarketEvent[] } = $props();
 
-	let result = $state<ProfileResult | null>(null);
+	let result = $state<RunResult | null>(null);
 	let playing = $state(false);
 	let speed = $state(6); // trading days per frame
 	let narrate = $state(false);
 
 	onMount(async () => {
-		result = await loadProfile(app.adviser);
+		const idx = await loadIndex();
+		result = await loadRun(app.adviser, idx.story_model);
 		app.cursor = 0;
 		playing = true;
 	});

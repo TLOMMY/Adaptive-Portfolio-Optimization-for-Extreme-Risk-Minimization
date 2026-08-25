@@ -1,0 +1,87 @@
+{
+ "period": "2011-04-01..2015-12-31",
+ "model": "robust",
+ "note": "kappa=0 equals markowitz_lw; on 2011-2015 Sharpe falls monotonically with kappa",
+ "rows": [
+  {
+   "profile": "builder",
+   "kappa": 0.5,
+   "sharpe": 1.231,
+   "cagr": 0.153,
+   "maxdd": -0.112,
+   "cvar/limit": 0.95,
+   "turnover": 5.8,
+   "cash": 0.03
+  },
+  {
+   "profile": "builder",
+   "kappa": 1.0,
+   "sharpe": 1.053,
+   "cagr": 0.113,
+   "maxdd": -0.103,
+   "cvar/limit": 0.86,
+   "turnover": 5.0,
+   "cash": 0.04
+  },
+  {
+   "profile": "builder",
+   "kappa": 2.0,
+   "sharpe": 0.837,
+   "cagr": 0.071,
+   "maxdd": -0.096,
+   "cvar/limit": 0.67,
+   "turnover": 4.1,
+   "cash": 0.14
+  },
+  {
+   "profile": "builder",
+   "kappa": 3.0,
+   "sharpe": 0.644,
+   "cagr": 0.044,
+   "maxdd": -0.106,
+   "cvar/limit": 0.58,
+   "turnover": 4.5,
+   "cash": 0.25
+  },
+  {
+   "profile": "preserver",
+   "kappa": 0.5,
+   "sharpe": 1.078,
+   "cagr": 0.072,
+   "maxdd": -0.084,
+   "cvar/limit": 1.02,
+   "turnover": 3.1,
+   "cash": 0.27
+  },
+  {
+   "profile": "preserver",
+   "kappa": 1.0,
+   "sharpe": 1.049,
+   "cagr": 0.07,
+   "maxdd": -0.085,
+   "cvar/limit": 1.02,
+   "turnover": 3.1,
+   "cash": 0.27
+  },
+  {
+   "profile": "preserver",
+   "kappa": 2.0,
+   "sharpe": 0.898,
+   "cagr": 0.056,
+   "maxdd": -0.085,
+   "cvar/limit": 0.99,
+   "turnover": 3.0,
+   "cash": 0.33
+  },
+  {
+   "profile": "preserver",
+   "kappa": 3.0,
+   "sharpe": 0.733,
+   "cagr": 0.041,
+   "maxdd": -0.084,
+   "cvar/limit": 0.94,
+   "turnover": 3.8,
+   "cash": 0.4
+  }
+ ]
+}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Time-Travel Portfolio Backend</title>
-<meta name="description" content="How the Python optimisation pipeline works and how its output drives the time-travel demo site, explained from first principles.">
+<meta name="description" content="How the Python optimisation pipeline works, the five portfolio models it runs, and how their output drives the time-travel demo site, explained from first principles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <style>
@@ -34,60 +34,26 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #14181b;
-    --bg-2: #1b2024;
-    --panel: #1e2428;
-    --ink: #e4e7e3;
-    --ink-2: #aeb6b3;
-    --ink-3: #7f8886;
-    --rule: #303a3e;
-    --accent: #5fb3a1;
-    --accent-ink: #0f1a1c;
-    --accent-soft: #1f3a3a;
-    --warn: #e0a742;
-    --warn-soft: #3a2f18;
-    --code-bg: #101416;
-    --code-ink: #dfe4e0;
-    --kw: #7fcdbf;
-    --cm: #7f8886;
-    --st: #e2a06a;
-    --link: #7fcdbf;
+    --bg: #14181b; --bg-2: #1b2024; --panel: #1e2428;
+    --ink: #e4e7e3; --ink-2: #aeb6b3; --ink-3: #7f8886; --rule: #303a3e;
+    --accent: #5fb3a1; --accent-ink: #0f1a1c; --accent-soft: #1f3a3a;
+    --warn: #e0a742; --warn-soft: #3a2f18;
+    --code-bg: #101416; --code-ink: #dfe4e0; --kw: #7fcdbf; --cm: #7f8886; --st: #e2a06a; --link: #7fcdbf;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #14181b;
-  --bg-2: #1b2024;
-  --panel: #1e2428;
-  --ink: #e4e7e3;
-  --ink-2: #aeb6b3;
-  --ink-3: #7f8886;
-  --rule: #303a3e;
-  --accent: #5fb3a1;
-  --accent-ink: #0f1a1c;
-  --accent-soft: #1f3a3a;
-  --warn: #e0a742;
-  --warn-soft: #3a2f18;
-  --code-bg: #101416;
-  --code-ink: #dfe4e0;
-  --kw: #7fcdbf;
-  --cm: #7f8886;
-  --st: #e2a06a;
-  --link: #7fcdbf;
+  --bg: #14181b; --bg-2: #1b2024; --panel: #1e2428;
+  --ink: #e4e7e3; --ink-2: #aeb6b3; --ink-3: #7f8886; --rule: #303a3e;
+  --accent: #5fb3a1; --accent-ink: #0f1a1c; --accent-soft: #1f3a3a;
+  --warn: #e0a742; --warn-soft: #3a2f18;
+  --code-bg: #101416; --code-ink: #dfe4e0; --kw: #7fcdbf; --cm: #7f8886; --st: #e2a06a; --link: #7fcdbf;
 }
 
 /* ---------- base ---------- */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  font-feature-settings: "onum" 0;
-}
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
 a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 h1, h2, h3, h4 { font-family: var(--sans); font-weight: 600; line-height: 1.2; margin: 0; text-wrap: balance; }
@@ -100,14 +66,8 @@ ul, ol { max-width: 68ch; padding-left: 1.4rem; }
 li { margin: 0.35rem 0; }
 li p { margin: 0.3rem 0; }
 strong { font-weight: 600; }
-em { font-style: italic; }
 code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); color: var(--code-ink); padding: 0.08em 0.35em; border-radius: 3px; }
-pre {
-  font-family: var(--mono); font-size: 0.82rem; line-height: 1.5;
-  background: var(--code-bg); color: var(--code-ink);
-  padding: 1rem 1.2rem; border-radius: 4px; overflow-x: auto; margin: 1rem 0;
-  border-left: 3px solid var(--accent);
-}
+pre { font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; background: var(--code-bg); color: var(--code-ink); padding: 1rem 1.2rem; border-radius: 4px; overflow-x: auto; margin: 1rem 0; border-left: 3px solid var(--accent); }
 pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
 .kw { color: var(--kw); font-weight: 500; }
 .cm { color: var(--cm); font-style: italic; }
@@ -117,9 +77,7 @@ pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
 .frame { display: grid; grid-template-columns: 1fr; gap: 0 3rem; max-width: 76rem; margin: 0 auto; padding: 0 1.25rem 6rem; }
 @media (min-width: 64rem) { .frame { grid-template-columns: 15rem minmax(0, 1fr); } }
 nav.toc { display: none; }
-@media (min-width: 64rem) {
-  nav.toc { display: block; position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 2.5rem 0 2rem; font-family: var(--sans); font-size: 0.8rem; }
-}
+@media (min-width: 64rem) { nav.toc { display: block; position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 2.5rem 0 2rem; font-family: var(--sans); font-size: 0.8rem; } }
 nav.toc ol { list-style: none; padding: 0; margin: 0; }
 nav.toc li { margin: 0; }
 nav.toc a { display: block; color: var(--ink-2); text-decoration: none; padding: 0.22rem 0 0.22rem 0.75rem; border-left: 2px solid var(--rule); }
@@ -127,7 +85,6 @@ nav.toc a:hover { color: var(--ink); border-left-color: var(--accent); }
 nav.toc .sub a { padding-left: 1.5rem; font-size: 0.75rem; color: var(--ink-3); }
 nav.toc .label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.6rem; }
 main { min-width: 0; padding-top: 2.5rem; }
-
 header.masthead { padding-bottom: 0.4rem; }
 .eyebrow { font-family: var(--sans); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin: 0 0 0.8rem; }
 .lede { font-size: 1.2rem; color: var(--ink-2); max-width: 60ch; }
@@ -190,28 +147,31 @@ dl.gloss dd { margin: 0.15rem 0 0 0; }
     <li><a href="#data">data.py</a></li>
     <li><a href="#estimate">estimate.py</a></li>
     <li><a href="#risk">Measuring risk: VaR and CVaR</a></li>
-    <li><a href="#model">model/portfolio.mod</a>
+    <li><a href="#common">model/common.mod</a></li>
+    <li><a href="#models">The five models</a>
       <ol class="sub">
-        <li><a href="#model-sets">Sets and parameters</a></li>
-        <li><a href="#model-vars">Decision variables</a></li>
-        <li><a href="#model-obj">The objective</a></li>
-        <li><a href="#model-cons">The constraints</a></li>
+        <li><a href="#model-cvar">CVaR limit</a></li>
+        <li><a href="#model-mv">Markowitz, two ways</a></li>
+        <li><a href="#model-robust">Robust mean-variance</a></li>
+        <li><a href="#model-equal">Equal weight</a></li>
+        <li><a href="#model-code">The Model interface</a></li>
       </ol>
     </li>
     <li><a href="#optimiser">optimiser.py</a></li>
     <li><a href="#profiles">profiles.py</a></li>
     <li><a href="#backtest">backtest.py</a></li>
     <li><a href="#metrics">metrics.py</a></li>
-    <li><a href="#tune">tune.py</a></li>
+    <li><a href="#tune">tune.py and the kappa grid</a></li>
     <li><a href="#export">export.py</a></li>
     <li><a href="#tests">The tests</a></li>
     <li><a href="#site">Into the site</a>
       <ol class="sub">
         <li><a href="#site-static">A site with no server</a></li>
         <li><a href="#site-data">data.ts</a></li>
-        <li><a href="#site-stages">The six stages</a></li>
-        <li><a href="#site-sim">sim.ts</a></li>
-        <li><a href="#site-letters">letters.ts</a></li>
+        <li><a href="#site-stages">The story's six stages</a></li>
+        <li><a href="#site-archive">The Archive, sector by sector</a></li>
+        <li><a href="#site-sim">sim.ts and letters.ts</a></li>
+        <li><a href="#site-lab">The lab</a></li>
         <li><a href="#site-rebuild">Rebuilding after a change</a></li>
       </ol>
     </li>
@@ -225,23 +185,23 @@ dl.gloss dd { margin: 0.15rem 0 0 0; }
 <header class="masthead">
   <p class="eyebrow">Technical documentation</p>
   <h1>Time-Travel Portfolio Backend</h1>
-  <p class="lede">How the Python pipeline turns ten years of market prices into six model-managed portfolios, and how the demo site replays them in your browser.</p>
-  <p class="meta">Covers: src/portfolio/*.py · model/portfolio.mod · tests/ · site/src/lib/{data,sim,letters}.ts · site/static/data/*.json · written 24 August 2026</p>
+  <p class="lede">How the Python pipeline turns ten years of market prices into thirty backtests (six investors under five portfolio methods), and how the demo site replays and compares them in your browser.</p>
+  <p class="meta">Covers: src/portfolio/**/*.py · model/*.mod · tests/ · site/src/lib/{data,sim,letters}.ts · site/src/lib/lab/ · site/static/data/ · written 24 August 2026, revised 25 August 2026</p>
 </header>
 
 <!-- ============================================================ -->
 <h2 id="read">How to read this</h2>
 <p>This page explains the whole backend in one sitting, from the first download of prices to the moment a number appears on the site. It assumes you can read Python but does not assume you know anything about investing or optimisation. Every term is defined the first time it is used, in a box like the one below, and the <a href="#glossary">glossary</a> at the end collects all of them.</p>
 <div class="def"><p class="term">Backend</p><p>The part of a software project that prepares data and does the computation, as opposed to the part the user looks at. Here the backend is a set of Python scripts that run once, on a laptop, and write files. The site then only reads those files.</p></div>
-<p>Each section makes one main point, gives one example, and sometimes ends with a short question so you can check that the point landed. Where a concept is deeper than this page can go, a grey box lists a good source or a search phrase for YouTube.</p>
+<p>Each section makes one main point, gives one example, and sometimes ends with a short question so you can check that the point landed. Where a concept is deeper than this page can go, a grey box lists a good source or a search phrase for YouTube. Amber boxes record mistakes that were made along the way and what they taught.</p>
 
 <!-- ============================================================ -->
 <h2 id="picture">The whole picture</h2>
-<p>The project has two halves that never run at the same time. The Python half downloads prices, builds a mathematical model, and replays ten years of decisions for six imaginary investors. It writes its answers as JSON files into the site's <code>static/data</code> folder. The site half is a static web page that fetches those files and draws them. There is no server, no database, and nothing is computed on demand except the user's own buy-and-hold picks, which are cheap enough to simulate in the browser.</p>
+<p>The project has two halves that never run at the same time. The Python half downloads prices, builds mathematical models, and replays ten years of decisions for six imaginary investors under five different methods. It writes its answers as JSON files into the site's <code>static/data</code> folder. The site half is a static web page that fetches those files and draws them. There is no server, no database, and nothing is computed on demand except the user's own buy-and-hold picks, which are cheap enough to simulate in the browser.</p>
 <div class="def"><p class="term">JSON (JavaScript Object Notation)</p><p>A plain-text file format for lists and key–value records, for example <code>{"cagr": 0.107, "sharpe": 0.70}</code>. Python writes it with <code>json.dumps</code> and the browser reads it with <code>response.json()</code>, so it is the natural handover format between the two halves.</p></div>
 
 <figure class="diagram">
-<svg viewBox="0 0 900 400" role="img" aria-label="Pipeline diagram: Python modules on the left produce JSON files in the middle that the site's TypeScript modules read on the right">
+<svg viewBox="0 0 900 420" role="img" aria-label="Pipeline diagram: Python modules on the left produce JSON files in the middle that the site's TypeScript modules read on the right">
   <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker></defs>
   <text x="20" y="22" class="lane">Python · runs once, offline</text>
   <text x="470" y="22" class="lane">JSON · site/static/data</text>
@@ -249,17 +209,16 @@ dl.gloss dd { margin: 0.15rem 0 0 0; }
 
   <rect x="20" y="40" width="150" height="40" rx="3" class="box py"/><text x="30" y="58">universe.py</text><text x="30" y="72" class="small">54 assets, sectors</text>
   <rect x="20" y="100" width="150" height="40" rx="3" class="box py"/><text x="30" y="118">data.py</text><text x="30" y="132" class="small">yfinance + FRED → parquet</text>
-  <rect x="20" y="160" width="150" height="40" rx="3" class="box py"/><text x="30" y="178">estimate.py</text><text x="30" y="192" class="small">window, shrink, CVaR</text>
-  <rect x="20" y="220" width="150" height="40" rx="3" class="box py"/><text x="30" y="238">optimiser.py</text><text x="30" y="252" class="small">amplpy → HiGHS</text>
+  <rect x="20" y="160" width="150" height="40" rx="3" class="box py"/><text x="30" y="178">estimate.py</text><text x="30" y="192" class="small">window, mu, Σ, CVaR</text>
+  <rect x="20" y="220" width="150" height="40" rx="3" class="box py"/><text x="30" y="238">models/ (5)</text><text x="30" y="252" class="small">cvar · mv · mv_lw · robust · 1/N</text>
   <rect x="20" y="280" width="150" height="40" rx="3" class="box py"/><text x="30" y="298">profiles.py</text><text x="30" y="312" class="small">6 archetypes → params</text>
-  <rect x="20" y="340" width="150" height="40" rx="3" class="box py"/><text x="30" y="358">portfolio.mod</text><text x="30" y="372" class="small">the MILP, in AMPL</text>
+  <rect x="20" y="340" width="150" height="40" rx="3" class="box py"/><text x="30" y="358">optimiser.py + *.mod</text><text x="30" y="372" class="small">amplpy → HiGHS / Gurobi</text>
 
   <rect x="230" y="40" width="130" height="40" rx="3" class="box py"/><text x="240" y="58">tune.py</text><text x="240" y="72" class="small">grid on 2011–2015</text>
   <rect x="230" y="160" width="130" height="40" rx="3" class="box py"/><text x="240" y="178">backtest.py</text><text x="240" y="192" class="small">walk-forward loop</text>
   <rect x="230" y="220" width="130" height="40" rx="3" class="box py"/><text x="240" y="238">metrics.py</text><text x="240" y="252" class="small">CAGR, Sharpe, drawdown</text>
-  <rect x="230" y="300" width="130" height="40" rx="3" class="box py"/><text x="240" y="318">export.py</text><text x="240" y="332" class="small">run all, write JSON</text>
+  <rect x="230" y="300" width="130" height="40" rx="3" class="box py"/><text x="240" y="318">export.py</text><text x="240" y="332" class="small">6 × 5 grid → JSON</text>
 
-  <!-- the five modules backtest.py imports, collected on one bus -->
   <path d="M170,60 L200,60 L200,300 L170,300" class="arrow" style="marker-end:none"/>
   <path d="M170,120 L200,120" class="arrow" style="marker-end:none"/>
   <path d="M170,240 L200,240" class="arrow" style="marker-end:none"/>
@@ -274,87 +233,89 @@ dl.gloss dd { margin: 0.15rem 0 0 0; }
   <path d="M420,107 L440,107" class="arrow"/>
   <path d="M420,157 L440,157" class="arrow"/>
   <path d="M420,207 L440,207" class="arrow"/>
-  <path d="M420,257 L440,257" class="arrow"/>
 
-  <rect x="440" y="40" width="180" height="34" rx="3" class="box data"/><text x="450" y="61">universe.json</text>
-  <rect x="440" y="90" width="180" height="34" rx="3" class="box data"/><text x="450" y="111">prices.json</text>
-  <rect x="440" y="140" width="180" height="34" rx="3" class="box data"/><text x="450" y="161">profiles/index.json</text>
-  <rect x="440" y="190" width="180" height="34" rx="3" class="box data"/><text x="450" y="211">profiles/&lt;key&gt;.json ×6</text>
-  <rect x="440" y="240" width="180" height="34" rx="3" class="box data"/><text x="450" y="261">summary.json</text>
+  <rect x="440" y="40" width="180" height="34" rx="3" class="box data"/><text x="450" y="61">index.json</text>
+  <rect x="440" y="90" width="180" height="34" rx="3" class="box data"/><text x="450" y="111">universe.json · prices.json</text>
+  <rect x="440" y="140" width="180" height="34" rx="3" class="box data"/><text x="450" y="161">archive.json</text>
+  <rect x="440" y="190" width="180" height="34" rx="3" class="box data"/><text x="450" y="211">runs/&lt;profile&gt;__&lt;model&gt;.json ×30</text>
+  <rect x="440" y="240" width="180" height="34" rx="3" class="box data"/><text x="450" y="261">notes2015.json</text><text x="560" y="261" class="small">(hand-written)</text>
   <rect x="440" y="290" width="180" height="34" rx="3" class="box data"/><text x="450" y="311">events.json</text><text x="530" y="311" class="small">(hand-written)</text>
 
   <rect x="700" y="40" width="180" height="40" rx="3" class="box"/><text x="710" y="58">data.ts</text><text x="710" y="72" class="small">fetch + cache + types</text>
-  <rect x="700" y="100" width="180" height="40" rx="3" class="box"/><text x="710" y="118">Archive.svelte</text><text x="710" y="132" class="small">pick stocks, hire adviser</text>
+  <rect x="700" y="100" width="180" height="40" rx="3" class="box"/><text x="710" y="118">Archive.svelte</text><text x="710" y="132" class="small">2015 walkthrough, adviser</text>
   <rect x="700" y="160" width="180" height="40" rx="3" class="box"/><text x="710" y="178">Journey.svelte</text><text x="710" y="192" class="small">replay, letters, ribbon</text>
-  <rect x="700" y="220" width="180" height="40" rx="3" class="box"/><text x="710" y="238">Debrief.svelte</text><text x="710" y="252" class="small">metrics table</text>
-  <rect x="700" y="280" width="180" height="40" rx="3" class="box"/><text x="710" y="298">sim.ts · letters.ts</text><text x="710" y="312" class="small">buy-and-hold, prose</text>
+  <rect x="700" y="220" width="180" height="40" rx="3" class="box"/><text x="710" y="238">Debrief.svelte</text><text x="710" y="252" class="small">metrics table → lab</text>
+  <rect x="700" y="280" width="180" height="40" rx="3" class="box"/><text x="710" y="298">routes/lab</text><text x="710" y="312" class="small">compare any runs</text>
   <rect x="700" y="340" width="180" height="40" rx="3" class="box"/><text x="710" y="358">Rewind.svelte</text><text x="710" y="372" class="small">timeline roughness from SPY</text>
 
   <path d="M620,57 L700,57" class="arrow"/>
   <path d="M620,107 L660,107 L660,60" class="arrow" style="marker-end:none"/>
   <path d="M620,157 L660,157" class="arrow" style="marker-end:none"/>
   <path d="M620,207 L660,207" class="arrow" style="marker-end:none"/>
-  <path d="M660,60 L660,207" class="arrow" style="marker-end:none"/>
+  <path d="M620,257 L660,257" class="arrow" style="marker-end:none"/>
+  <path d="M660,60 L660,257" class="arrow" style="marker-end:none"/>
   <path d="M790,80 L790,100" class="arrow"/>
   <path d="M790,140 L790,160" class="arrow"/>
   <path d="M790,200 L790,220" class="arrow"/>
   <path d="M790,260 L790,280" class="arrow"/>
   <path d="M790,320 L790,340" class="arrow"/>
 </svg>
-<figcaption>On the left, the bus of thin lines collects the five modules that <code>backtest.py</code> imports; <code>tune.py</code> and <code>export.py</code> both call it. Every arrow into the middle column is a file write; every arrow from the middle to the right is an HTTP fetch of a static file. <code>summary.json</code> is written for reporting and is not read by any current component; <code>events.json</code> is written by hand, not by Python.</figcaption>
+<figcaption>On the left, the bus of thin lines collects the modules that <code>backtest.py</code> imports; <code>tune.py</code> and <code>export.py</code> both call it. Every arrow into the middle column is a file write by <code>export.py</code>; the two hand-written files are checked against sources rather than computed. Every arrow from the middle to the right is an HTTP fetch of a static file.</figcaption>
 </figure>
 
-<p>The order in which things run is fixed. First <code>data.py</code> builds the cleaned price tables. Then <code>tune.py</code> may be run to pick defaults using only 2011–2015. Then <code>export.py</code> runs one backtest per archetype over 2016–2025 and writes the JSON. Finally the site is built. The sections below follow that order, module by module, and then cross into the site.</p>
+<p>The order in which things run is fixed. First <code>data.py</code> builds the cleaned price tables. Then <code>tune.py</code> may be run to pick defaults using only 2011–2015. Then <code>export.py</code> runs one backtest per investor per model over 2016–2025 and writes the JSON. Finally the site is built. The sections below follow that order, module by module, and then cross into the site.</p>
 
 <!-- ============================================================ -->
 <h2 id="words">The words you need first</h2>
 <p>Four ideas come up in every module, so they are worth fixing before reading any code: a price, a return, a weight, and a portfolio.</p>
 <div class="def"><p class="term">Stock, ticker, ETF</p><p>A <strong>stock</strong> (or share) is a small slice of ownership of a company that can be bought and sold on an exchange. A <strong>ticker</strong> is the short code the exchange uses for it, such as <code>AAPL</code> for Apple. An <strong>ETF</strong> (Exchange-Traded Fund) is a bundle of many investments that trades like a single stock; this project uses <code>AGG</code>, which holds thousands of US bonds, <code>GLD</code>, which holds gold, and <code>SPY</code>, which holds the 500 largest US companies.</p></div>
 <div class="def"><p class="term">Price and daily return</p><p>The <strong>price</strong> is what one share cost at the close of a trading day. The <strong>daily return</strong> is the fractional change from one close to the next: if a share closes at $100 on Monday and $102 on Tuesday, Tuesday's return is <code>102/100 − 1 = 0.02</code>, or 2%. The whole pipeline works in returns rather than prices, because returns can be compared across assets with very different price levels.</p></div>
-<div class="def"><p class="term">Portfolio and weight</p><p>A <strong>portfolio</strong> is the set of everything you hold. A <strong>weight</strong> is the fraction of your total money in one asset. If you have $10,000 and $1,200 of it is in Apple, Apple's weight is 0.12. Weights across the whole portfolio always add to 1. The optimiser's entire job is to choose weights.</p></div>
+<div class="def"><p class="term">Portfolio and weight</p><p>A <strong>portfolio</strong> is the set of everything you hold. A <strong>weight</strong> is the fraction of your total money in one asset. If you have $10,000 and $1,200 of it is in Apple, Apple's weight is 0.12. Weights across the whole portfolio always add to 1. Every model's entire job is to choose weights.</p></div>
 <div class="def"><p class="term">Benchmark and S&amp;P 500</p><p>A <strong>benchmark</strong> is the simple alternative you compare a strategy against. Here it is buying <code>SPY</code> once and never touching it. <code>SPY</code> tracks the <strong>S&amp;P 500</strong>, an index of roughly the 500 largest US companies weighted by size, which is the usual stand-in for "the US stock market".</p></div>
-<p>One worked example ties these together. Suppose on 4 January 2016 a portfolio holds weights of 0.5 in Apple and 0.5 in cash, and the next day Apple returns −2% while cash returns 0%. The portfolio's return that day is <code>0.5 × (−0.02) + 0.5 × 0 = −0.01</code>, a 1% loss. That single formula, "portfolio return equals the weighted sum of asset returns", is what both the AMPL model and the backtest loop are built on.</p>
+<p>One worked example ties these together. Suppose on 4 January 2016 a portfolio holds weights of 0.5 in Apple and 0.5 in cash, and the next day Apple returns −2% while cash returns 0%. The portfolio's return that day is <code>0.5 × (−0.02) + 0.5 × 0 = −0.01</code>, a 1% loss. That single formula, "portfolio return equals the weighted sum of asset returns", is what every model file and the backtest loop are built on.</p>
 <div class="check"><span class="term">Check yourself.</span> If the portfolio above loses 1% on that day, what are its new weights? (They are no longer 0.5 and 0.5, and that drift is why the backtest has a "drift trigger".)</div>
 
 <!-- ============================================================ -->
 <h2 id="run">Running it yourself</h2>
 <p>The Python side is a package called <code>portfolio</code> living in <code>src/portfolio</code>, managed with <code>uv</code>. The site is a Node project in <code>site/</code>. The only one-off setup step is activating the AMPL licence, which you must do yourself because the licence is personal.</p>
 <div class="def"><p class="term">uv</p><p>A fast Python package and environment manager. <code>uv run</code> makes sure the virtual environment in <code>.venv</code> matches <code>pyproject.toml</code> and <code>uv.lock</code>, then runs the command inside it, so you never activate an environment by hand.</p></div>
-<pre><code><span class="cm"># one-time: AMPL Community Edition licence (your own UUID)</span>
+<pre><code><span class="cm"># one-time: AMPL for Academics licence (your own UUID). It is stored inside .venv,</span>
+<span class="cm"># so repeat this if .venv is ever recreated. The current licence expires 24 Sept 2026.</span>
 uv run python -m amplpy.modules activate &lt;uuid&gt;
 
 <span class="cm"># 1. download prices and build data/processed/*.parquet (cached in data/raw/)</span>
 uv run python -m portfolio.data
 
-<span class="cm"># 2. run the tests (needs step 1)</span>
+<span class="cm"># 2. run the tests (needs step 1 and a working licence)</span>
 uv run pytest
 
 <span class="cm"># 3. optional: hyperparameter grid on 2011-2015 for two profiles</span>
 uv run python -m portfolio.tune builder preserver
 
-<span class="cm"># 4. backtest every archetype over 2016-2025 and write site/static/data/*.json</span>
-uv run python -m portfolio.export          <span class="cm"># or: ... export builder sprinter</span>
+<span class="cm"># 4. backtest every profile under every model and write site/static/data/</span>
+uv run python -m portfolio.export                      <span class="cm"># 30 runs, 4 in parallel, ~4 minutes</span>
+uv run python -m portfolio.export --model robust       <span class="cm"># only one model (repeatable flag)</span>
+uv run python -m portfolio.export --profile sprinter --jobs 1   <span class="cm"># one profile, serial</span>
 
 <span class="cm"># 5. the site (Node 22, see site/.nvmrc)</span>
 cd site &amp;&amp; npm install &amp;&amp; npm run dev       <span class="cm"># http://localhost:5173</span>
 npm run build                              <span class="cm"># static output in site/build/</span></code></pre>
-<p>Step 4 takes about two minutes in total; each ten-year profile needs around 25 seconds, of which almost all is the roughly 47 solver calls at about 0.2 seconds each plus the Python loop around them.</p>
-<p>The dependencies in <code>pyproject.toml</code> are <code>yfinance</code> and <code>pandas-datareader</code> for downloading, <code>pandas</code>, <code>numpy</code> and <code>pyarrow</code> for tables, <code>amplpy</code> with the <code>ampl-module-base</code> and <code>ampl-module-highs</code> packages for optimisation, and <code>quantstats</code>, which is installed but not used by the current code (the metrics were written by hand in <code>metrics.py</code> so the site could mirror them exactly).</p>
+<p>The dependencies in <code>pyproject.toml</code> are <code>yfinance</code> and <code>pandas-datareader</code> for downloading, <code>pandas</code>, <code>numpy</code> and <code>pyarrow</code> for tables, and <code>amplpy</code> with three solver modules from AMPL's own package index: <code>ampl-module-base</code>, <code>ampl-module-highs</code> and <code>ampl-module-gurobi</code>. <code>quantstats</code> is installed but unused; the metrics were written by hand in <code>metrics.py</code> so the site could mirror them exactly.</p>
 
 <!-- ============================================================ -->
-<h2 id="universe">universe.py — what the model may hold</h2>
+<h2 id="universe">universe.py — what the models may hold</h2>
 <p class="file">src/portfolio/universe.py</p>
 <p>This module is a frozen list, not a computation. It names 51 stocks, two ETFs, and one synthetic cash asset, and records the sector of each. Everything else in the pipeline imports these lists so that "the universe" is defined in exactly one place.</p>
 <div class="def"><p class="term">Universe</p><p>The set of assets an optimiser is allowed to choose from. A model can only pick from what you give it, so the universe is the first and most consequential design choice.</p></div>
-<div class="def"><p class="term">Sector (GICS)</p><p>An industry grouping. GICS (Global Industry Classification Standard) is the scheme used by S&amp;P that puts every listed company into one of about eleven sectors, such as Information Technology or Utilities. Sectors matter here because one of the model's constraints caps how much can sit in any single sector.</p></div>
+<div class="def"><p class="term">Sector (GICS)</p><p>An industry grouping. GICS (Global Industry Classification Standard) is the scheme used by S&amp;P that puts every listed company into one of about eleven sectors, such as Information Technology or Utilities. Sectors matter here because one of the shared constraints caps how much can sit in any single sector, and because the site's Archive walks the user through the universe one sector at a time.</p></div>
 
 <h3>The selection rule</h3>
 <p>The docstring at the top of the file states the rule, applied once by hand and not revised since. A stock had to be in the S&amp;P 500 on 1 January 2016; within each sector the largest companies by market value at the end of 2015 were taken, four to six per sector; and every stock needed a full daily price history back to April 2008, because the tuning period and the three-year estimation window both reach that far back. That last rule excluded Facebook (listed 2012) and LyondellBasell (listed 2010), and Oracle and PPG took their places.</p>
-<p>Two extra assets give the optimiser somewhere safe to go when stocks look risky: <code>AGG</code> (a broad US bond ETF) and <code>GLD</code> (gold). A third, <code>CASH</code>, does not exist on any exchange; it is manufactured in <code>data.py</code> from the interest rate on short-term US government debt.</p>
+<p>Two extra assets give the models somewhere safe to go when stocks look risky: <code>AGG</code> (a broad US bond ETF) and <code>GLD</code> (gold). A third, <code>CASH</code>, does not exist on any exchange; it is manufactured in <code>data.py</code> from the interest rate on short-term US government debt.</p>
 <div class="def"><p class="term">Bond, T-bill, risk-free rate</p><p>A <strong>bond</strong> is a loan to a government or company that pays interest and returns the principal at a fixed date. A <strong>T-bill</strong> (Treasury bill) is a US government bond that matures within a year; the three-month T-bill is treated by convention as the closest thing to a risk-free investment, and its yield is called the <strong>risk-free rate</strong>. "Cash" in this project means money parked at that rate, not banknotes in a drawer.</p></div>
 
 <h3>Survivorship bias, disclosed</h3>
-<p>Companies whose tickers did not survive to 2026 (Dow/DuPont, Monsanto, Praxair and others) were skipped because <code>yfinance</code> cannot return their history. That means the universe is slightly tilted towards companies that turned out fine, which flatters every strategy that draws from it, including the S&amp;P 500 comparison only partly, since <code>SPY</code> itself contains the failures. The file says this plainly and so should any presentation of the results.</p>
+<p>Companies whose tickers did not survive to 2026 (Dow/DuPont, Monsanto, Praxair and others) were skipped because <code>yfinance</code> cannot return their history. That means the universe is slightly tilted towards companies that turned out fine, which flatters every strategy that draws from it; the S&amp;P 500 comparison is affected less, since <code>SPY</code> itself contains the failures. The file says this plainly and so should any presentation of the results.</p>
 <div class="def"><p class="term">Survivorship bias</p><p>The distortion that comes from studying only the things that survived. If you test a strategy on the companies that still exist today, you have quietly removed every bankruptcy from the sample.</p></div>
 
 <h3>What the rest of the code imports</h3>
@@ -363,16 +324,16 @@ npm run build                              <span class="cm"># static output in s
 <tbody>
 <tr><td><code>STOCKS</code>, <code>ETFS</code></td><td>ticker → (company name, sector)</td><td>this file only</td></tr>
 <tr><td><code>TICKERS</code></td><td>the 53 symbols priced via yfinance</td><td>data.py, backtest.py (volatility trigger), export.py</td></tr>
-<tr><td><code>ASSETS</code></td><td><code>TICKERS + ["CASH"]</code>, the 54 things the model may hold</td><td>estimate.py, backtest.py, export.py</td></tr>
-<tr><td><code>BENCHMARK</code></td><td><code>"SPY"</code>, priced but never held by the model</td><td>data.py, backtest.py, export.py</td></tr>
-<tr><td><code>SECTOR</code>, <code>NAME</code></td><td>ticker → sector / display name, including CASH</td><td>optimiser.py, export.py</td></tr>
+<tr><td><code>ASSETS</code></td><td><code>TICKERS + ["CASH"]</code>, the 54 things a model may hold</td><td>estimate.py, backtest.py, export.py</td></tr>
+<tr><td><code>BENCHMARK</code></td><td><code>"SPY"</code>, priced but never held by any model</td><td>data.py, backtest.py, export.py</td></tr>
+<tr><td><code>SECTOR</code>, <code>NAME</code></td><td>ticker → sector / display name, including CASH</td><td>models/base.py, export.py</td></tr>
 </tbody></table></div>
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>what is an ETF explained</code>, <code>survivorship bias investing</code></li><li>Reading: the GICS sector list on the MSCI or S&amp;P websites, to see where any company sits.</li></ul></div>
 
 <!-- ============================================================ -->
 <h2 id="data">data.py — fetching and cleaning prices</h2>
 <p class="file">src/portfolio/data.py</p>
-<p>This module downloads daily prices once, caches them, and produces four aligned tables that every later stage reads. Its one rule is that it only <em>stores</em> history; deciding what the model is allowed to see on a given date is somebody else's job (<code>estimate.py</code>).</p>
+<p>This module downloads daily prices once, caches them, and produces four aligned tables that every later stage reads. Its one rule is that it only <em>stores</em> history; deciding what a model is allowed to see on a given date is somebody else's job (<code>estimate.py</code>).</p>
 
 <h3>Downloading</h3>
 <p><code>fetch_prices</code> loops over the 53 tickers plus <code>SPY</code>. For each it looks for <code>data/raw/&lt;ticker&gt;.parquet</code>; if the file exists it is read, otherwise <code>yfinance</code> downloads the full history from 1 April 2008 and the file is written. Passing <code>refresh=True</code> forces a re-download. <code>data/raw</code> is git-ignored, so a fresh clone downloads everything on the first run.</p>
@@ -383,7 +344,7 @@ npm run build                              <span class="cm"># static output in s
 <p><code>fetch_tbill</code> pulls the daily three-month T-bill yield (FRED series <code>DTB3</code>, an annual percentage) and falls back to Yahoo's <code>^IRX</code> if FRED is unreachable. In <code>build_dataset</code> that annual yield is turned into a daily return and compounded into a price-like series that starts at 1:</p>
 <pre><code>daily_rf = (1 + tbill / 100) ** (1 / 252) - 1     <span class="cm"># annual % → daily fraction</span>
 close["CASH"] = (1 + daily_rf).cumprod()           <span class="cm"># a "price" that grows at that rate</span></code></pre>
-<p>The number 252 is the usual count of US trading days in a year and is used for every annualisation in the project. The result is that <code>CASH</code> behaves like any other column: it has a price, it has a daily return, and the model can hold it with a weight.</p>
+<p>The number 252 is the usual count of US trading days in a year and is used for every annualisation in the project. The result is that <code>CASH</code> behaves like any other column: it has a price, it has a daily return, and a model can hold it with a weight.</p>
 
 <h3>Alignment and the four outputs</h3>
 <p>Different tickers occasionally have different trading days in the raw download (a few odd half-days). <code>close.dropna(how="any")</code> keeps only dates where every ticker traded, which removes a handful of rows and guarantees that every table has identical dates. Then the module writes:</p>
@@ -392,7 +353,7 @@ close["CASH"] = (1 + daily_rf).cumprod()           <span class="cm"># a "price" 
 <tbody>
 <tr><td><code>prices.parquet</code></td><td>4,628 days × 55 columns</td><td>adjusted close per asset, 2 April 2008 → today, including SPY and CASH</td></tr>
 <tr><td><code>returns.parquet</code></td><td>same</td><td><code>prices.pct_change()</code>, the daily return, first row dropped</td></tr>
-<tr><td><code>volume.parquet</code></td><td>4,628 × 53</td><td>dollar volume, price × shares traded, for a liquidity cap that is defined in the model but not currently used by any profile</td></tr>
+<tr><td><code>volume.parquet</code></td><td>4,628 × 53</td><td>dollar volume, price × shares traded, for a liquidity cap that is possible through the per-asset caps but not used by any profile</td></tr>
 <tr><td><code>rf.parquet</code></td><td>4,628 × 1</td><td>the daily risk-free return, used by the Sharpe ratio</td></tr>
 </tbody></table></div>
 <p><code>load_dataset()</code> reads the four back into a dictionary and is what every other module calls.</p>
@@ -400,9 +361,9 @@ close["CASH"] = (1 + daily_rf).cumprod()           <span class="cm"># a "price" 
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>adjusted close vs close price</code>, <code>what is a treasury bill</code></li><li>Reading: the FRED page for series DTB3 explains the T-bill yield definition.</li></ul></div>
 
 <!-- ============================================================ -->
-<h2 id="estimate">estimate.py — what the model is allowed to see</h2>
+<h2 id="estimate">estimate.py — what a model is allowed to see</h2>
 <p class="file">src/portfolio/estimate.py</p>
-<p>This tiny module is the honesty gate of the project. Its first function decides which days of history a decision may use, and it always stops strictly before the decision date. The other two functions turn that history into the two inputs the model needs: an expected return per asset and a set of scenarios.</p>
+<p>This module is the honesty gate of the project. Its first function decides which days of history a decision may use, and it always stops strictly before the decision date. The other functions turn that history into the inputs the models need: an expected return per asset, a covariance matrix for the mean-variance models, a conversion between the two risk languages, and the realised CVaR of a set of weights.</p>
 <div class="def"><p class="term">Look-ahead bias</p><p>Accidentally letting a simulated decision use information that did not exist yet, for example fitting a model on 2016–2025 and then "testing" it on 2016–2025. It is the single most common way backtests lie, and it is prevented here by construction rather than by care.</p></div>
 
 <h3>window_before</h3>
@@ -418,17 +379,27 @@ close["CASH"] = (1 + daily_rf).cumprod()           <span class="cm"># a "price" 
 risky = m.drop("CASH")
 out = (1 - shrink) * risky + shrink * risky.mean()
 out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noisy estimate; leave it alone</span></code></pre>
-<p>With <code>shrink = 0</code> each asset keeps its own average; with <code>shrink = 1</code> every risky asset gets the same expected return and the optimiser can only distinguish them by risk. The tuned value is 0.75. Worked example: if Apple's three-year daily mean is 0.0012 and the cross-asset mean is 0.0004, the shrunk estimate is <code>0.25 × 0.0012 + 0.75 × 0.0004 = 0.0006</code>.</p>
-<div class="lesson"><p class="term">Lesson learned: never shrink cash</p><p>An early version shrank <code>CASH</code> along with the stocks. Cash's true expected return (the T-bill rate, near zero for most of the decade) got pulled up towards the stock average, so the model thought cash paid like a stock without any risk, and sat in cash. Cash's mean is not an estimate at all, it is the known rate, so it is now exempt.</p></div>
+<p>With <code>shrink = 0</code> each asset keeps its own average; with <code>shrink = 1</code> every risky asset gets the same expected return and a model can only distinguish them by risk. The tuned value is 0.75. Worked example: if Apple's three-year daily mean is 0.0012 and the cross-asset mean is 0.0004, the shrunk estimate is <code>0.25 × 0.0012 + 0.75 × 0.0004 = 0.0006</code>. All five models receive the same shrunk <code>mu</code>, so they differ only in how they treat risk.</p>
+<div class="lesson"><p class="term">Lesson learned: never shrink cash</p><p>An early version shrank <code>CASH</code> along with the stocks. Cash's true expected return (the T-bill rate, near zero for most of the decade) got pulled up towards the stock average, so the model thought cash paid like a stock without any risk, and sat in cash. Cash's mean is not an estimate at all, it is the known rate, so it is now exempt. The same exemption applies to the covariance below.</p></div>
+
+<h3>covariance and ledoit_wolf</h3>
+<div class="def"><p class="term">Covariance matrix (Σ)</p><p>A table with one row and one column per asset. The diagonal entries are each asset's <strong>variance</strong>, the square of its volatility; the off-diagonal entries say how much two assets move together. With weights <code>w</code>, the portfolio's variance is <code>wᵀΣw</code>, which is the quantity the Markowitz models cap.</p></div>
+<p><code>covariance(scenarios, method)</code> builds Σ over the window for the 53 risky assets and then embeds it in a 54 × 54 matrix whose CASH row and column are zero, because cash's variance is known to be almost nothing. With <code>method="sample"</code> it is the plain population covariance. With <code>method="ledoit_wolf"</code> it is shrunk:</p>
+<div class="def"><p class="term">Ledoit–Wolf shrinkage</p><p>A 53 × 53 covariance has 1,431 distinct numbers estimated from 756 days, so it is noisy in a specific way: the largest eigenvalues are too large and the smallest too small, and an optimiser exploits exactly those errors. Ledoit and Wolf (2004) pull the sample matrix part-way towards a simple target, a scaled identity (every asset given the same variance, no correlation), with an intensity computed from the data itself rather than chosen by hand. <code>ledoit_wolf(x)</code> implements their formula in about fifteen lines of NumPy and returns both the matrix and the intensity; on the 2016 window the intensity is a few percent.</p></div>
+
+<h3>cvar_to_vol — translating the investor's promise</h3>
+<p>Every investor profile states its risk appetite as a CVaR limit (next section), but the mean-variance models only understand variance. <code>cvar_to_vol</code> converts one to the other under the assumption that daily returns are normally distributed with zero mean:</p>
+<div class="math">CVaR_α = σ · φ(z_α) / (1 − α)   →   at α = 0.95, CVaR ≈ 2.063 · σ</div>
+<p>So a 2.0% daily CVaR limit becomes a daily volatility cap of about 0.97%, and the models square it to get a variance cap. The normal assumption is an approximation: real returns have fatter tails than a bell curve, so a portfolio that meets the volatility cap tends to show a realised CVaR a little above the original limit (the Builder's Markowitz runs show 2.0% against a 2.0%→1.0% glide path where the CVaR model shows 1.9%). That gap is one of the things the lab makes visible.</p>
 
 <h3>realised_cvar</h3>
-<p>The third function computes, for a given set of weights, the average loss over the worst 5% of scenario days. It is used after each solve to report what risk the chosen weights actually carry over the window. The idea it implements, CVaR, is important enough to get its own section next.</p>
-<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>look-ahead bias backtesting</code>, <code>James-Stein shrinkage estimator intuition</code></li><li>Reading: Jorion (1986), "Bayes-Stein estimation for portfolio analysis", is the origin of shrinking expected returns for portfolios; the intuition is all you need.</li></ul></div>
+<p>The last function computes, for a given set of weights, the average loss over the worst 5% of scenario days. It is used after every solve, for every model, so that the solve log carries one risk number that is comparable across methods regardless of which measure the model itself optimised.</p>
+<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>look-ahead bias backtesting</code>, <code>James-Stein shrinkage estimator intuition</code>, <code>Ledoit Wolf covariance shrinkage explained</code></li><li>Reading: Jorion (1986), "Bayes-Stein estimation for portfolio analysis"; Ledoit &amp; Wolf (2004), "A well-conditioned estimator for large-dimensional covariance matrices". The intuition in each is all you need.</li></ul></div>
 
 <!-- ============================================================ -->
 <h2 id="risk">Measuring risk: VaR and CVaR</h2>
-<p>Every investor archetype in this project is defined mainly by one number: the largest average loss they will accept on their bad days. That number is a CVaR limit. To read the model you need to understand what CVaR measures and the trick that lets a linear solver compute it.</p>
-<div class="def"><p class="term">Scenario</p><p>One possible outcome for tomorrow. This project takes each of the last 756 days of history as one scenario, all equally likely: "tomorrow could look like any of these days". The model never assumes a bell curve or any other formula for returns; it just uses the days that happened.</p></div>
+<p>Every investor archetype in this project is defined mainly by one number: the largest average loss they will accept on their bad days. That number is a CVaR limit. To read the models you need to understand what CVaR measures and the trick that lets a linear solver compute it.</p>
+<div class="def"><p class="term">Scenario</p><p>One possible outcome for tomorrow. This project takes each of the last 756 days of history as one scenario, all equally likely: "tomorrow could look like any of these days". The CVaR model never assumes a bell curve or any other formula for returns; it just uses the days that happened.</p></div>
 <div class="def"><p class="term">VaR (Value at Risk)</p><p>The loss you would exceed only on the worst (1 − α) share of days, for a chosen confidence level α. With α = 0.95 and 756 scenarios, sort the daily losses from worst to best; the 95% VaR is the loss at the boundary of the worst 5%, that is roughly the 38th-worst day. VaR answers "how bad is a bad day?" but says nothing about how bad the days beyond it are.</p></div>
 <div class="def"><p class="term">CVaR (Conditional Value at Risk), also called Expected Shortfall</p><p>The <em>average</em> loss over those worst 5% of days. It is always at least the VaR, and it does account for how deep the tail goes. A daily 95% CVaR of 2% means "on your 5% worst days you lose 2% on average". As a rough feel, a portfolio with a daily CVaR of 2% loses about 8–10% in a bad month.</p></div>
 <p>A miniature example with twenty scenarios and α = 0.95 makes the difference concrete. The worst 5% of twenty days is one day. Suppose the two worst daily losses are 6% and 3%. The VaR is the boundary of the worst 5%, so it is about 6% (with one day in the tail, VaR and CVaR coincide). Now suppose there were forty days, so the tail holds two days: VaR is 3% (the boundary), and CVaR is the average of 6% and 3%, which is 4.5%. CVaR noticed the 6% day; VaR did not.</p>
@@ -436,32 +407,28 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <h3>The Rockafellar–Uryasev trick</h3>
 <p>Computing "the average of the worst 5%" seems to need sorting, which is not something a linear program can do. Rockafellar and Uryasev (2000) showed that CVaR is the minimum over a free number <code>ζ</code> (zeta) of the following expression, where <code>L_s</code> is the portfolio loss in scenario <code>s</code> and <code>[x]⁺</code> means "x if positive, else 0":</p>
 <div class="math">CVaR_α = min over ζ of:  ζ + (1 / ((1 − α) · nS)) · Σ_s [L_s − ζ]⁺</div>
-<p>The intuition is that <code>ζ</code> is a threshold you are guessing, and you pay for every scenario whose loss overshoots it, scaled up by 1/(1 − α) so that overshoots count 20 times. The expression is smallest exactly when <code>ζ</code> equals the VaR, and at that point its value equals the CVaR. In a model you replace <code>[L_s − ζ]⁺</code> with a new non-negative variable <code>u_s</code> and a constraint <code>u_s ≥ L_s − ζ</code>; because the objective pushes every <code>u_s</code> as low as it can go, the two are equivalent and everything stays linear. That is precisely what <code>portfolio.mod</code> does with its <code>zeta</code>, <code>u[s]</code>, and <code>tail_loss</code> constraint.</p>
+<p>The intuition is that <code>ζ</code> is a threshold you are guessing, and you pay for every scenario whose loss overshoots it, scaled up by 1/(1 − α) so that overshoots count 20 times. The expression is smallest exactly when <code>ζ</code> equals the VaR, and at that point its value equals the CVaR. In a model you replace <code>[L_s − ζ]⁺</code> with a new non-negative variable <code>u_s</code> and a constraint <code>u_s ≥ L_s − ζ</code>; because the objective pushes every <code>u_s</code> as low as it can go, the two are equivalent and everything stays linear. That is precisely what <code>cvar.mod</code> does with its <code>zeta</code>, <code>u[s]</code>, and <code>tail_loss</code> constraint.</p>
 <div class="def"><p class="term">Linear program (LP)</p><p>An optimisation problem in which the objective and every constraint are straight-line (linear) functions of the decision variables. LPs with hundreds of thousands of variables solve in seconds with standard software, which is why a linearisable risk measure like CVaR is so useful.</p></div>
 <div class="check"><span class="term">Check yourself.</span> In the twenty-scenario example, if you set ζ far below every loss, does the Rockafellar–Uryasev expression get bigger or smaller than the true CVaR, and why?</div>
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>value at risk vs expected shortfall</code>, <code>conditional value at risk linear programming Rockafellar Uryasev</code></li><li>Reading: Rockafellar &amp; Uryasev (2000), "Optimization of conditional value-at-risk", Journal of Risk. Section 2 is short and is the whole trick.</li></ul></div>
 
 <!-- ============================================================ -->
-<h2 id="model">model/portfolio.mod — the optimisation model</h2>
-<p class="file">model/portfolio.mod (39 lines of AMPL)</p>
-<p>This file is the heart of the project. It describes one decision: given estimates and an investor's rules, which weights to hold until the next rebalance. It is written in AMPL, solved by HiGHS, and called once per rebalance date from Python.</p>
-<div class="def"><p class="term">AMPL and HiGHS</p><p><strong>AMPL</strong> (A Mathematical Programming Language) is a language for writing optimisation models in something close to mathematical notation, separately from the data. A <strong>solver</strong> is the program that actually finds the best solution; <strong>HiGHS</strong> is a free, open-source solver for linear and mixed-integer problems, and <code>amplpy</code> is the Python library that loads a model, fills in its data, and calls the solver.</p></div>
+<h2 id="common">model/common.mod — the investor's rules</h2>
+<p class="file">model/common.mod, loaded before any of cvar.mod, markowitz.mod, robust.mod</p>
+<p>Every optimising model shares the same investor rules, so those rules live in one AMPL file that is read first; a second, short file then adds the risk measure and the objective. The split is what makes "the same investor under different methods" a true statement: the constraints are literally the same text.</p>
+<div class="def"><p class="term">AMPL and solvers</p><p><strong>AMPL</strong> (A Mathematical Programming Language) is a language for writing optimisation models in something close to mathematical notation, separately from the data. A <strong>solver</strong> is the program that actually finds the best solution. This project uses two: <strong>HiGHS</strong>, free and open-source, for linear and mixed-integer linear problems, and <strong>Gurobi</strong>, a commercial solver available under the academic licence, for problems with quadratic terms. <code>amplpy</code> is the Python library that loads a model, fills in its data, and calls whichever solver is named; switching solver is one line and the model files do not change.</p></div>
 <div class="def"><p class="term">MILP (Mixed-Integer Linear Program)</p><p>A linear program in which some variables must be whole numbers, here 0 or 1. Integer variables let a model express yes/no decisions ("do I hold this asset at all?"), at the cost of making the problem much harder in theory. In practice, this one has 53 binaries and HiGHS solves it in a fifth of a second.</p></div>
 
-<h3 id="model-sets">Sets and parameters</h3>
-<p>AMPL separates the <em>shape</em> of a problem (sets) from its <em>numbers</em> (parameters, "params"). Python fills all of these in before each solve.</p>
+<h3>Sets and parameters</h3>
+<p>AMPL separates the <em>shape</em> of a problem (sets) from its <em>numbers</em> (parameters, "params"). Python fills all of these in before each solve, through <code>Model.common_sets_and_params</code> in <code>models/base.py</code>.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Declaration</th><th>Meaning</th><th>Filled from</th></tr></thead>
 <tbody>
 <tr><td><code>set ASSETS</code></td><td>the 54 things that may be held</td><td><code>mu.index</code></td></tr>
-<tr><td><code>set SCENARIOS</code></td><td>integers 0…755, one per history day</td><td><code>range(len(scenarios))</code></td></tr>
 <tr><td><code>set SECTORS</code>, <code>param sector{ASSETS}</code></td><td>sector of each asset</td><td><code>universe.SECTOR</code></td></tr>
-<tr><td><code>param is_cash{ASSETS}</code></td><td>1 for CASH, else 0; cash is exempt from cardinality rules</td><td>optimiser.py</td></tr>
+<tr><td><code>param is_cash{ASSETS}</code></td><td>1 for CASH, else 0; cash is exempt from cardinality rules</td><td>base.py</td></tr>
 <tr><td><code>param mu{ASSETS}</code></td><td>expected daily return</td><td><code>estimate.expected_returns</code></td></tr>
-<tr><td><code>param r{SCENARIOS, ASSETS}</code></td><td>the realised daily return in each scenario, 756 × 54 numbers</td><td><code>estimate.window_before</code></td></tr>
-<tr><td><code>param alpha</code></td><td>CVaR confidence, 0.95</td><td>profile</td></tr>
-<tr><td><code>param cvar_limit</code></td><td>the maximum daily CVaR allowed</td><td>profile glide path</td></tr>
-<tr><td><code>param lambda_risk</code></td><td>optional extra penalty on CVaR in the objective; 0 for every profile</td><td>profile</td></tr>
+<tr><td><code>param lambda_risk</code></td><td>optional extra penalty on risk in the objective; 0 for every profile</td><td>profile</td></tr>
 <tr><td><code>param w_max{ASSETS}</code></td><td>cap on each asset's weight (1.0 for CASH, 0 for excluded tickers)</td><td>profile + exclusions</td></tr>
 <tr><td><code>param w_min_pos</code></td><td>if an asset is held at all, hold at least this much (0.02)</td><td>profile</td></tr>
 <tr><td><code>param max_holdings</code></td><td>the most non-cash assets allowed</td><td>profile</td></tr>
@@ -473,97 +440,166 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 </tbody></table></div>
 <div class="def"><p class="term">Basis point (bp)</p><p>One hundredth of one percent. A 10 bp cost means paying $1 for every $1,000 traded, a reasonable all-in figure for large US stocks including the gap between buying and selling prices.</p></div>
 
-<h3 id="model-vars">Decision variables</h3>
+<h3>Decision variables and shared expressions</h3>
 <pre><code><span class="kw">var</span> w    {a in ASSETS} &gt;= 0, &lt;= w_max[a];   <span class="cm"># the weights: the actual decision</span>
 <span class="kw">var</span> z    {ASSETS} binary;                   <span class="cm"># 1 if the asset is held at all</span>
 <span class="kw">var</span> buy  {ASSETS} &gt;= 0;                     <span class="cm"># how much weight is bought ...</span>
 <span class="kw">var</span> sell {ASSETS} &gt;= 0;                     <span class="cm"># ... and sold, relative to w_prev</span>
-<span class="kw">var</span> zeta;                                   <span class="cm"># the VaR threshold from the R-U trick</span>
-<span class="kw">var</span> u    {SCENARIOS} &gt;= 0;                  <span class="cm"># loss beyond zeta in each scenario</span></code></pre>
-<p>Three named expressions are defined for readability. <code>cvar</code> is the Rockafellar–Uryasev formula <code>zeta + Σ u[s] / ((1 − alpha) · nS)</code>. <code>exp_return</code> is <code>Σ mu[a] · w[a]</code>, the expected daily portfolio return. <code>turnover</code> is <code>Σ (buy[a] + sell[a])</code>, the total weight that changes hands.</p>
 
-<h3 id="model-obj">The objective</h3>
-<div class="math">maximize  hold_days · exp_return − lambda_risk · cvar − cost_rate · turnover</div>
-<p>The model wants the highest expected return over the holding period, minus what it costs to get there. Risk is handled mostly as a hard limit (below), so <code>lambda_risk</code> is zero for every profile and the middle term is dormant; it exists so a profile could trade return for risk smoothly instead of with a cliff.</p>
-<div class="lesson"><p class="term">Lesson learned: scale return by hold_days</p><p>The first version maximised <code>exp_return − cost_rate · turnover</code>. Expected return is a <em>daily</em> number, around 0.0005, while switching a 10% position costs <code>0.001 × 0.2 = 0.0002</code> once. One day of return could never justify a trade, so the model sat in cash and never rebalanced. Multiplying the return by the 21 days the position is expected to be held compares like with like, and the model started trading sensibly.</p></div>
+<span class="kw">var</span> exp_return = sum {a in ASSETS} mu[a] * w[a];          <span class="cm"># expected daily portfolio return</span>
+<span class="kw">var</span> turnover   = sum {a in ASSETS} (buy[a] + sell[a]);    <span class="cm"># total weight that changes hands</span></code></pre>
 
-<h3 id="model-cons">The constraints</h3>
-<p>Each constraint below is one rule an adviser might state in words. Reading them in this order tells the story of the model.</p>
+<h3>The shared constraints</h3>
+<p>Each constraint below is one rule an adviser might state in words.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Constraint</th><th>In AMPL</th><th>In words</th></tr></thead>
 <tbody>
 <tr><td><code>budget</code></td><td><code>Σ w[a] = 1</code></td><td>All the money is placed somewhere; cash counts as somewhere.</td></tr>
 <tr><td><code>trade_balance</code></td><td><code>w[a] = w_prev[a] + buy[a] − sell[a]</code></td><td>The new weight is the old weight plus what was bought minus what was sold. Because both buy and sell are non-negative and cost money, the solver never sets both positive for one asset.</td></tr>
-<tr><td><code>tail_loss</code></td><td><code>u[s] ≥ −Σ r[s,a]·w[a] − zeta</code></td><td>In each scenario, <code>u[s]</code> must cover the portfolio loss beyond the threshold. The portfolio loss is minus the portfolio return, hence the leading minus sign.</td></tr>
-<tr><td><code>loss_tolerance</code></td><td><code>cvar ≤ cvar_limit</code></td><td>The average loss on the worst 5% of scenario days may not exceed the investor's limit. This is the constraint that defines each archetype.</td></tr>
 <tr><td><code>link_upper</code></td><td><code>w[a] ≤ w_max[a] · z[a]</code> (non-cash)</td><td>If <code>z[a]</code> is 0 the weight must be 0; if it is 1 the weight may go up to the cap. This links the continuous weight to the yes/no variable.</td></tr>
 <tr><td><code>link_lower</code></td><td><code>w[a] ≥ w_min_pos · z[a]</code> (non-cash)</td><td>If the asset is held, hold at least 2%. This stops "dust" positions of 0.01% that would be pointless to trade.</td></tr>
-<tr><td><code>cardinality</code></td><td><code>Σ z[a] ≤ max_holdings</code> (non-cash)</td><td>No more than this many different assets. This is the rule that needs the binaries and makes the problem a MILP.</td></tr>
+<tr><td><code>cardinality</code></td><td><code>Σ z[a] ≤ max_holdings</code> (non-cash)</td><td>No more than this many different assets. This is the rule that needs the binaries and makes every optimising model a mixed-integer one.</td></tr>
 <tr><td><code>sector_limit</code></td><td><code>Σ w[a] over sector k ≤ sector_cap[k]</code></td><td>No sector gets more than its cap; the default cap is 1.0 (no limit) unless a profile sets one.</td></tr>
 <tr><td><code>cash_floor</code></td><td><code>w[CASH] ≥ cash_min</code></td><td>Keep at least this much liquid.</td></tr>
 </tbody></table></div>
 <div class="def"><p class="term">Cardinality constraint</p><p>A limit on how many things are chosen, as opposed to how much. "Hold at most twelve stocks" is a cardinality constraint. It cannot be written with weights alone, because a weight of 0.0001 would still count as not holding, so a binary indicator per asset is needed.</p></div>
 <p>Worked example of the link constraints: with <code>w_max = 0.12</code> and <code>w_min_pos = 0.02</code>, asset <code>a</code> may have weight 0 (with <code>z = 0</code>) or any weight in [0.02, 0.12] (with <code>z = 1</code>), but nothing in between 0 and 0.02. The binaries make the feasible region disconnected, which is exactly what a plain LP cannot represent.</p>
 <div class="check"><span class="term">Check yourself.</span> If a profile sets <code>max_holdings = 8</code> and <code>w_max = 0.20</code>, what is the most that can be in stocks and ETFs combined, and where must the rest go?</div>
-<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>mixed integer linear programming explained</code>, <code>big M constraint binary variable</code>, <code>AMPL tutorial</code></li><li>Reading: the AMPL book (Fourer, Gay, Kernighan) is free online; chapters 1–2 cover everything this model uses. The HiGHS documentation lists the options used in <code>optimiser.py</code>.</li></ul></div>
+<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>mixed integer linear programming explained</code>, <code>big M constraint binary variable</code>, <code>AMPL tutorial</code></li><li>Reading: the AMPL book (Fourer, Gay, Kernighan) is free online; chapters 1–2 cover everything these files use.</li></ul></div>
 
 <!-- ============================================================ -->
-<h2 id="optimiser">optimiser.py — calling the model from Python</h2>
+<h2 id="models">The five models</h2>
+<p>A model answers one question at each rebalance: given the estimates and the investor's rules, which weights to hold until the next decision. Five models are registered in <code>src/portfolio/models/__init__.py</code>, in the order the site shows them. Four of them share <code>common.mod</code> and differ only in the file that adds their risk measure and objective; the fifth needs no solver at all.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Key</th><th>Name on the site</th><th>Risk measure</th><th>Model file</th><th>Solver</th><th>Problem class</th></tr></thead>
+<tbody>
+<tr><td><code>cvar</code></td><td>CVaR limit</td><td>CVaR over 756 historical scenarios</td><td><code>cvar.mod</code></td><td>HiGHS</td><td>MILP</td></tr>
+<tr><td><code>markowitz</code></td><td>Markowitz</td><td>variance, sample covariance</td><td><code>markowitz.mod</code></td><td>Gurobi</td><td>MIQCP</td></tr>
+<tr><td><code>markowitz_lw</code></td><td>Markowitz + Ledoit-Wolf</td><td>variance, shrunk covariance</td><td><code>markowitz.mod</code></td><td>Gurobi</td><td>MIQCP</td></tr>
+<tr><td><code>robust</code></td><td>Robust mean-variance</td><td>variance cap plus worst-case expected return</td><td><code>robust.mod</code></td><td>Gurobi</td><td>MISOCP</td></tr>
+<tr><td><code>equal</code></td><td>Equal weight (1/N)</td><td>none</td><td>—</td><td>—</td><td>arithmetic</td></tr>
+</tbody></table></div>
+<p>The story part of the site always runs on <code>cvar</code> (<code>STORY_MODEL</code> in the registry); the lab can show any of them. The CVaR model is the one this project designed: the profile-to-constraints mapping, the glide path on the loss limit, and event-triggered rebalancing are its ideas. The other four are textbook methods included so that those ideas can be measured against something.</p>
+
+<h3 id="model-cvar">CVaR limit (the project's own)</h3>
+<p class="file">model/cvar.mod · src/portfolio/models/cvar.py</p>
+<p>The file adds the scenario set and returns <code>r[s,a]</code>, the confidence level <code>alpha</code> and the investor's <code>cvar_limit</code>, the Rockafellar–Uryasev variables <code>zeta</code> and <code>u[s]</code>, and two constraints:</p>
+<pre><code><span class="kw">var</span> cvar = zeta + sum {s in SCENARIOS} u[s] / ((1 - alpha) * nS);
+
+maximize objective:  hold_days * exp_return - lambda_risk * cvar - cost_rate * turnover;
+
+subject to tail_loss {s in SCENARIOS}:  u[s] &gt;= -sum {a in ASSETS} r[s,a] * w[a] - zeta;
+subject to loss_tolerance:              cvar &lt;= cvar_limit;</code></pre>
+<p>The objective wants the highest expected return over the holding period, minus what it costs to get there; risk is a hard limit rather than a penalty, which is why <code>lambda_risk</code> is zero for every profile.</p>
+<div class="lesson"><p class="term">Lesson learned: scale return by hold_days</p><p>The first version maximised <code>exp_return − cost_rate · turnover</code>. Expected return is a <em>daily</em> number, around 0.0005, while switching a 10% position costs <code>0.001 × 0.2 = 0.0002</code> once. One day of return could never justify a trade, so the model sat in cash and never rebalanced. Multiplying the return by the 21 days the position is expected to be held compares like with like. Every model's objective now has the same <code>hold_days</code> factor.</p></div>
+
+<h3 id="model-mv">Markowitz, two ways</h3>
+<p class="file">model/markowitz.mod · src/portfolio/models/markowitz.py</p>
+<div class="def"><p class="term">Markowitz mean-variance optimisation</p><p>The 1952 idea that started portfolio theory: describe each portfolio by two numbers, its expected return and its variance, and choose the highest return for a given variance. Its inputs are a vector of expected returns and a covariance matrix; its weakness is that it trusts both completely, and both are noisy.</p></div>
+<p>The file adds <code>Sigma</code> and a cap <code>var_limit</code>, and replaces the CVaR constraint with a quadratic one:</p>
+<pre><code><span class="kw">var</span> variance = sum {i in ASSETS, j in ASSETS} w[i] * Sigma[i,j] * w[j];
+
+maximize objective:  hold_days * exp_return - lambda_risk * variance - cost_rate * turnover;
+subject to risk_tolerance:  variance &lt;= var_limit;</code></pre>
+<p><code>var_limit</code> is the investor's CVaR limit on that day passed through <code>cvar_to_vol</code> and squared, so the glide path applies here too. The two variants are one class, <code>MarkowitzModel(cov_method)</code>, differing only in whether <code>covariance()</code> is asked for the sample or the Ledoit–Wolf matrix. A quadratic constraint together with the binaries makes this a MIQCP (Mixed-Integer Quadratically Constrained Program), which HiGHS cannot solve and Gurobi solves in well under a second.</p>
+<div class="lesson"><p class="term">Lesson learned: solver tolerances have units</p><p>Daily variances are around 5 × 10⁻⁵. Gurobi's default feasibility tolerance is 10⁻⁶, which sounds tiny but is 2% of that constraint, and the first test run showed the variance cap exceeded by exactly that much. The fix is to hand the solver covariances in percent² (multiplied by <code>SCALE2 = 10⁴</code> in <code>models/base.py</code>) so a typical variance is 0.5 and the tolerance is negligible, and to tighten <code>feastol</code> to 10⁻⁸. Python converts back before reporting. The AMPL files say which units they expect in their comments.</p></div>
+
+<h3 id="model-robust">Robust mean-variance</h3>
+<p class="file">model/robust.mod · src/portfolio/models/robust.py</p>
+<div class="def"><p class="term">Robust optimisation</p><p>Instead of trusting an estimate, assume the true value lies somewhere in a set around it and optimise for the worst case in that set. Here the uncertain quantity is the vector of expected returns <code>mu</code>, and the set is an ellipsoid whose shape comes from how uncertain each estimate is.</p></div>
+<div class="def"><p class="term">Standard error</p><p>How far a sample average is likely to be from the true average. For a mean of <code>n</code> daily returns with standard deviation <code>σ</code>, it is <code>σ / √n</code>. With 756 days and a typical stock's σ of 1.2% a day, the standard error is about 0.044% a day, which is roughly the size of a stock's whole expected excess return. That single fact drives everything about this model.</p></div>
+<p>The covariance of the estimation error is <code>Omega = Sigma / n</code>. For a long-only portfolio the worst-case expected return over an ellipsoid of radius <code>kappa</code> standard errors has a closed form, <code>mu·w − kappa · √(wᵀ Omega w)</code>, and the square root is handled by a cone variable:</p>
+<pre><code><span class="kw">var</span> t &gt;= 0;                                              <span class="cm"># t &gt;= sqrt(w' Omega w)</span>
+<span class="kw">var</span> worst_return = exp_return - kappa * t / sigma_scale;  <span class="cm"># Omega is in percent^2, so t is a percent</span>
+
+maximize objective:  hold_days * worst_return - lambda_risk * variance - cost_rate * turnover;
+subject to cone:            sum {i,j} w[i] * Omega[i,j] * w[j] &lt;= t * t;
+subject to risk_tolerance:  variance &lt;= var_limit;</code></pre>
+<p>The same variance cap as Markowitz applies, so the only difference between <code>robust</code> and <code>markowitz_lw</code> is the <code>kappa · t</code> haircut on expected return. This is a MISOCP (Mixed-Integer Second-Order Cone Program), which Gurobi handles; it is the slowest model, occasionally reaching the two-minute time limit, in which case the best solution found so far is used (see <a href="#optimiser">optimiser.py</a>).</p>
+<div class="lesson"><p class="term">Lesson learned: units, again</p><p>When the covariance scaling above was introduced, <code>t</code> silently became a percent while <code>exp_return</code> stayed a fraction, so the haircut was 100 times too large and every robust run sat in cash for ten years. The export log made it obvious (a 2.2% CAGR with zero drawdown is a cash account), and <code>sigma_scale</code> in the model file is the fix. The general rule: any time a model mixes two quantities, write down the units of both.</p></div>
+<p>How big should <code>kappa</code> be? That is a hyperparameter, so it was checked on 2011–2015 like the others; the result is in the <a href="#tune">tuning section</a> and is the reason the default is the conventional 1.0 rather than a tuned value.</p>
+
+<h3 id="model-equal">Equal weight (1/N)</h3>
+<p class="file">src/portfolio/models/equal.py</p>
+<p>Put the same weight in every allowed non-cash asset and rebalance back to equal whenever a trigger fires. There are no estimates and no solver; the class computes the weights in three lines and reports the turnover against the previous weights. It ignores every investor rule except exclusions, so the Ethical Investor's 1/N portfolio still holds no oil company and no Philip Morris. It is here because a well-known paper (DeMiguel, Garlappi and Uppal, 2009) found that no optimised strategy consistently beat 1/N out of sample; this project's <a href="#results">results</a> agree on return and disagree on risk.</p>
+
+<h3 id="model-code">The Model interface</h3>
+<p class="file">src/portfolio/models/base.py, __init__.py</p>
+<p>All five are subclasses of one abstract class, which is what lets <code>backtest.py</code> treat them identically:</p>
+<pre><code><span class="kw">class</span> Model(ABC):
+    key: str            <span class="cm"># file names and the site</span>
+    name: str           <span class="cm"># shown to users</span>
+    blurb: str          <span class="cm"># one plain-language sentence on how it decides</span>
+    solver: str | None  <span class="cm"># "highs", "gurobi", or None</span>
+
+    <span class="kw">def</span> solve(self, scenarios, mu, params, w_prev) -&gt; Solution: ...
+
+MODELS = {m.key: m <span class="kw">for</span> m <span class="kw">in</span> [CvarModel(), MarkowitzModel("sample"), MarkowitzModel("ledoit_wolf"),
+                            RobustModel(), EqualWeightModel()]}
+STORY_MODEL = "cvar"</code></pre>
+<p>Two helpers on the base class do the repetitive work: <code>common_sets_and_params</code> fills everything in <code>common.mod</code> from the profile parameters (including forcing CASH's cap to 1.0 and excluded tickers' caps to 0), and <code>finish</code> packages the weights into a <code>Solution</code> with the realised CVaR computed the same way for every model. Adding a sixth model is one new file with a <code>solve</code> method and one entry in the <code>MODELS</code> list; nothing else in the pipeline changes, and <code>export.py</code> picks it up automatically.</p>
+<div class="def"><p class="term">Strategy pattern</p><p>The name for this arrangement in software design: several interchangeable ways of doing one job, each behind the same interface, chosen at run time. The backtest is the context, the models are the strategies.</p></div>
+<div class="check"><span class="term">Check yourself.</span> Which of the five models would change its answer if you doubled <code>hold_days</code>, and which would not?</div>
+<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>Markowitz portfolio theory explained</code>, <code>robust portfolio optimization intuition</code>, <code>1/N portfolio DeMiguel</code>, <code>second order cone programming</code></li><li>Reading: DeMiguel, Garlappi &amp; Uppal (2009), "Optimal versus naive diversification"; Goldfarb &amp; Iyengar (2003), "Robust portfolio selection problems", for the ellipsoidal form used here.</li></ul></div>
+
+<!-- ============================================================ -->
+<h2 id="optimiser">optimiser.py — talking to AMPL</h2>
 <p class="file">src/portfolio/optimiser.py</p>
-<p>This module does one thing: take pandas objects in, hand them to AMPL, and return a <code>Solution</code>. It knows nothing about dates, so it cannot possibly leak future information; the only way to get scenarios into it is through <code>estimate.window_before</code>.</p>
+<p>This module is the only place that touches <code>amplpy</code>. It offers one function, <code>ampl_solve</code>, which loads <code>common.mod</code> plus one model file, fills in sets and parameters, runs the named solver and returns the weights and any requested expression values. It knows nothing about dates, so it cannot possibly leak future information.</p>
+<pre><code>SOLVER_OPTIONS = {
+    "highs":  "outlev=0 mip_rel_gap=1e-4 timelim=60",
+    "gurobi": "outlev=0 mipgap=1e-3 timelim=120 feastol=1e-8 threads=2",
+}
 
-<h3>One AMPL session, reused</h3>
-<p><code>_get_ampl()</code> creates a single AMPL object the first time it is called and keeps it in a module-level variable. Creating the session is slow (it starts a separate process); reusing it means each solve pays only for loading data. Three options are set once: the solver is <code>highs</code>, all solver chatter is silenced, and HiGHS is told <code>mip_rel_gap=1e-4 timelim=60</code>.</p>
-<div class="def"><p class="term">MIP gap</p><p>A solver proves a mixed-integer solution is optimal by squeezing an upper bound and the best solution found towards each other. The relative gap is how far apart they still are; stopping at 0.01% means the returned answer is within 0.01% of the best possible, which is far below the noise in the inputs.</p></div>
-
-<h3>The solve function, step by step</h3>
-<ol>
-<li><p>Build the asset list from <code>mu.index</code> and the sector list from those assets. If no previous weights are given, assume 100% cash.</p></li>
-<li><p>Turn <code>w_max</code> into a per-asset Series if a single number was given, force <code>CASH</code>'s cap to 1.0 (cash is always allowed in any amount), and set the cap to 0 for any ticker in the profile's <code>exclude</code> list, which is how the Ethical Investor refuses Philip Morris.</p></li>
-<li><p><code>ampl.reset()</code> then <code>ampl.read(MODEL)</code> reloads the model file fresh, so nothing from the previous solve leaks through.</p></li>
-<li><p>Fill every set and parameter. The biggest is <code>r</code>, a dictionary of 756 × 54 ≈ 41,000 entries keyed by <code>(scenario, asset)</code>, built with one comprehension over the NumPy array.</p></li>
-<li><p><code>ampl.solve()</code>, timed. If the result is anything other than <code>"solved"</code> (for example <code>"infeasible"</code> when no portfolio can meet a very tight CVaR limit and a cash floor at once) a <code>RuntimeError</code> stops the backtest rather than silently continuing.</p></li>
-<li><p>Read <code>w</code> back, zero anything below 10⁻⁶, and package it with the model's expected return, the turnover, and the CVaR of those weights recomputed in Python by <code>realised_cvar</code>. Recomputing rather than reading the model's <code>cvar</code> variable is a small cross-check that the linearisation did what it claims.</p></li>
-</ol>
+<span class="kw">def</span> ampl_solve(model_file, solver, sets, params, values=()):
+    ampl = _get_ampl()                       <span class="cm"># one AMPL session per process, reused</span>
+    ampl.reset(); ampl.read(COMMON); ampl.read(model_file)
+    ...fill sets and params...
+    ampl.solve()
+    <span class="kw">if</span> ampl.solve_result <span class="kw">not in</span> ("solved", "limit"): <span class="kw">raise</span> RuntimeError(...)
+    <span class="kw">return</span> weights, {v: ampl.get_value(v) <span class="kw">for</span> v <span class="kw">in</span> values}, status, seconds</code></pre>
+<div class="def"><p class="term">MIP gap</p><p>A solver proves a mixed-integer solution is optimal by squeezing an upper bound and the best solution found towards each other. The relative gap is how far apart they still are; stopping at 0.01% (HiGHS) or 0.1% (Gurobi) means the returned answer is within that fraction of the best possible, far below the noise in the inputs.</p></div>
+<p>Three details matter. Creating an AMPL session starts a separate process and is slow, so <code>_get_ampl</code> keeps one per Python process and each solve only pays for reloading the model text. A result of <code>"limit"</code> (the solver stopped on its time limit but has a feasible solution) is accepted and recorded in the solve log's <code>status</code>, because a slightly sub-optimal robust portfolio is preferable to an aborted backtest; anything else, such as <code>"infeasible"</code>, raises an error and stops the run. And Gurobi is told to use two threads, because <code>export.py</code> runs four backtests at once and four unrestricted Gurobis on one laptop starve each other into time limits.</p>
 <pre><code><span class="kw">@dataclass</span>
 <span class="kw">class</span> Solution:
     weights: pd.Series      <span class="cm"># the answer, one weight per asset</span>
     exp_return: float       <span class="cm"># expected daily return, mu · w</span>
-    cvar: float             <span class="cm"># realised CVaR of these weights over the scenarios</span>
+    risk: float             <span class="cm"># the model's own measure: CVaR for cvar, daily volatility for the others</span>
+    cvar: float             <span class="cm"># realised CVaR of these weights over the scenarios, comparable across models</span>
     turnover: float         <span class="cm"># Σ |trades| as a fraction of portfolio value</span>
-    status: str             <span class="cm"># "solved"</span>
-    solve_time: float       <span class="cm"># seconds inside ampl.solve()</span>
+    status: str             <span class="cm"># "solved" or "limit"</span>
+    solve_time: float       <span class="cm"># seconds inside the solver</span>
     n_holdings: int         <span class="cm"># non-cash assets with positive weight</span></code></pre>
 
 <!-- ============================================================ -->
 <h2 id="profiles">profiles.py — six investors as numbers</h2>
 <p class="file">src/portfolio/profiles.py</p>
-<p>A <code>Profile</code> holds what a person would tell an adviser: how long the money is for, how much loss they can stomach, how many holdings they want, and any exclusions. <code>params_at(years_left)</code> translates that into the parameter dictionary the model needs on a given date. Only one thing changes with time: the loss limit.</p>
+<p>A <code>Profile</code> holds what a person would tell an adviser: how long the money is for, how much loss they can stomach, how many holdings they want, and any exclusions. <code>params_at(years_left)</code> translates that into the parameter dictionary every model receives on a given date. Only one thing changes with time: the loss limit.</p>
 
 <h3>The glide path</h3>
 <div class="def"><p class="term">Horizon and glide path</p><p>The <strong>horizon</strong> is how many years until the investor needs the money. A <strong>glide path</strong> is a rule that makes a portfolio safer as the horizon shrinks, the idea behind "target-date" retirement funds. Here it is a straight line on the CVaR limit:</p></div>
 <div class="math">cvar_limit(years_left) = cvar_end + (years_left / horizon_years) · (cvar_start − cvar_end)</div>
-<p>For The Builder, <code>cvar_start = 0.020</code> and <code>cvar_end = 0.010</code> over ten years, so at the start the model may run a 2.0% daily CVaR, five years in it may run 1.5%, and in the final months only 1.0%. The fraction is clamped to [0, 1] so nothing strange happens if a backtest runs past the horizon. This is the project's first "policy" idea: the risk budget is a state that depends on time, not a constant.</p>
+<p>For The Builder, <code>cvar_start = 0.020</code> and <code>cvar_end = 0.010</code> over ten years, so at the start a model may run a 2.0% daily CVaR, five years in 1.5%, and in the final months only 1.0%. The mean-variance models see the same path after translation to a volatility cap. This is the project's first "policy" idea: the risk budget is a state that depends on time, not a constant.</p>
 
 <h3>The six archetypes</h3>
 <div class="tablewrap"><table>
-<thead><tr><th>Key</th><th>Name</th><th class="num">Horizon</th><th class="num">CVaR start → end</th><th class="num">Max holdings</th><th class="num">Per-asset cap</th><th class="num">Cash min</th><th>Extra rules</th></tr></thead>
+<thead><tr><th>Key</th><th>Name · type</th><th class="num">Horizon</th><th class="num">CVaR start → end</th><th class="num">Max holdings</th><th class="num">Per-asset cap</th><th class="num">Cash min</th><th>Extra rules</th></tr></thead>
 <tbody>
-<tr><td><code>preserver</code></td><td>The Preserver</td><td class="num">10 y</td><td class="num">1.0% → 0.5%</td><td class="num">20</td><td class="num">8%</td><td class="num">10%</td><td>IT ≤ 20%, Energy ≤ 10%</td></tr>
-<tr><td><code>steady</code></td><td>The Steady Hand</td><td class="num">10 y</td><td class="num">1.5% → 0.7%</td><td class="num">15</td><td class="num">10%</td><td class="num">5%</td><td>—</td></tr>
-<tr><td><code>builder</code></td><td>The Builder</td><td class="num">10 y</td><td class="num">2.0% → 1.0%</td><td class="num">12</td><td class="num">12%</td><td class="num">2%</td><td>—</td></tr>
-<tr><td><code>maverick</code></td><td>The Maverick</td><td class="num">10 y</td><td class="num">2.8% → 1.4%</td><td class="num">8</td><td class="num">20%</td><td class="num">0%</td><td>—</td></tr>
-<tr><td><code>sprinter</code></td><td>The Sprinter</td><td class="num">3 y</td><td class="num">1.5% → 0.4%</td><td class="num">12</td><td class="num">10%</td><td class="num">10%</td><td>—</td></tr>
-<tr><td><code>ethical</code></td><td>The Ethical Investor</td><td class="num">10 y</td><td class="num">1.8% → 0.9%</td><td class="num">15</td><td class="num">10%</td><td class="num">2%</td><td>Energy ≤ 0%, no PM</td></tr>
+<tr><td><code>preserver</code></td><td>The Preserver · Capital preservation</td><td class="num">10 y</td><td class="num">1.0% → 0.5%</td><td class="num">20</td><td class="num">8%</td><td class="num">10%</td><td>IT ≤ 20%, Energy ≤ 10%</td></tr>
+<tr><td><code>steady</code></td><td>The Steady Hand · Balanced</td><td class="num">10 y</td><td class="num">1.5% → 0.7%</td><td class="num">15</td><td class="num">10%</td><td class="num">5%</td><td>—</td></tr>
+<tr><td><code>builder</code></td><td>The Builder · Growth</td><td class="num">10 y</td><td class="num">2.0% → 1.0%</td><td class="num">12</td><td class="num">12%</td><td class="num">2%</td><td>—</td></tr>
+<tr><td><code>maverick</code></td><td>The Maverick · Aggressive growth</td><td class="num">10 y</td><td class="num">2.8% → 1.4%</td><td class="num">8</td><td class="num">20%</td><td class="num">0%</td><td>—</td></tr>
+<tr><td><code>sprinter</code></td><td>The Sprinter · Short horizon</td><td class="num">3 y</td><td class="num">1.5% → 0.4%</td><td class="num">12</td><td class="num">10%</td><td class="num">10%</td><td>—</td></tr>
+<tr><td><code>ethical</code></td><td>The Ethical Investor · Values-led growth</td><td class="num">10 y</td><td class="num">1.8% → 0.9%</td><td class="num">15</td><td class="num">10%</td><td class="num">2%</td><td>Energy ≤ 0%, no PM</td></tr>
 </tbody></table></div>
-<p>Every profile shares the remaining defaults: α = 0.95, minimum position 2%, cost 10 bp, <code>hold_days</code> 21, lookback 756 days, shrinkage 0.75, and the rebalance triggers described in the next section (drift 10%, volatility ratio 2.0, at most 63 days between solves, at least 10). Note that <code>DEFAULT_SECTOR_CAP = 0.30</code> is declared at the top of the file but is not applied anywhere; profiles without an explicit <code>sector_cap</code> have no sector limit at all.</p>
+<p>Each profile also carries three presentation fields the site uses on the adviser cards: <code>archetype</code> (the type label above), <code>personality</code> (one sentence in the adviser's voice), and a derived <code>risk_tolerance</code> label (Low, Moderate, High or Very high, thresholds on <code>cvar_start</code>). Every profile shares the remaining defaults: α = 0.95, minimum position 2%, cost 10 bp, <code>hold_days</code> 21, lookback 756 days, shrinkage 0.75, and the rebalance triggers described in the next section. Note that <code>DEFAULT_SECTOR_CAP = 0.30</code> is declared at the top of the file but is not applied anywhere; profiles without an explicit <code>sector_cap</code> have no sector limit at all.</p>
 <p>A word of honesty about these numbers. They were hand-picked to spread the archetypes across a plausible range, and the plan on record is to replace each one with a value derived from a cited source (for example fund-industry glide paths and survey data on how many stocks households actually hold). Until that is done the table above is a reasonable illustration, not a calibrated one.</p>
-<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>target date fund glide path explained</code></li><li>Reading: any Vanguard or Fidelity page describing their target-date glide path shows the same shape in stock/bond terms.</li></ul></div>
+<div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>target date fund glide path explained</code></li></ul></div>
 
 <!-- ============================================================ -->
 <h2 id="backtest">backtest.py — replaying ten years honestly</h2>
 <p class="file">src/portfolio/backtest.py</p>
-<p>A backtest replays a strategy day by day over history as if it had been run live. This one walks forward through every trading day from 4 January 2016, lets the portfolio earn that day's returns, decides whether to re-solve, and if so trades at that day's close using only history before that day. The whole module is one loop and the honesty lives in its ordering.</p>
+<p>A backtest replays a strategy day by day over history as if it had been run live. This one walks forward through every trading day from 4 January 2016, lets the portfolio earn that day's returns, decides whether to re-solve, and if so asks the model for new weights using only history before that day and trades at that day's close. The whole module is one loop and the honesty lives in its ordering. The signature is <code>run_backtest(profile, data, model="cvar", start, end, initial=100_000)</code>; <code>model</code> may be a key or a <code>Model</code> object.</p>
 <div class="def"><p class="term">Walk-forward backtest</p><p>A simulation that moves through time in order, making each decision with only the data that was available at that moment, then revealing the next day and repeating. It is the opposite of fitting one model to the whole period at once.</p></div>
 <div class="def"><p class="term">Rebalance</p><p>Trading a portfolio back to a chosen set of weights. Weights drift on their own as prices move, so any strategy that targets weights has to decide when to rebalance and pay the trading costs of doing so.</p></div>
 
@@ -572,14 +608,14 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <ol>
 <li><p><strong>Earn.</strong> Except on the very first day, multiply each holding by <code>1 + returns.loc[t]</code>. Compute the new total and the current weights <code>w = holdings / total</code>.</p></li>
 <li><p><strong>Decide whether to re-solve.</strong> A reason is set if any trigger fires (next subsection). On the first day the reason is <code>"start"</code>.</p></li>
-<li><p><strong>Re-solve, if needed.</strong> Compute <code>years_left</code> to the horizon end. Take the 756-day window before <code>t</code>, shrink its means, ask the profile for its parameters at this <code>years_left</code>, and call <code>solve</code> with the current weights as <code>w_prev</code>.</p></li>
-<li><p><strong>Trade and pay.</strong> The new dollar holdings are <code>sol.weights × total</code>. The amount traded is the sum of absolute dollar changes; the cost is <code>cost_rate</code> times that; and the cost is taken out of every position pro rata by scaling all holdings by <code>1 − cost/total</code>. Every asset whose weight changed by more than 0.01 percentage points is logged as a trade, and one row is logged for the solve itself.</p></li>
+<li><p><strong>Re-solve, if needed.</strong> Compute <code>years_left</code> to the horizon end. Take the 756-day window before <code>t</code>, shrink its means, ask the profile for its parameters at this <code>years_left</code>, and call <code>model.solve(scen, mu, params, w_prev=w)</code>.</p></li>
+<li><p><strong>Trade and pay.</strong> The new dollar holdings are <code>weights × total</code>. The amount traded is the sum of absolute dollar changes; the cost is <code>cost_rate</code> times that; and the cost is taken out of every position pro rata by scaling all holdings by <code>1 − cost/total</code>. Every asset whose weight changed by more than 0.01 percentage points is logged as a trade, and one row is logged for the solve itself, including the model's own <code>risk</code> number and the comparable <code>cvar</code>.</p></li>
 <li><p><strong>Record.</strong> Append today's total value and weights.</p></li>
 </ol>
-<p>The new weights earn returns only from <code>t + 1</code>. So the model never earns a return on the same day's data it was allowed to see, and the scenarios it saw ended the day before <code>t</code>. Worked example from the exported Builder run: on 4 January 2016 the first solve moved 98% of $100,000 out of cash into nine holdings, so turnover was 1.96 (buys plus sells), the cost was <code>0.001 × 1.96 × 100,000 = $196</code>, and the recorded value on day one is $99,804. That is why the site's adviser line starts a hair below the S&amp;P line.</p>
+<p>The new weights earn returns only from <code>t + 1</code>. So a model never earns a return on the same day's data it was allowed to see, and the scenarios it saw ended the day before <code>t</code>. Worked example from the exported Builder × CVaR run: on 4 January 2016 the first solve moved 98% of $100,000 out of cash into nine holdings, so turnover was 1.96 (buys plus sells), the cost was <code>0.001 × 1.96 × 100,000 = $196</code>, and the recorded value on day one is $99,804. That is why the site's adviser line starts a hair below the S&amp;P line.</p>
 
 <h3>The triggers</h3>
-<p>This is the project's second "policy" idea: rebalancing is event-driven rather than on a fixed calendar. After a cooldown of <code>min_days_between</code> (10 trading days, so a crash cannot cause a solve every day), the loop checks three conditions in this order and uses the first that fires:</p>
+<p>This is the project's second "policy" idea: rebalancing is event-driven rather than on a fixed calendar, and the same policy is applied to all five models so that they differ only in what they decide, not in when. After a cooldown of <code>min_days_between</code> (10 trading days, so a crash cannot cause a solve every day), the loop checks three conditions in this order and uses the first that fires:</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Reason</th><th>Condition</th><th>Why it exists</th></tr></thead>
 <tbody>
@@ -588,39 +624,39 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <tr><td><code>volatility</code></td><td>21-day volatility of the equal-weight universe ÷ its 252-day volatility ≥ 2.0</td><td>The market has become twice as jumpy as usual, so the risk the old weights carry has changed even if the weights have not.</td></tr>
 </tbody></table></div>
 <div class="def"><p class="term">Volatility</p><p>The standard deviation of returns, that is how widely they scatter around their average. High volatility means big moves in both directions. <code>market_vol_ratio</code> computes it over the last 21 and 252 trading days on the average return of all 53 tickers, again using only data before <code>t</code>.</p></div>
-<p>In the exported Builder run there were 49 solves: 1 start, 34 calendar, 5 drift, and 9 volatility. The volatility trigger fired around events such as February 2018, March 2020 and April 2025, which is what it is for.</p>
+<p>In the exported Builder × CVaR run there were 49 solves: 1 start, 34 calendar, 5 drift, and 9 volatility. The volatility trigger fired in February–March 2018, March–April 2020 and April–May 2025, which is what it is for.</p>
 
 <h3>The benchmark and the horizon</h3>
-<p>The benchmark is <code>SPY</code> bought once with the same initial amount; its series is normalised so that day one equals <code>initial</code>, matching the portfolio's day one, on which no return is earned. The end date is the earlier of the requested end and <code>start + horizon_years</code>, so The Sprinter's backtest runs only three years, to 4 January 2019, with 757 days instead of 2,514, and its benchmark metrics cover the same three years.</p>
-<p>The function returns a <code>BacktestResult</code> with the daily value series, daily weights, the benchmark series, the solve log, the trade log, and the metrics of both portfolio and benchmark.</p>
+<p>The benchmark is <code>SPY</code> bought once with the same initial amount; its series is normalised so that day one equals <code>initial</code>, matching the portfolio's day one, on which no return is earned. The end date is the earlier of the requested end and <code>start + horizon_years</code>, so The Sprinter's backtests run only three years, to 4 January 2019, with 757 days instead of 2,514, and its benchmark metrics cover the same three years.</p>
+<p>The function returns a <code>BacktestResult</code> with the profile, the model, the daily value series, daily weights, the benchmark series, the solve log, the trade log, and the metrics of both portfolio and benchmark.</p>
 <div class="check"><span class="term">Check yourself.</span> On a re-solve day, the model is given <code>w_prev = w</code>, the weights <em>after</em> that day's returns. Why would giving it the previous target weights instead be wrong?</div>
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>walk forward backtesting explained</code>, <code>portfolio rebalancing strategies calendar vs threshold</code></li></ul></div>
 
 <!-- ============================================================ -->
-<h2 id="metrics">metrics.py — the eight numbers on the debrief</h2>
+<h2 id="metrics">metrics.py — the numbers on the debrief and in the lab</h2>
 <p class="file">src/portfolio/metrics.py</p>
-<p><code>summarise(value, rf_daily)</code> turns a daily value series into a dictionary of headline numbers. They are written by hand rather than taken from a library so that <code>site/src/lib/sim.ts</code> can compute the same numbers in the browser for the user's own picks, and the two columns on the debrief page are comparable.</p>
+<p><code>summarise(value, rf_daily)</code> turns a daily value series into a dictionary of headline numbers. They are written by hand rather than taken from a library so that <code>site/src/lib/sim.ts</code> can compute the same numbers in the browser for the user's own picks, and the columns on the debrief page are comparable.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Key</th><th>How it is computed</th><th>What it tells you</th></tr></thead>
 <tbody>
 <tr><td><code>total_return</code></td><td><code>end / start − 1</code></td><td>Growth over the whole period, as a fraction.</td></tr>
-<tr><td><code>cagr</code></td><td><code>(end / start)^(1/years) − 1</code></td><td><strong>CAGR</strong> (Compound Annual Growth Rate): the single yearly rate that would produce the same total growth. 10.7% CAGR over ten years turns $100,000 into about $277,000.</td></tr>
+<tr><td><code>cagr</code></td><td><code>(end / start)^(1/years) − 1</code></td><td><strong>CAGR</strong> (Compound Annual Growth Rate): the single yearly rate that would produce the same total growth. 10.5% CAGR over ten years turns $100,000 into about $270,000.</td></tr>
 <tr><td><code>volatility</code></td><td><code>std(daily returns) × √252</code></td><td>Annualised scatter of returns; roughly, the size of a typical year's swing.</td></tr>
 <tr><td><code>sharpe</code></td><td><code>mean(r − rf) / std(r) × √252</code></td><td><strong>Sharpe ratio</strong>: return above cash, per unit of volatility. Above 1 is very good over a decade; SPY managed 0.74.</td></tr>
 <tr><td><code>sortino</code></td><td><code>mean(r − rf) × 252 / (std of negative days × √252)</code></td><td>Like Sharpe but only counts downside scatter, since nobody minds upside volatility.</td></tr>
 <tr><td><code>max_drawdown</code>, <code>_date</code></td><td>minimum of <code>value / running max − 1</code></td><td><strong>Drawdown</strong>: the fall from the highest point so far. The maximum drawdown is the worst peak-to-trough loss an investor would have lived through, and its date.</td></tr>
 <tr><td><code>worst_month</code>, <code>best_month</code></td><td>month-end values → monthly returns → min, max</td><td>The single worst and best calendar months.</td></tr>
-<tr><td><code>cvar_95_daily</code></td><td>mean of the largest 5% of daily losses</td><td>The realised version of the limit the model was given; it should sit near or below the profile's average limit.</td></tr>
+<tr><td><code>cvar_95_daily</code></td><td>mean of the largest 5% of daily losses</td><td>The realised version of the limit the models were given; it should sit near or below the profile's average limit.</td></tr>
 <tr><td><code>years</code></td><td>calendar days between first and last date ÷ 365.25</td><td>Used by CAGR and reported on the debrief.</td></tr>
 </tbody></table></div>
 <p>One detail worth knowing: the Sharpe ratio here divides the mean <em>excess</em> return by the standard deviation of the <em>raw</em> return, not of the excess return. Over this period the two are almost identical because the daily risk-free rate barely moves, and <code>sim.ts</code> does the same, so the columns agree.</p>
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>Sharpe ratio explained simply</code>, <code>maximum drawdown explained</code>, <code>CAGR vs average return</code></li></ul></div>
 
 <!-- ============================================================ -->
-<h2 id="tune">tune.py — choosing defaults without peeking</h2>
-<p class="file">src/portfolio/tune.py</p>
-<p>Four settings are not part of any investor's story but still affect results: the lookback window, the shrinkage, the drift trigger and the volatility trigger. They are hyperparameters, and choosing them by trying values on 2016–2025 would be look-ahead bias in another disguise. So <code>tune.py</code> tries them on 1 April 2011 to 31 December 2015, a period the site never shows.</p>
-<div class="def"><p class="term">Hyperparameter</p><p>A setting of the method itself rather than a quantity the method estimates. The model estimates expected returns; how many days of history to estimate them from is a hyperparameter.</p></div>
+<h2 id="tune">tune.py and the kappa grid — choosing defaults without peeking</h2>
+<p class="file">src/portfolio/tune.py · data/processed/tuning.json · data/processed/tuning_robust.json</p>
+<p>Some settings are not part of any investor's story but still affect results: the lookback window, the shrinkage, the drift trigger, the volatility trigger, and the robust model's <code>kappa</code>. They are hyperparameters, and choosing them by trying values on 2016–2025 would be look-ahead bias in another disguise. So they were tried on 1 April 2011 to 31 December 2015, a period the site never shows.</p>
+<div class="def"><p class="term">Hyperparameter</p><p>A setting of the method itself rather than a quantity the method estimates. A model estimates expected returns; how many days of history to estimate them from is a hyperparameter.</p></div>
 
 <h3>The grid and the selection rule</h3>
 <pre><code>GRID = {
@@ -629,7 +665,7 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
     "drift_trigger": [0.10, 0.20],
     "vol_trigger":   [1.5, 2.0, 99.0],    <span class="cm"># 99 = volatility trigger effectively off</span>
 }</code></pre>
-<p>That is 36 combinations, run for The Builder and The Preserver, so 72 backtests in a process pool of four. For each run it records CAGR, Sharpe, maximum drawdown, realised CVaR, the profile's average CVaR limit over the run, their ratio, and total turnover. The selection rule is stated in the docstring: keep configurations whose realised CVaR stayed within 10% of the average limit (the risk promise was kept), then take the highest Sharpe, with ties going to the one that traded least.</p>
+<p>That is 36 combinations, run for The Builder and The Preserver under the CVaR model, so 72 backtests in a process pool of four. For each run it records CAGR, Sharpe, maximum drawdown, realised CVaR, the profile's average CVaR limit over the run, their ratio, and total turnover. The selection rule is stated in the docstring: keep configurations whose realised CVaR stayed within 10% of the average limit (the risk promise was kept), then take the highest Sharpe, with ties going to the one that traded least.</p>
 
 <h3>What it found, and what was actually chosen</h3>
 <p>The per-profile winners disagreed on shrinkage and drift (Builder's best was shrink 0.5 and drift 0.2; Preserver's was shrink 0.75, drift 0.1, and no volatility trigger). Rather than give each profile its own tuned settings, which would overfit two small samples, the defaults in <code>profiles.py</code> were set from the <em>marginal means</em> of Sharpe across all 72 runs, that is the average Sharpe of every run that used a given value:</p>
@@ -641,84 +677,105 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <tr><td>drift_trigger</td><td class="num">0.10: 1.080 · 0.20: 1.059</td><td class="num">0.10</td></tr>
 <tr><td>vol_trigger</td><td class="num">1.5: 1.063 · 2.0: 1.082 · off: 1.064</td><td class="num">2.0</td></tr>
 </tbody></table></div>
-<p>The full table of 72 rows is in <code>data/processed/tuning.json</code> and the console summary in <code>tuning.log</code>. The differences are small, which is itself the finding: on 2011–2015 the strategy is not very sensitive to these settings, and the longer window helps most.</p>
+<p>The differences are small, which is itself the finding: on 2011–2015 the strategy is not very sensitive to these settings, and the longer window helps most.</p>
+
+<h3>The kappa grid</h3>
+<p>The robust model's ellipsoid radius was checked the same way, for the same two profiles, with κ in {0.5, 1, 2, 3} (κ = 0 is <code>markowitz_lw</code>):</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Profile</th><th class="num">κ</th><th class="num">Sharpe</th><th class="num">CAGR</th><th class="num">Max drawdown</th><th class="num">CVaR ÷ limit</th><th class="num">Average cash</th></tr></thead>
+<tbody>
+<tr><td>Builder</td><td class="num">0.5</td><td class="num">1.23</td><td class="num">15.3%</td><td class="num">−11.2%</td><td class="num">0.95</td><td class="num">3%</td></tr>
+<tr><td>Builder</td><td class="num">1.0</td><td class="num">1.05</td><td class="num">11.3%</td><td class="num">−10.3%</td><td class="num">0.86</td><td class="num">4%</td></tr>
+<tr><td>Builder</td><td class="num">2.0</td><td class="num">0.84</td><td class="num">7.1%</td><td class="num">−9.6%</td><td class="num">0.67</td><td class="num">14%</td></tr>
+<tr><td>Builder</td><td class="num">3.0</td><td class="num">0.64</td><td class="num">4.4%</td><td class="num">−10.6%</td><td class="num">0.58</td><td class="num">25%</td></tr>
+<tr><td>Preserver</td><td class="num">0.5</td><td class="num">1.08</td><td class="num">7.2%</td><td class="num">−8.4%</td><td class="num">1.02</td><td class="num">27%</td></tr>
+<tr><td>Preserver</td><td class="num">1.0</td><td class="num">1.05</td><td class="num">7.0%</td><td class="num">−8.5%</td><td class="num">1.02</td><td class="num">27%</td></tr>
+<tr><td>Preserver</td><td class="num">2.0</td><td class="num">0.90</td><td class="num">5.6%</td><td class="num">−8.5%</td><td class="num">0.99</td><td class="num">33%</td></tr>
+<tr><td>Preserver</td><td class="num">3.0</td><td class="num">0.73</td><td class="num">4.1%</td><td class="num">−8.4%</td><td class="num">0.94</td><td class="num">40%</td></tr>
+</tbody></table></div>
+<p>Sharpe falls steadily as κ grows for both profiles, so the selection rule would pick the smallest κ, which is plain Markowitz. In other words, on 2011–2015 the extra caution bought nothing: the ellipsoid trims expected return but the variance cap was already doing the risk control. Rather than register a "robust" model that is secretly Markowitz, the default stays at the conventional κ = 1 (one standard error), and the lab shows what that caution costs over 2016–2025 as well. This is the kind of negative result the comparison screen exists to display.</p>
 <div class="check"><span class="term">Check yourself.</span> Why is it acceptable that the tuning period's Sharpe ratios (around 1.1) are much higher than the 2016–2025 ones (around 0.7), and what would it mean if they were much lower?</div>
 <div class="sources"><span class="term">Go deeper</span><ul><li>YouTube: <code>hyperparameter tuning train validation test split</code>, <code>overfitting backtest</code></li></ul></div>
 
 <!-- ============================================================ -->
 <h2 id="export">export.py — the handover to the site</h2>
 <p class="file">src/portfolio/export.py</p>
-<p>This is the last Python step and the only one that writes into <code>site/</code>. It runs one full backtest per profile over 4 January 2016 to 31 December 2025 and writes five kinds of JSON into <code>site/static/data</code>. Every number is rounded (four decimals for weights, two for dollars, six for metrics) to keep the files small enough to fetch comfortably.</p>
+<p>This is the last Python step and the only one that writes into <code>site/</code>. It runs every profile under every model over 4 January 2016 to 31 December 2025, four backtests at a time, and writes the files below into <code>site/static/data</code>. Every number is rounded (four decimals for weights, two for dollars, six for metrics) to keep the files small enough to fetch comfortably. Runs are keyed <code>&lt;profile&gt;__&lt;model&gt;</code>, and <code>--profile</code> / <code>--model</code> flags re-export a subset while <code>index.json</code> keeps the rows of everything else.</p>
 
-<h3>universe.json (6 KB)</h3>
-<pre><code>{ "assets": [ {"ticker": "AAPL", "name": "Apple", "sector": "Information Technology", "kind": "stock"}, …,
-              {"ticker": "AGG", …, "kind": "etf"}, {"ticker": "CASH", "name": "Cash (T-bills)", "sector": "Cash", "kind": "cash"} ],
-  "benchmark": "SPY", "start": "2016-01-04", "end": "2025-12-31" }</code></pre>
-<p>Fifty-four entries in universe order. <code>kind</code> is derived from the sector: Bonds and Gold are <code>etf</code>, CASH is <code>cash</code>, everything else is <code>stock</code>. The site uses this to lay out the stock-picking cards by sector and to group weights into stocks, bonds and gold, and cash.</p>
+<h3>index.json (23 KB) — the table of contents</h3>
+<pre><code>{ "start": "2016-01-04", "end": "2025-12-31", "benchmark": "SPY", "story_model": "cvar",
+  "profiles": [ { "key", "name", "tagline", "archetype", "personality", "risk_tolerance",
+                  "horizon_years", "cvar_start", "cvar_end", "max_holdings", "w_max", "cash_min", "sector_cap", "exclude" }, ×6 ],
+  "models":   [ { "key", "name", "blurb", "solver" }, ×5 ],
+  "runs":     [ { "profile", "model", "file", "solves", "total_cost", "avg_cvar_limit",
+                  "metrics": { cagr, volatility, sharpe, sortino, max_drawdown, cvar_95_daily, end_value },
+                  "benchmark_metrics": { …same keys for SPY… } }, ×30 ] }</code></pre>
+<p>The site reads this first: the Archive takes its adviser cards from <code>profiles</code>, the Journey reads <code>story_model</code> to know which run file to fetch, and the lab builds its picker and table from <code>models</code> and <code>runs</code> without loading a single run file until asked.</p>
 
-<h3>prices.json (1.1 MB)</h3>
-<pre><code>{ "dates":  ["2016-01-04", …, "2025-12-31"],          <span class="cm"># 2,514 trading days</span>
-  "assets": ["AAPL", …, "GLD", "SPY", "CASH"],         <span class="cm"># 55 columns</span>
-  "rows":   [[1.0, 1.0, …], [0.9750, …], …] }          <span class="cm"># price ÷ price on the first day</span></code></pre>
-<p>Every column is divided by its first value, so each series starts at exactly 1.0 and a value of 2.5 means "$1 became $2.50". This normalisation is what lets the browser price any buy-and-hold portfolio by multiplication alone. It is also the only file the timeline stage uses.</p>
-
-<h3>profiles/&lt;key&gt;.json (65–265 KB each) and profiles/index.json</h3>
-<pre><code>{ "profile": { "key", "name", "tagline", "horizon_years", "cvar_start", "cvar_end",
-               "max_holdings", "w_max", "cash_min", "sector_cap", "exclude" },
-  "dates":     [ … 2,514 … ],
+<h3>runs/&lt;profile&gt;__&lt;model&gt;.json (30 files, 65–265 KB each, 7.9 MB in total)</h3>
+<pre><code>{ "profile": { …as in index… }, "model": { …as in index… },
+  "dates":     [ … 2,514 (757 for the Sprinter) … ],
   "value":     [ 99804.0, … ],          <span class="cm"># daily portfolio value from $100,000</span>
   "benchmark": [ 100000.0, … ],         <span class="cm"># SPY from the same $100,000</span>
-  "weights":   { "dates": [ … 522 Fridays … ], "assets": [ only assets ever held ], "rows": [[…], …] },
-  "solves":    [ { "date", "reason", "years_left", "cvar_limit", "exp_return_ann", "cvar",
+  "weights":   { "dates": [ … Fridays … ], "assets": [ only assets ever held ], "rows": [[…], …] },
+  "solves":    [ { "date", "reason", "years_left", "cvar_limit", "exp_return_ann", "cvar", "risk",
                    "turnover", "cost", "n_holdings", "solve_time" }, … ],
   "trades":    [ { "date", "asset", "from", "to" }, … ],
   "metrics":           { … the metrics.py dictionary … },
   "benchmark_metrics": { … the same for SPY … } }</code></pre>
-<p>Two size decisions are worth knowing. Weights are resampled to one row per week (the last value up to each Friday) rather than daily, because the ribbon chart cannot show more detail than that and daily weights would triple the file. And the weight columns include only assets that were ever held, so The Maverick's file has fewer columns than The Preserver's. <code>index.json</code> is just the six <code>profile</code> blocks in one list, so the archive page can show the adviser cards without loading six large files.</p>
+<p>Two size decisions are worth knowing. Weights are resampled to one row per week rather than daily, because the ribbon chart cannot show more detail than that and daily weights would triple the file. And the weight columns include only assets that were ever held, so an equal-weight run has 53 columns and a Maverick run far fewer.</p>
 
-<h3>summary.json (2 KB)</h3>
-<p>One row per profile with the headline metrics next to SPY's over the same dates. It is written for reporting and for this documentation; no site component currently reads it. The main loop merges into any existing file, so exporting a single profile (<code>… export sprinter</code>) updates only that row.</p>
+<h3>universe.json (6 KB) and prices.json (1.1 MB)</h3>
+<p>Unchanged in shape: the 54 assets with name, sector and <code>kind</code> (stock, etf or cash), and 2,514 days × 55 columns of prices divided by their first value so every series starts at exactly 1.0. That normalisation is what lets the browser price any buy-and-hold portfolio by multiplication alone, and it is the only file the timeline stage uses.</p>
+
+<h3>archive.json (34 KB) — the view from 31 December 2015</h3>
+<p><code>export_archive</code> is the one function that deliberately looks backwards from the journey's start rather than forwards. Using prices dated on or before 31 December 2015 and nothing later, it computes for every asset the 2015 return and worst fall, the 2013–2015 return and worst fall, and a 36-point monthly sparkline; for every sector the average 2015 return of its members, the best and worst member, the equal-weight basket's worst fall, and the three-year average; and the T-bill rate on the last day of 2015. The Archive stage shows these next to the hand-written notes.</p>
+<pre><code>{ "as_of": "2015-12-31", "spark_dates": ["2013-01", …, "2015-12"], "tbill_rate_annual": 0.0016,
+  "assets":  { "AAPL": { "return_2015", "drawdown_2015", "return_3y", "drawdown_3y", "spark": [1.0, …] }, … },
+  "sectors": { "Energy": { "tickers", "return_2015", "worst_2015": {ticker, return}, "best_2015", "drawdown_2015", "return_3y" }, … } }</code></pre>
+
+<h3>notes2015.json (12 KB) and events.json — hand-written and checked</h3>
+<p>Two files in <code>static/data</code> are not produced by Python. <code>events.json</code> is the list of market and world events on the timeline. <code>notes2015.json</code> holds one paragraph on the year 2015, one per sector (including Bonds and Gold), and a one-line note for 22 companies, all written as of 31 December 2015. Every statement in it was checked against the source listed alongside it, and three facts that were true but only published in January or February 2016 (Gilead's full-year revenue, Boeing's record deliveries, Union Pacific's full-year carloads) were rewritten as what was known in December (Gilead's own guidance, the quarterly coal declines) or left out. The Archive shows the sources under each note.</p>
+<div class="check"><span class="term">Check yourself.</span> <code>archive.json</code> is computed by Python and <code>notes2015.json</code> by hand. Which of the two could accidentally contain look-ahead, and what stops it?</div>
 
 <!-- ============================================================ -->
 <h2 id="tests">The tests</h2>
-<p class="file">tests/test_data.py · tests/test_optimiser.py</p>
-<p>The tests are few and pointed. They need the processed data to exist and a working AMPL licence, so they are integration tests rather than unit tests.</p>
+<p class="file">tests/test_data.py · tests/test_optimiser.py (15 tests, about 4 seconds)</p>
+<p>The tests are few and pointed. They need the processed data to exist and a working licence for both solvers, so they are integration tests rather than unit tests.</p>
 <ul>
 <li><p><code>test_dataset_shape_and_coverage</code>: the price table has exactly the 55 expected columns, starts by 2 April 2008, reaches past 1 January 2026, and contains no missing values; the returns table has the same dates.</p></li>
-<li><p><code>test_cash_is_smooth_and_positive</code>: the CASH return is never below −0.001% (T-bill yields dipped slightly negative in March 2020) and never above 0.1% in a day. This guards the synthetic asset against a bad download.</p></li>
+<li><p><code>test_cash_is_smooth_and_positive</code>: the CASH return is never below −0.001% (T-bill yields dipped slightly negative in March 2020) and never above 0.1% in a day.</p></li>
 <li><p><code>test_no_lookahead</code>: the window before 4 January 2016 has 756 rows and its last date is before 4 January 2016.</p></li>
-<li><p><code>test_solution_respects_constraints</code>: with a 1.5% CVaR limit, the solved weights sum to 1, no asset exceeds its 10% cap, every held asset is at least 2%, at most 15 are held, and the realised CVaR is within the limit.</p></li>
-<li><p><code>test_tighter_limit_means_less_risk_and_return</code>: a 1.0% limit produces no more CVaR and no more expected return than a 2.0% limit. This checks the economic direction of the model, not just its feasibility.</p></li>
+<li><p><code>test_cvar_to_vol_normal_factor</code>: the CVaR-to-volatility factor at 95% is 2.063.</p></li>
+<li><p><code>test_ledoit_wolf_is_valid_covariance</code>: the shrinkage intensity lies strictly between 0 and 1, the matrix is symmetric and positive definite, and CASH's row and column are zero.</p></li>
+<li><p><code>test_solution_respects_constraints</code>, run for each of the four optimising models: weights sum to 1, no asset exceeds its 10% cap, every held asset is at least 2%, at most 15 are held, the excluded ticker (PM) is absent, the Energy sector stays within its 5% cap, and the model's own risk measure is within its limit.</p></li>
+<li><p><code>test_tighter_limit_means_less_risk_and_return</code>, for each optimising model: a 1.0% limit produces no more risk and no more expected return than a 2.0% limit. This checks the economic direction of each model, not just its feasibility.</p></li>
+<li><p><code>test_equal_weight_ignores_everything_but_exclusions</code>: 52 equal weights, no cash, no PM, turnover of exactly 2 from all-cash.</p></li>
+<li><p><code>test_robust_is_more_cautious_than_markowitz</code>: with the same inputs the robust model's expected return is no higher than Markowitz + Ledoit-Wolf's.</p></li>
 </ul>
 
 <!-- ============================================================ -->
 <h2 id="site">Into the site</h2>
-<p>Everything from here on happens in the browser. The site is written in SvelteKit with hand-written CSS and D3 for the two charts. This section follows the same data through the site that the earlier sections produced, so you can trace any number on screen back to a line of Python.</p>
+<p>Everything from here on happens in the browser. The site is written in SvelteKit with hand-written CSS, D3 for the charts, and Three.js for the timeline. This section follows the same data through the site that the earlier sections produced, so you can trace any number on screen back to a line of Python.</p>
 <div class="def"><p class="term">SvelteKit, Svelte 5 runes</p><p><strong>Svelte</strong> is a framework for building web interfaces from components, files that mix HTML, JavaScript and CSS. <strong>SvelteKit</strong> adds routing and building around it. Svelte 5 introduced <strong>runes</strong>, functions like <code>$state</code> and <code>$derived</code> that mark which values are reactive, meaning the page redraws automatically when they change.</p></div>
 
 <h3 id="site-static">A site with no server</h3>
-<p><code>vite.config.ts</code> uses <code>adapter-static</code> and <code>+layout.ts</code> sets <code>prerender = true</code>. That means <code>npm run build</code> produces a folder of plain HTML, JavaScript and JSON in <code>site/build</code> that any file host can serve; there is no code running on a server after deployment. Everything in <code>site/static</code>, including <code>data/</code>, is copied into the build unchanged, so a URL like <code>/data/profiles/builder.json</code> simply returns the file <code>export.py</code> wrote. Deployment is a push to GitHub that Vercel builds and hosts.</p>
-<div class="def"><p class="term">Static site</p><p>A website whose files are fixed at build time and served as-is. It cannot compute anything per visitor on the server, which is exactly why the heavy work was precomputed in Python. The trade-off is that a user cannot ask for a new archetype; only the six that were exported exist.</p></div>
+<p><code>vite.config.ts</code> uses <code>adapter-static</code> and <code>+layout.ts</code> sets <code>prerender = true</code>. That means <code>npm run build</code> produces a folder of plain HTML, JavaScript and JSON in <code>site/build</code> that any file host can serve; there is no code running on a server after deployment. Everything in <code>site/static</code>, including <code>data/</code>, is copied into the build unchanged, so a URL like <code>/data/runs/builder__cvar.json</code> simply returns the file <code>export.py</code> wrote. Deployment is a push to GitHub that Vercel builds and hosts.</p>
+<div class="def"><p class="term">Static site</p><p>A website whose files are fixed at build time and served as-is. It cannot compute anything per visitor on the server, which is exactly why the heavy work was precomputed as a grid. The trade-off is that a user can only explore combinations that were exported; a new risk limit or a sixth model needs a Python run and a redeploy.</p></div>
 
 <h3 id="site-data">data.ts — loading and typing the JSON</h3>
 <p class="file">site/src/lib/data.ts</p>
-<p>This file declares a TypeScript interface for each JSON file (<code>Universe</code>, <code>Prices</code>, <code>ProfileResult</code>, <code>Solve</code>, <code>Trade</code>, <code>Metrics</code>, <code>ProfileMeta</code>, <code>MarketEvent</code>), and every field name in them matches the Python dictionary keys exactly. If a key is renamed in <code>export.py</code>, the type here must change too; there is no runtime check.</p>
-<pre><code><span class="kw">const</span> cache = <span class="kw">new</span> Map&lt;string, Promise&lt;unknown&gt;&gt;();
-<span class="kw">async function</span> getJson&lt;T&gt;(path: string): Promise&lt;T&gt; {
-  <span class="kw">if</span> (!cache.has(path)) {
-    cache.set(path, fetch(`${base}/data/${path}`).then((r) =&gt; {
-      <span class="kw">if</span> (!r.ok) <span class="kw">throw new</span> Error(`failed to load ${path}: ${r.status}`);
-      <span class="kw">return</span> r.json();
-    }));
-  }
-  <span class="kw">return</span> cache.get(path) <span class="kw">as</span> Promise&lt;T&gt;;
-}
-<span class="kw">export const</span> loadUniverse = () =&gt; getJson&lt;Universe&gt;(<span class="st">'universe.json'</span>);
+<p>This file declares a TypeScript interface for each JSON file (<code>Universe</code>, <code>Prices</code>, <code>RunIndex</code>, <code>RunResult</code>, <code>Archive</code>, <code>Notes2015</code>, <code>MarketEvent</code>, and the pieces they contain), and every field name in them matches the Python dictionary keys exactly. If a key is renamed in <code>export.py</code>, the type here must change too; there is no runtime check. The loaders are one line each:</p>
+<pre><code><span class="kw">export const</span> loadUniverse = () =&gt; getJson&lt;Universe&gt;(<span class="st">'universe.json'</span>);
 <span class="kw">export const</span> loadPrices   = () =&gt; getJson&lt;Prices&gt;(<span class="st">'prices.json'</span>);
-<span class="kw">export const</span> loadProfile  = (key) =&gt; getJson&lt;ProfileResult&gt;(`profiles/${key}.json`);</code></pre>
-<p>The cache stores the <em>promise</em>, not the result, so two components asking for the same file at the same moment share one network request. <code>base</code> is SvelteKit's base path, empty on Vercel, so the fetch goes to <code>/data/…</code>.</p>
+<span class="kw">export const</span> loadEvents   = () =&gt; getJson&lt;MarketEvent[]&gt;(<span class="st">'events.json'</span>);
+<span class="kw">export const</span> loadIndex    = () =&gt; getJson&lt;RunIndex&gt;(<span class="st">'index.json'</span>);
+<span class="kw">export const</span> loadArchive  = () =&gt; getJson&lt;Archive&gt;(<span class="st">'archive.json'</span>);
+<span class="kw">export const</span> loadNotes    = () =&gt; getJson&lt;Notes2015&gt;(<span class="st">'notes2015.json'</span>);
+<span class="kw">export const</span> loadRun      = (profile, model) =&gt; getJson&lt;RunResult&gt;(`runs/${profile}__${model}.json`);</code></pre>
+<p><code>getJson</code> keeps a cache of <em>promises</em>, not results, so two components asking for the same file at the same moment share one network request, and a run file is fetched only once per visit however many panels use it.</p>
 
-<h3 id="site-stages">The six stages and what each one reads</h3>
+<h3 id="site-stages">The story's six stages and what each one reads</h3>
 <p>Global state lives in <code>state.svelte.ts</code> as one reactive object: the current <code>stage</code>, the wished-for <code>amount</code>, the user's <code>allocations</code> (ticker → dollars), the chosen <code>adviser</code> key, and a <code>cursor</code> into the date array. <code>+page.svelte</code> shows one component per stage and, on load, fetches <code>universe.json</code>, <code>prices.json</code> and <code>events.json</code> in parallel.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Stage</th><th>Component</th><th>Reads</th><th>Writes to state</th></tr></thead>
@@ -726,53 +783,77 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <tr><td>disclaimer</td><td>Disclaimer.svelte</td><td>nothing</td><td>—</td></tr>
 <tr><td>prologue</td><td>Prologue.svelte</td><td>nothing</td><td><code>amount</code> (minimum $100)</td></tr>
 <tr><td>rewind</td><td>Rewind.svelte</td><td><code>events.json</code>; the SPY column of <code>prices.json</code></td><td>—</td></tr>
-<tr><td>archive</td><td>Archive.svelte</td><td><code>universe.json</code>, <code>profiles/index.json</code></td><td><code>allocations</code>, <code>adviser</code></td></tr>
-<tr><td>journey</td><td>Journey.svelte</td><td><code>profiles/&lt;adviser&gt;.json</code>, <code>prices.json</code>, events</td><td><code>cursor</code></td></tr>
-<tr><td>debrief</td><td>Debrief.svelte</td><td><code>profiles/&lt;adviser&gt;.json</code>, <code>prices.json</code></td><td>—</td></tr>
+<tr><td>archive</td><td>Archive.svelte</td><td><code>universe.json</code>, <code>index.json</code>, <code>archive.json</code>, <code>notes2015.json</code></td><td><code>allocations</code>, <code>adviser</code></td></tr>
+<tr><td>journey</td><td>Journey.svelte</td><td><code>index.json</code>, then <code>runs/&lt;adviser&gt;__&lt;story_model&gt;.json</code>, <code>prices.json</code>, events</td><td><code>cursor</code></td></tr>
+<tr><td>debrief</td><td>Debrief.svelte</td><td>the same run file, <code>prices.json</code></td><td>—</td></tr>
 </tbody></table></div>
 <p><strong>Rewind</strong> is the 3D timeline. Its only use of backend data is decorative but real: it computes a 21-day rolling volatility of SPY from <code>prices.json</code>, maps it to a 0–1 "roughness" along the track, and uses that to make the glowing thread thicker and rougher in turbulent periods like March 2020.</p>
-<p><strong>Archive</strong> lists every non-cash asset from <code>universe.json</code> grouped by sector, with a dollar input per card; whatever is not allocated stays in cash. The adviser cards come from <code>index.json</code> and show each profile's horizon, loss limit range, holdings cap and cash floor, straight from the <code>Profile</code> dataclass.</p>
-<p><strong>Journey</strong> is where the two halves meet. It loads the chosen profile's file, then builds three value series of equal length <code>n</code>:</p>
+<p><strong>Journey</strong> is where the two halves meet. It loads the adviser's run under the story model, then builds three value series of equal length <code>n</code>:</p>
 <pre><code><span class="kw">const</span> scale   = app.amount / 100_000;
 <span class="kw">const</span> you     = buyAndHold(prices, app.allocations, app.amount).slice(0, n);   <span class="cm">// computed here</span>
 <span class="kw">const</span> adviser = result.value.map((v) =&gt; v * scale);                            <span class="cm">// from Python</span>
 <span class="kw">const</span> market  = series(prices, <span class="st">'SPY'</span>).slice(0, n).map((v) =&gt; v * app.amount);  <span class="cm">// from prices.json</span></code></pre>
-<p>The adviser's series is the Python <code>value</code> array scaled by <code>amount / 100,000</code>. That is legitimate because the whole model works in weights and every cost is proportional, so a $10,000 investor gets exactly one tenth of the $100,000 path. (The one place this breaks down is in reality, not the model: a $100 investor cannot buy 2% of Apple.) The cursor advances a few trading days per animation frame, the D3 line chart draws the three series up to the cursor, the weights ribbon draws the weekly weights up to the cursor date grouped by sector, and the two side panels show the latest "letter" and the latest world event at or before the cursor date.</p>
-<p><strong>Debrief</strong> puts the eight metrics side by side. The adviser's column is the Python <code>metrics</code> block with only <code>start_value</code> and <code>end_value</code> rescaled (ratios do not change with scale). The "You" and "S&amp;P 500" columns are computed in the browser by <code>sim.ts</code>. The line under the table sums <code>cost</code> over the solve log and scales it.</p>
+<p>The adviser's series is the Python <code>value</code> array scaled by <code>amount / 100,000</code>. That is legitimate because every model works in weights and every cost is proportional, so a $10,000 investor gets exactly one tenth of the $100,000 path. (The one place this breaks down is in reality, not the model: a $100 investor cannot buy 2% of Apple.) The cursor advances a few trading days per animation frame, the D3 line chart draws the three series up to the cursor with event labels staggered across three rows and end labels pushed apart so they never overprint, the weights ribbon draws the weekly weights up to the cursor date grouped by sector, and the two side panels show the latest "letter" and the latest world event at or before the cursor date.</p>
+<p><strong>Debrief</strong> puts the eight metrics side by side. The adviser's column is the Python <code>metrics</code> block with only <code>start_value</code> and <code>end_value</code> rescaled (ratios do not change with scale). The "You" and "S&amp;P 500" columns are computed in the browser by <code>sim.ts</code>. It names the model that was used and links to the lab with that run pre-selected.</p>
 
-<h3 id="site-sim">sim.ts — the browser's copy of the maths</h3>
-<p class="file">site/src/lib/sim.ts</p>
-<p><code>buyAndHold(prices, dollars, total)</code> prices the user's picks on every day as <code>Σ dollars[t] × normalised price[t]</code> plus leftover cash growing with the <code>CASH</code> column. Because prices are normalised to 1.0 on day one, "$1,200 in Apple" is simply <code>1200 × row[AAPL]</code>. There are no trading costs on the user's side, on the argument that one purchase in 2016 is negligible against ten years.</p>
-<p><code>summarise(dates, value, rf)</code> is a line-by-line port of <code>metrics.py</code>: same 252-day annualisation, same sample standard deviation (dividing by n − 1, matching pandas), same running-maximum drawdown, same month-end detection (a day is a month end if the next date's year-month differs), same "largest 5% of losses" CVaR. <code>riskFree(prices)</code> derives the daily risk-free return from the CASH column, which is the same number <code>rf.parquet</code> holds because CASH was built from it. If you change a formula in <code>metrics.py</code>, change it here too.</p>
+<h3 id="site-archive">The Archive, sector by sector</h3>
+<p class="file">site/src/lib/components/Archive.svelte, Avatar.svelte, Sparkline.svelte</p>
+<p>The Archive is the stage where the user, having "travelled back", decides where their money goes, and it is built to immerse them in the moment rather than to look like a form. It is a walk-through of fourteen steps with a rail to jump between them and a sticky ledger showing invested and remaining cash:</p>
+<ol>
+<li><p><strong>Where things stand.</strong> The year-2015 note from <code>notes2015.json</code> with its sources, and six figures from <code>archive.json</code>: the S&amp;P 500's 2015 return and worst fall, bonds, gold, the cash rate, and the three-year return.</p></li>
+<li><p><strong>One step per sector, eleven in all.</strong> The sector's headline and paragraph, the sector figures (average return, best and worst member, three-year average), and one card per company with a 2013–2015 sparkline, its 2015 and three-year returns, its worst fall, its one-line note if there is one, and a dollar input.</p></li>
+<li><p><strong>Bonds and gold.</strong> The two ETFs, with the Bonds and Gold notes and a reminder of what uninvested cash earns.</p></li>
+<li><p><strong>Your adviser.</strong> Six cards, each with a hand-drawn geometric mark (<code>Avatar.svelte</code>: a shield, three level bars, rising steps, a bolt, chevrons, a leaf), the name, archetype and risk-tolerance label, the personality sentence, and the rules: horizon, loss limit start → end, holdings cap, cash floor, and what it avoids or caps.</p></li>
+</ol>
+<p>Nothing on these screens post-dates 31 December 2015: the figures come from a file computed only from prices up to that day, and the prose from a file checked sentence by sentence. The user's unfair advantage, their own memory of the decade, stays in their head. A dev shortcut, <code>/?stage=archive&amp;step=3</code>, opens any step directly.</p>
 
-<h3 id="site-letters">letters.ts — turning the solve log into prose</h3>
-<p class="file">site/src/lib/letters.ts</p>
-<p>Each row of <code>solves</code> becomes a short letter from the adviser. The opening sentence is chosen by the <code>reason</code> field (start, calendar, drift, volatility). The trades logged on that date are grouped, the three largest increases and decreases are named using the company names from <code>universe.json</code>, and a running target map (updated trade by trade) gives the split between stocks, bonds and gold, and cash for the first letter. Each letter then states the day's <code>cvar_limit</code> in words and, if the horizon has started to bite, says that it tightens as the years left shrink. The trading cost of that solve closes the letter. The Journey page can read letters aloud with the browser's speech engine.</p>
+<h3 id="site-sim">sim.ts and letters.ts — the browser's copy of the maths, and the prose</h3>
+<p class="file">site/src/lib/sim.ts · site/src/lib/letters.ts</p>
+<p><code>buyAndHold(prices, dollars, total)</code> prices the user's picks on every day as <code>Σ dollars[t] × normalised price[t]</code> plus leftover cash growing with the <code>CASH</code> column. Because prices are normalised to 1.0 on day one, "$1,200 in Apple" is simply <code>1200 × row[AAPL]</code>. There are no trading costs on the user's side, on the argument that one purchase in 2016 is negligible against ten years. <code>summarise(dates, value, rf)</code> is a line-by-line port of <code>metrics.py</code>; if you change a formula there, change it here too.</p>
+<p><code>letters.ts</code> turns each row of a run's <code>solves</code> into a short letter from the adviser: the opening sentence is chosen by the <code>reason</code> field, the three largest increases and decreases that day are named using company names from <code>universe.json</code>, the day's loss limit is stated in words with a note that it tightens as the horizon shrinks, and the trading cost closes the letter. It works for any model's run, though the story only ever shows the CVaR one.</p>
+
+<h3 id="site-lab">The lab — same decade, different methods</h3>
+<p class="file">site/src/routes/lab/+page.svelte · site/src/lib/lab/{store.svelte.ts, series.ts, LineChart, Panel, Picker, MetricsTable}.svelte</p>
+<p>The lab is a second, prerendered route at <code>/lab</code> for exploring rather than being told a story. The user composes a set of runs and the page lays them side by side. A <em>run</em> is one investor under one method; any of the thirty may be chosen, including equal weight, and shortcuts add every method for one investor or every investor under one method. Each chosen run gets a stable colour from D3's ten-colour categorical palette in the order it was added, and the S&amp;P 500 (the <code>benchmark</code> series of the first chosen run) is always drawn as a dashed grey line.</p>
+<p>Eight panels can be shown or hidden; each has a title, a one-sentence explanation in plain language, and a hide control, and a "+ Add a panel" menu brings hidden ones back. Which panels are visible is remembered in the browser's <code>localStorage</code> (inside try/catch, so a browser that blocks storage still works).</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Panel</th><th>Default</th><th>What it draws, and from which field</th></tr></thead>
+<tbody>
+<tr><td>Value of $100,000</td><td>on</td><td><code>value</code> per run on a logarithmic axis, so a doubling looks the same at $100,000 and $300,000.</td></tr>
+<tr><td>Drawdown</td><td>on</td><td><code>value / running max − 1</code>, computed in <code>series.ts</code>; the deepest point is the worst loss lived through.</td></tr>
+<tr><td>The numbers</td><td>on</td><td>One row per run plus the S&amp;P 500: years, final value, CAGR, volatility, Sharpe, Sortino, worst drawdown, daily CVaR, re-solves, total trading cost, from <code>metrics</code> and <code>index.json</code>.</td></tr>
+<tr><td>Rolling one-year return</td><td>off</td><td>The return over the previous 252 trading days on each day.</td></tr>
+<tr><td>Rolling one-year volatility</td><td>off</td><td>The annualised standard deviation over the previous 252 days.</td></tr>
+<tr><td>Realised loss against the promise</td><td>off</td><td>Step lines per solve: <code>solves[].cvar</code> (solid) against <code>solves[].cvar_limit</code> (dashed). This is where the glide path and the normal-assumption gap of the mean-variance models become visible.</td></tr>
+<tr><td>Trading costs</td><td>off</td><td>Cumulative <code>solves[].cost</code>.</td></tr>
+<tr><td>What one run held</td><td>off</td><td>The weights ribbon for one chosen run, selected in the panel header.</td></tr>
+</tbody></table></div>
+<p>Charts use a real time scale on each run's own dates, so a three-year Sprinter run sits correctly beside ten-year runs. A comparison is linkable: <code>/lab?runs=builder__cvar,builder__equal,preserver__cvar</code> pre-selects those runs (keys are validated against <code>index.json</code>), and <code>&amp;panels=all</code> or a comma list of panel ids overrides the remembered set for that visit without saving it. The debrief's "Open the lab" button uses exactly this.</p>
 
 <h3 id="site-rebuild">Rebuilding after a change</h3>
 <p>Because the two halves communicate only through files, the update path is always the same three steps, and skipping one is the usual cause of "the site shows old numbers":</p>
 <ol>
-<li><p>Change the Python (a profile number, a constraint, a trigger) and run <code>uv run python -m portfolio.export</code>, or <code>… export &lt;key&gt;</code> for one profile. This overwrites the JSON in <code>site/static/data</code>.</p></li>
-<li><p>If a JSON key was added or renamed, update the matching interface in <code>data.ts</code> and whichever component uses it.</p></li>
+<li><p>Change the Python (a profile number, a constraint, a model) and run <code>uv run python -m portfolio.export</code>, or with <code>--profile</code> / <code>--model</code> for a subset. This overwrites the JSON in <code>site/static/data</code> and merges the subset's rows into <code>index.json</code>.</p></li>
+<li><p>If a JSON key was added or renamed, update the matching interface in <code>data.ts</code> and whichever component uses it. If a model was added, nothing on the site needs to change: the lab reads the model list from <code>index.json</code>.</p></li>
 <li><p>Run <code>npm run build</code> in <code>site/</code> (or let Vercel do it on push). The dev server on port 5173 picks up new static files without a rebuild; the preview server on 4173 does not.</p></li>
 </ol>
 <div class="check"><span class="term">Check yourself.</span> If you changed <code>cost_rate</code> in <code>profiles.py</code>, which of the three columns on the debrief page would change, and which two would not?</div>
 
 <!-- ============================================================ -->
 <h2 id="results">The results, as exported</h2>
-<p>These are the numbers in <code>summary.json</code> from the current export, 4 January 2016 to 31 December 2025 from $100,000 (The Sprinter: to 4 January 2019, with SPY measured over the same three years).</p>
+<p>These are the numbers in <code>index.json</code> from the current export, 4 January 2016 to 31 December 2025 from $100,000. Each cell is CAGR / Sharpe / worst drawdown. The S&amp;P 500 over the same ten years: 14.9% / 0.74 / −33.7%; over the Sprinter's three years: 10.0% / 0.71 / −19.3%.</p>
 <div class="tablewrap"><table>
-<thead><tr><th>Profile</th><th class="num">Solves</th><th class="num">CAGR</th><th class="num">Volatility</th><th class="num">Sharpe</th><th class="num">Max drawdown</th><th class="num">Daily CVaR</th><th class="num">End value</th><th class="num">SPY CAGR</th><th class="num">SPY max DD</th></tr></thead>
+<thead><tr><th>Profile</th><th class="num">CVaR limit</th><th class="num">Markowitz</th><th class="num">Markowitz + LW</th><th class="num">Robust</th><th class="num">Equal weight</th></tr></thead>
 <tbody>
-<tr><td>The Preserver</td><td class="num">47</td><td class="num">6.2%</td><td class="num">6.9%</td><td class="num">0.60</td><td class="num">−17.9%</td><td class="num">0.99%</td><td class="num">$181,405</td><td class="num">14.9%</td><td class="num">−33.7%</td></tr>
-<tr><td>The Steady Hand</td><td class="num">47</td><td class="num">9.0%</td><td class="num">10.0%</td><td class="num">0.70</td><td class="num">−23.8%</td><td class="num">1.42%</td><td class="num">$235,188</td><td class="num">14.9%</td><td class="num">−33.7%</td></tr>
-<tr><td>The Builder</td><td class="num">49</td><td class="num">10.7%</td><td class="num">12.7%</td><td class="num">0.70</td><td class="num">−27.4%</td><td class="num">1.89%</td><td class="num">$276,716</td><td class="num">14.9%</td><td class="num">−33.7%</td></tr>
-<tr><td>The Maverick</td><td class="num">49</td><td class="num">14.6%</td><td class="num">16.5%</td><td class="num">0.78</td><td class="num">−29.1%</td><td class="num">2.43%</td><td class="num">$390,182</td><td class="num">14.9%</td><td class="num">−33.7%</td></tr>
-<tr><td>The Sprinter (3 y)</td><td class="num">15</td><td class="num">8.1%</td><td class="num">7.2%</td><td class="num">0.98</td><td class="num">−8.6%</td><td class="num">1.12%</td><td class="num">$126,116</td><td class="num">10.0%</td><td class="num">−19.3%</td></tr>
-<tr><td>The Ethical Investor</td><td class="num">47</td><td class="num">10.4%</td><td class="num">11.6%</td><td class="num">0.73</td><td class="num">−26.7%</td><td class="num">1.70%</td><td class="num">$267,783</td><td class="num">14.9%</td><td class="num">−33.7%</td></tr>
+<tr><td>The Preserver</td><td class="num">6.2% / 0.60 / −18%</td><td class="num">6.5% / 0.61 / −18%</td><td class="num">6.4% / 0.60 / −18%</td><td class="num">6.3% / 0.60 / −18%</td><td class="num">12.9% / 0.71 / −33%</td></tr>
+<tr><td>The Steady Hand</td><td class="num">9.0% / 0.70 / −24%</td><td class="num">8.4% / 0.63 / −22%</td><td class="num">8.4% / 0.63 / −22%</td><td class="num">7.4% / 0.56 / −22%</td><td class="num">12.9% / 0.71 / −33%</td></tr>
+<tr><td>The Builder</td><td class="num">10.5% / 0.68 / −27%</td><td class="num">10.7% / 0.66 / −29%</td><td class="num">10.8% / 0.67 / −29%</td><td class="num">8.8% / 0.64 / −22%</td><td class="num">12.9% / 0.71 / −33%</td></tr>
+<tr><td>The Maverick</td><td class="num">14.6% / 0.78 / −29%</td><td class="num">14.4% / 0.75 / −31%</td><td class="num">14.6% / 0.75 / −32%</td><td class="num">7.6% / 0.51 / −25%</td><td class="num">12.9% / 0.71 / −33%</td></tr>
+<tr><td>The Sprinter (3 y)</td><td class="num">8.1% / 0.98 / −9%</td><td class="num">7.2% / 0.84 / −9%</td><td class="num">7.2% / 0.85 / −9%</td><td class="num">7.2% / 0.87 / −8%</td><td class="num">11.4% / 0.94 / −14%</td></tr>
+<tr><td>The Ethical Investor</td><td class="num">10.5% / 0.74 / −27%</td><td class="num">10.5% / 0.70 / −25%</td><td class="num">10.6% / 0.70 / −26%</td><td class="num">8.6% / 0.63 / −23%</td><td class="num">12.9% / 0.71 / −33%</td></tr>
 </tbody></table></div>
-<p>The pattern is consistent. Every profile earned less than the S&amp;P 500, which is unsurprising for 2016–2025, a decade in which a handful of very large technology companies drove the index and a diversified, capped portfolio could not match them. In exchange, every profile had a proportionally smaller worst fall, and the realised daily CVaR of each sits close to the profile's average limit (for example The Builder's 1.89% against a limit that glided from 2.0% to 1.0%, averaging about 1.5%; the overshoot is expected because the limit is enforced on past scenarios and the future was somewhat worse). Only The Maverick came close to the index, and it did so with lower volatility and a higher Sharpe ratio. The Sprinter, with the shortest horizon and the tightest final limit, had the best Sharpe of all.</p>
-<div class="check"><span class="term">Check yourself.</span> The Preserver's Sharpe (0.60) is below SPY's (0.74) even though its CVaR is a third of SPY's. Which of the two facts would matter more to the person described by its tagline, and why is that not a contradiction?</div>
+<p>Four things stand out. First, every constrained portfolio earned less than the S&amp;P 500, which is unsurprising for 2016–2025, a decade in which a handful of very large technology companies drove the index and a diversified, capped portfolio could not match them; in exchange each had a smaller worst fall in proportion to its risk limit. Second, the CVaR model and the two Markowitz variants land within a percentage point of each other for every investor, and the CVaR model has the higher Sharpe for five of the six; with the same expected returns and the same rules, the choice of risk measure matters less than the rules themselves, but the measure that looks at the actual bad days edges the one that assumes a bell curve. Third, the robust model is consistently the most cautious and the lowest-returning of the optimisers, most visibly for The Maverick, whose concentrated positions are exactly what a haircut on expected returns discourages; that is the price of one standard error, and it matches the tuning period. Fourth, equal weight earned the most of any method for every ten-year investor and fell the furthest, because it ignores the loss limit entirely: it is the same portfolio whoever the investor is, which is both its strength (no estimation error) and the reason it cannot be an adviser.</p>
+<div class="check"><span class="term">Check yourself.</span> Equal weight's 12.9% CAGR is identical for five profiles but its Sharpe ratio (0.71) is below the CVaR model's for The Maverick (0.78). What does that tell you about the two ways an investor can "win"?</div>
 
 <!-- ============================================================ -->
 <h2 id="limits">What this does not do</h2>
@@ -780,10 +861,11 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <ul>
 <li><p><strong>Survivorship bias in the universe.</strong> Companies that disappeared before 2026 are missing, as described under <a href="#universe">universe.py</a>.</p></li>
 <li><p><strong>Hand-picked archetype numbers.</strong> The six profiles' limits and caps are illustrative until the planned calibration from cited sources is done.</p></li>
-<li><p><strong>Scenarios are the past.</strong> The CVaR limit is enforced over the last three years of history, so a future that is worse than anything in the window will exceed the limit. The realised CVaRs above show the size of that gap.</p></li>
-<li><p><strong>No taxes, no dividends withheld, no slippage beyond 10 bp.</strong> Returns are total returns (dividends reinvested), costs are a flat proportional rate, and every trade fills at the closing price.</p></li>
-<li><p><strong>Liquidity cap is unused.</strong> <code>volume.parquet</code> and the per-asset <code>w_max</code> mechanism exist so that a profile could cap positions by dollar volume, but no profile does.</p></li>
-<li><p><strong>The site cannot run new profiles.</strong> Only exported archetypes exist; a custom risk limit would need a Python run and a redeploy.</p></li>
+<li><p><strong>Scenarios are the past.</strong> The CVaR limit is enforced over the last three years of history, so a future that is worse than anything in the window will exceed the limit. The realised CVaRs show the size of that gap, and the mean-variance models add a second gap from the normal assumption in <code>cvar_to_vol</code>.</p></li>
+<li><p><strong>One rebalancing policy for all models.</strong> The drift and volatility triggers were tuned for the CVaR model and applied unchanged to the others so that the comparison isolates the decision rule. A fairer test of Markowitz might use its own tuned triggers.</p></li>
+<li><p><strong>Robust is not tuned.</strong> Its κ stays at the textbook value because tuning would have removed it; see the <a href="#tune">kappa grid</a>.</p></li>
+<li><p><strong>No taxes, no slippage beyond 10 bp.</strong> Returns are total returns (dividends reinvested), costs are a flat proportional rate, and every trade fills at the closing price. The user's own buy-and-hold picks pay no cost at all.</p></li>
+<li><p><strong>The site cannot run new combinations.</strong> Only the exported grid exists; a custom risk limit or a sixth model needs a Python run and a redeploy.</p></li>
 <li><p><strong>The sentiment idea is not built.</strong> The stretch goal of feeding news sentiment into expected returns via Black–Litterman has no code yet.</p></li>
 </ul>
 
@@ -791,37 +873,45 @@ out["CASH"] = m["CASH"]                     <span class="cm"># cash is not a noi
 <h2 id="glossary">Glossary</h2>
 <dl class="gloss">
 <dt>Adjusted close</dt><dd>A price series rewritten so that dividends and splits do not appear as jumps.</dd>
-<dt>AMPL</dt><dd>A modelling language for optimisation problems; the model lives in <code>portfolio.mod</code>.</dd>
+<dt>AMPL</dt><dd>A modelling language for optimisation problems; the models live in <code>model/*.mod</code>.</dd>
 <dt>Backend</dt><dd>The offline Python pipeline that computes everything the site shows.</dd>
 <dt>Basis point</dt><dd>One hundredth of a percent.</dd>
 <dt>Benchmark</dt><dd>The simple alternative a strategy is compared with; here, buying SPY and holding it.</dd>
 <dt>Bond / T-bill</dt><dd>A loan to a government or company; a T-bill is a US government loan of under a year.</dd>
 <dt>CAGR</dt><dd>Compound Annual Growth Rate: the constant yearly rate that reproduces the total growth.</dd>
 <dt>Cardinality constraint</dt><dd>A limit on how many assets may be held, requiring binary variables.</dd>
+<dt>Covariance matrix (Σ)</dt><dd>Per-asset variances on the diagonal and co-movements off it; <code>wᵀΣw</code> is portfolio variance.</dd>
 <dt>CVaR / Expected Shortfall</dt><dd>The average loss over the worst (1 − α) share of scenarios.</dd>
 <dt>Daily return</dt><dd>Today's price divided by yesterday's, minus one.</dd>
 <dt>Drawdown</dt><dd>The fall from the highest value reached so far.</dd>
 <dt>ETF</dt><dd>A fund holding many investments that trades like a single stock.</dd>
 <dt>Glide path</dt><dd>A rule that lowers allowed risk as the horizon shrinks.</dd>
-<dt>HiGHS</dt><dd>The open-source solver that finds the optimal weights.</dd>
+<dt>Gurobi</dt><dd>The commercial solver, under the academic licence, used for the quadratic and cone models.</dd>
+<dt>HiGHS</dt><dd>The open-source solver used for the CVaR model.</dd>
 <dt>Horizon</dt><dd>Years until the investor needs the money.</dd>
-<dt>Hyperparameter</dt><dd>A setting of the method (lookback, shrinkage, triggers), tuned on 2011–2015.</dd>
+<dt>Hyperparameter</dt><dd>A setting of the method (lookback, shrinkage, triggers, κ), checked on 2011–2015.</dd>
 <dt>JSON</dt><dd>The text format the Python side writes and the site reads.</dd>
+<dt>Ledoit–Wolf shrinkage</dt><dd>Pulling a noisy sample covariance towards a scaled identity with a data-chosen intensity.</dd>
 <dt>Look-ahead bias</dt><dd>Letting a simulated decision use information from its own future.</dd>
-<dt>LP / MILP</dt><dd>A linear program; a mixed-integer linear program adds whole-number variables.</dd>
+<dt>LP / MILP / MIQCP / MISOCP</dt><dd>A linear program; with integer variables; with a quadratic constraint; with a second-order cone constraint.</dd>
+<dt>Markowitz mean-variance</dt><dd>Choosing weights for the best expected return at a given variance.</dd>
 <dt>MIP gap</dt><dd>How far a mixed-integer solution may be from provably optimal when the solver stops.</dd>
+<dt>Model (strategy pattern)</dt><dd>One of five interchangeable decision rules behind the same <code>solve</code> interface.</dd>
 <dt>Parquet</dt><dd>A compact binary table format used for all cached data.</dd>
 <dt>Portfolio / weight</dt><dd>Everything held; the fraction of money in each holding.</dd>
 <dt>Rebalance</dt><dd>Trading back to chosen weights.</dd>
 <dt>Risk-free rate</dt><dd>The T-bill yield; what "cash" earns here.</dd>
+<dt>Robust optimisation</dt><dd>Optimising the worst case over a set of plausible inputs instead of a point estimate.</dd>
 <dt>Rockafellar–Uryasev</dt><dd>The reformulation that makes CVaR linear, using a threshold variable and one slack per scenario.</dd>
+<dt>Run</dt><dd>One backtest: one investor profile under one model, stored as <code>runs/&lt;profile&gt;__&lt;model&gt;.json</code>.</dd>
 <dt>Scenario</dt><dd>One historical day treated as a possible tomorrow.</dd>
-<dt>Sector (GICS)</dt><dd>An industry grouping used for sector caps.</dd>
+<dt>Sector (GICS)</dt><dd>An industry grouping used for sector caps and the Archive's walk-through.</dd>
 <dt>Sharpe ratio</dt><dd>Return above cash per unit of volatility.</dd>
 <dt>Shrinkage</dt><dd>Pulling noisy estimates towards a common average.</dd>
+<dt>Standard error</dt><dd>How far a sample average is likely to be from the truth, <code>σ / √n</code>.</dd>
 <dt>Static site</dt><dd>A site served as fixed files with no server-side computation.</dd>
 <dt>Survivorship bias</dt><dd>Distortion from studying only what survived.</dd>
-<dt>Universe</dt><dd>The set of assets the model may choose from.</dd>
+<dt>Universe</dt><dd>The set of assets the models may choose from.</dd>
 <dt>uv</dt><dd>The Python environment and package manager used to run everything.</dd>
 <dt>VaR</dt><dd>Value at Risk: the loss at the boundary of the worst (1 − α) share of scenarios.</dd>
 <dt>Volatility</dt><dd>The standard deviation of returns, usually annualised with √252.</dd>

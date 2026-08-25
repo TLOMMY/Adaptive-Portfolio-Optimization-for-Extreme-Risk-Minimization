@@ -37,7 +37,7 @@ def _run(args):
     key, cfg = args
     data = load_dataset()
     prof = replace(PROFILES[key], **cfg)
-    res = run_backtest(prof, data, TUNE_START, TUNE_END)
+    res = run_backtest(prof, data, start=TUNE_START, end=TUNE_END)
     m = res.metrics
     avg_limit = float(res.solves.cvar_limit.mean())
     return {

@@ -1,5 +1,5 @@
 // Turn the model's solve log into short letters from "your adviser".
-import type { Asset, ProfileResult, Solve } from './data';
+import type { Asset, RunResult, Solve } from './data';
 
 export interface Letter {
 	date: string;
@@ -24,7 +24,7 @@ const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const monthYear = (iso: string) =>
 	new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
-export function buildLetters(result: ProfileResult, assets: Asset[]): Letter[] {
+export function buildLetters(result: RunResult, assets: Asset[]): Letter[] {
 	const kind = new Map(assets.map((a) => [a.ticker, a]));
 	const target = new Map<string, number>(assets.map((a) => [a.ticker, a.kind === 'cash' ? 1 : 0]));
 	const tradesByDate = new Map<string, typeof result.trades>();

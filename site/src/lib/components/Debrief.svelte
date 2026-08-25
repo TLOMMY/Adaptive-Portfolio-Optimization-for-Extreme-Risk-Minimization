@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, go } from '$lib/state.svelte';
-	import { loadProfile, type Metrics, type Prices, type ProfileResult, type Universe } from '$lib/data';
+	import { loadIndex, loadRun, type Metrics, type Prices, type RunResult, type Universe } from '$lib/data';
+	import { base } from '$app/paths';
 	import { buyAndHold, riskFree, series, summarise } from '$lib/sim';
 	import { money, pct, signedPct } from '$lib/format';
 
 	let { universe, prices }: { universe: Universe; prices: Prices } = $props();
-	let result = $state<ProfileResult | null>(null);
+	let result = $state<RunResult | null>(null);
 	onMount(async () => {
-		result = await loadProfile(app.adviser);
+		const idx = await loadIndex();
+		result = await loadRun(app.adviser, idx.story_model);
 	});
 
 	const n = $derived(result ? result.dates.length : prices.dates.length);
@@ -63,8 +65,15 @@
 			paid {money(result.solves.reduce((s, x) => s + x.cost, 0) * (app.amount / 100_000))} in trading costs.
 		</p>
 	{/if}
+	{#if result}
+		<p class="muted">
+			{result.profile.name} used the {result.model.name} model. The same investor can be run under other methods,
+			and other investors under this one, in the <a href="{base}/lab?runs={app.adviser}__{result.model.key}">comparison lab</a>.
+		</p>
+	{/if}
 	<footer>
 		<button class="btn" onclick={() => go('archive')}>Travel again</button>
+		<a class="btn" href="{base}/lab?runs={app.adviser}__{result?.model.key ?? 'cvar'}">Open the lab</a>
 	</footer>
 </section>
 
@@ -106,6 +115,13 @@
 	}
 	footer {
 		margin-top: 3rem;
-		text-align: center;
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	a.btn {
+		text-decoration: none;
+		display: inline-block;
 	}
 </style>

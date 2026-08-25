@@ -1,4 +1,4 @@
-"""Walk-forward backtest of one investor profile.
+"""Walk-forward backtest of one investor profile under one model.
 
 Timeline convention (the only one that matters for honesty):
   * On trading day t the portfolio first earns day t's returns.
@@ -21,7 +21,8 @@ import pandas as pd
 
 from .estimate import expected_returns, window_before
 from .metrics import summarise
-from .optimiser import Solution, solve
+from .models import STORY_MODEL, Model, get_model
+from .optimiser import Solution
 from .profiles import Profile
 from .universe import ASSETS, BENCHMARK, CASH, TICKERS
 
@@ -29,6 +30,7 @@ from .universe import ASSETS, BENCHMARK, CASH, TICKERS
 @dataclass
 class BacktestResult:
     profile: Profile
+    model: Model
     value: pd.Series                      # daily portfolio value
     weights: pd.DataFrame                 # daily weights (date x asset)
     benchmark: pd.Series                  # SPY buy-and-hold, same starting value
@@ -48,11 +50,14 @@ def market_vol_ratio(returns: pd.DataFrame, t: pd.Timestamp) -> float:
 def run_backtest(
     profile: Profile,
     data: dict[str, pd.DataFrame],
+    model: Model | str = STORY_MODEL,
     start: str = "2016-01-04",
     end: str = "2025-12-31",
     initial: float = 100_000.0,
     verbose: bool = False,
 ) -> BacktestResult:
+    if isinstance(model, str):
+        model = get_model(model)
     returns = data["returns"]
     rf = data["rf"]["rf"]
     start_ts, end_ts = pd.Timestamp(start), pd.Timestamp(end)
@@ -92,7 +97,7 @@ def run_backtest(
             scen = window_before(returns, t, profile.lookback_days)
             mu = expected_returns(scen, profile.shrink)
             params = profile.params_at(years_left)
-            sol: Solution = solve(mu, scen, params, w_prev=w)
+            sol: Solution = model.solve(scen, mu, params, w_prev=w)
             new_holdings = sol.weights * total
             traded = (new_holdings - holdings).abs().sum()
             cost = profile.cost_rate * traded
@@ -103,7 +108,7 @@ def run_backtest(
             solves.append({
                 "date": t, "reason": reason, "years_left": years_left,
                 "cvar_limit": params["cvar_limit"], "exp_return_ann": sol.exp_return * 252,
-                "cvar": sol.cvar, "turnover": sol.turnover, "cost": cost,
+                "cvar": sol.cvar, "risk": sol.risk, "turnover": sol.turnover, "cost": cost,
                 "n_holdings": sol.n_holdings, "solve_time": sol.solve_time,
             })
             holdings, target, last_solve_day = new_holdings, sol.weights, i
@@ -121,7 +126,7 @@ def run_backtest(
     bench_r = returns.loc[days, BENCHMARK]
     benchmark = initial * (1 + bench_r).cumprod() / (1 + bench_r.iloc[0])
     res = BacktestResult(
-        profile=profile, value=value, weights=weights_df, benchmark=benchmark,
+        profile=profile, model=model, value=value, weights=weights_df, benchmark=benchmark,
         solves=pd.DataFrame(solves), trades=pd.DataFrame(trades),
     )
     res.metrics = summarise(value, rf)

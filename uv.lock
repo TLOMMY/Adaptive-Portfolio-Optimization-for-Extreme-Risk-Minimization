@@ -23,6 +23,18 @@ wheels = [
 ]
 
 [[package]]
+name = "ampl-module-gurobi"
+version = "20260624"
+source = { registry = "https://pypi.ampl.com/" }
+wheels = [
+    { url = "https://portal.ampl.com/dl/pypi/ampl-module-gurobi/ampl_module_gurobi-20260624-py3-none-macosx_10_9_universal2.whl" },
+    { url = "https://portal.ampl.com/dl/pypi/ampl-module-gurobi/ampl_module_gurobi-20260624-py3-none-macosx_10_9_x86_64.whl" },
+    { url = "https://portal.ampl.com/dl/pypi/ampl-module-gurobi/ampl_module_gurobi-20260624-py3-none-manylinux2010_x86_64.whl" },
+    { url = "https://portal.ampl.com/dl/pypi/ampl-module-gurobi/ampl_module_gurobi-20260624-py3-none-manylinux2014_aarch64.whl" },
+    { url = "https://portal.ampl.com/dl/pypi/ampl-module-gurobi/ampl_module_gurobi-20260624-py3-none-win_amd64.whl" },
+]
+
+[[package]]
 name = "ampl-module-highs"
 version = "20260813"
 source = { registry = "https://pypi.ampl.com/" }
@@ -1837,6 +1849,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "ampl-module-base" },
+    { name = "ampl-module-gurobi" },
     { name = "ampl-module-highs" },
     { name = "amplpy" },
     { name = "numpy" },
@@ -1860,6 +1873,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ampl-module-base", specifier = ">=20260809", index = "https://pypi.ampl.com/" },
+    { name = "ampl-module-gurobi", index = "https://pypi.ampl.com/" },
     { name = "ampl-module-highs", specifier = ">=20260813", index = "https://pypi.ampl.com/" },
     { name = "amplpy", specifier = ">=0.15" },
     { name = "numpy" },

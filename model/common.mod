@@ -1,27 +1,22 @@
 # ---------------------------------------------------------------------------
-# Profile-driven CVaR portfolio model (single rebalance decision).
+# Shared part of every optimising model: the investor's rules.
 #
-# Solved once per rebalance date.  All inputs come from data strictly before
-# that date.  Linear except for the binary "do I hold it" variables, so the
-# whole thing is a MILP that HiGHS solves in well under a second.
+# Loaded first; then one of cvar.mod / markowitz.mod / robust.mod adds its
+# own risk measure and objective.  Everything here is linear except the
+# binary "do I hold it" variables.
 # ---------------------------------------------------------------------------
 
 set ASSETS;                       # everything the portfolio may hold, incl. CASH
-set SCENARIOS;                    # historical days used as samples of the future
 set SECTORS;
 param sector {ASSETS} symbolic in SECTORS;
 param is_cash {ASSETS} binary default 0;
 
-# --- market estimates ------------------------------------------------------
+# --- market estimate -------------------------------------------------------
 param mu {ASSETS};                # expected daily return (after shrinkage)
-param r  {SCENARIOS, ASSETS};     # realised daily return in each scenario
-param nS := card(SCENARIOS);
 
 # --- investor profile ------------------------------------------------------
-param alpha       >= 0.5, < 1;    # CVaR confidence level, e.g. 0.95
-param cvar_limit  >= 0;           # max average daily loss in the worst (1-alpha) of days
-param lambda_risk >= 0 default 0; # optional extra CVaR penalty in the objective
-param w_max  {ASSETS} >= 0, <= 1; # per-asset cap (concentration and liquidity)
+param lambda_risk >= 0 default 0; # optional extra risk penalty in the objective
+param w_max  {ASSETS} >= 0, <= 1; # per-asset cap (concentration, exclusions)
 param w_min_pos >= 0, <= 1;       # if held, hold at least this much (no dust)
 param max_holdings integer >= 1;  # cardinality cap over non-cash assets
 param sector_cap {SECTORS} >= 0, <= 1;
@@ -37,23 +32,12 @@ var w    {a in ASSETS} >= 0, <= w_max[a];
 var z    {ASSETS} binary;               # 1 if asset is held
 var buy  {ASSETS} >= 0;
 var sell {ASSETS} >= 0;
-var zeta;                               # the VaR threshold (Rockafellar-Uryasev)
-var u    {SCENARIOS} >= 0;              # loss beyond zeta in each scenario
 
-var cvar = zeta + sum {s in SCENARIOS} u[s] / ((1 - alpha) * nS);
 var exp_return = sum {a in ASSETS} mu[a] * w[a];
 var turnover   = sum {a in ASSETS} (buy[a] + sell[a]);
 
-maximize objective:
-    hold_days * exp_return - lambda_risk * cvar - cost_rate * turnover;
-
 subject to budget:            sum {a in ASSETS} w[a] = 1;
 subject to trade_balance {a in ASSETS}:  w[a] = w_prev[a] + buy[a] - sell[a];
-
-# CVaR: u[s] must cover the portfolio loss in scenario s beyond the threshold
-subject to tail_loss {s in SCENARIOS}:
-    u[s] >= -sum {a in ASSETS} r[s,a] * w[a] - zeta;
-subject to loss_tolerance:    cvar <= cvar_limit;
 
 # cardinality and minimum position (cash is always allowed)
 subject to link_upper {a in ASSETS: is_cash[a] = 0}:  w[a] <= w_max[a] * z[a];

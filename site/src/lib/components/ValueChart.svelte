@@ -30,6 +30,19 @@
 	);
 	const years = $derived(x.ticks(10));
 	const shown = $derived(events.filter((e) => Date.parse(e.date) <= times[Math.min(cursor, times.length - 1)]));
+	// Event labels alternate between three rows so neighbours a few weeks apart do not overprint.
+	const eventRow = (i: number) => m.top + 10 + (i % 3) * 11;
+	// End-value labels: keep at least 13px apart, pushing outward from the middle.
+	const labelY = $derived.by(() => {
+		const ys = series.map((s) => y(s.values[Math.min(cursor, s.values.length - 1)]));
+		const order = ys.map((v, i) => i).sort((a, b) => ys[a] - ys[b]);
+		const out = [...ys];
+		for (let k = 1; k < order.length; k++) {
+			const prev = out[order[k - 1]], cur = out[order[k]];
+			if (cur - prev < 13) out[order[k]] = prev + 13;
+		}
+		return out;
+	});
 	const fmt = (v: number) => '$' + (v >= 1e6 ? (v / 1e6).toFixed(2) + 'm' : (v / 1e3).toFixed(0) + 'k');
 </script>
 
@@ -44,13 +57,13 @@
 		{/each}
 		{#each shown as e (e.date)}
 			<line x1={x(Date.parse(e.date))} x2={x(Date.parse(e.date))} y1={m.top} y2={height - m.bottom} class="event" />
-			<text x={x(Date.parse(e.date)) + 4} y={m.top + 10} class="event-label mono">{e.title}</text>
+			<text x={x(Date.parse(e.date)) + 4} y={eventRow(shown.indexOf(e))} class="event-label mono">{e.title}</text>
 		{/each}
-		{#each series as s (s.name)}
+		{#each series as s, i (s.name)}
 			<path d={path(s.values.slice(0, cursor + 1)) ?? ''} fill="none" stroke={s.color} stroke-width="1.8" />
 			{#if cursor > 0}
 				<circle cx={x(times[cursor])} cy={y(s.values[cursor])} r="3.5" fill={s.color} />
-				<text x={x(times[cursor]) + 8} y={y(s.values[cursor])} dy="0.35em" class="label mono" fill={s.color}>
+				<text x={x(times[cursor]) + 8} y={labelY[i]} dy="0.35em" class="label mono" fill={s.color}>
 					{fmt(s.values[cursor])}
 				</text>
 			{/if}

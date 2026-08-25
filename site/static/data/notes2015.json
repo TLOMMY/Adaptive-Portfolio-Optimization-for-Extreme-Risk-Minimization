@@ -1,0 +1,148 @@
+{
+ "as_of": "2015-12-31",
+ "note": "Hand-written. Every statement describes something published on or before 31 December 2015 and was checked against the source listed. Figures that only became public in 2016 (for example full-year 2015 results) are deliberately absent.",
+ "year": {
+  "headline": "A flat year with a nervous ending",
+  "body": "The S&P 500 finished 2015 almost exactly where it started: a total return of about +1.4% with dividends, and a small loss without them. Oil ended the year near $37 a barrel, down from over $100 in mid-2014, after OPEC declined to cut output at its December meeting. Greece nearly left the euro in July, with capital controls and a referendum. China devalued the yuan in August and its stock market fell more than 40% from its June peak. On 16 December the Federal Reserve raised interest rates for the first time since 2006.",
+  "sources": [
+   "https://www.cbsnews.com/news/its-official-2015-a-tough-year-for-making-money/",
+   "https://www.eia.gov/todayinenergy/detail.php?id=24432",
+   "https://en.wikipedia.org/wiki/Capital_controls_in_Greece",
+   "https://money.cnn.com/2015/08/11/news/economy/china-yuan-devaluation-stocks-market/index.html",
+   "https://www.cnbc.com/2015/12/16/fed-raises-rates-for-first-time-since-2006.html"
+  ]
+ },
+ "sectors": {
+  "Information Technology": {
+   "headline": "Record iPhones, a new Alphabet",
+   "body": "Apple has just reported a record year: revenue of $233.7 billion and 231 million iPhones sold in the twelve months to September. Google reorganised itself in August under a new parent company, Alphabet. Microsoft released Windows 10 in July. Intel agreed in June to buy the chipmaker Altera for about $16.7 billion, and Cisco has had a new chief executive, Chuck Robbins, since July.",
+   "sources": [
+    "https://www.apple.com/newsroom/2015/10/27Apple-Reports-Record-Fourth-Quarter-Results/",
+    "https://www.geekwire.com/2015/google-announces-huge-restructure-forms-new-holding-company-called-alphabet/",
+    "https://news.microsoft.com/source/2015/06/01/windows-10-available-as-a-free-upgrade-on-july-29/",
+    "https://www.sec.gov/Archives/edgar/data/50863/000119312515209231/d935756dex991.htm",
+    "https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2015/m05/cisco-board-names-chuck-robbins-as-next-ceo-john-chambers-to-become-executive-chairman-effective-july-26.html"
+   ]
+  },
+  "Health Care": {
+   "headline": "Drug prices become politics",
+   "body": "In September, Turing Pharmaceuticals raised the price of a 62-year-old drug, Daraprim, from $13.50 to $750 a pill, and drug pricing became an issue in the presidential campaign. Pfizer agreed in November to combine with Allergan in a deal valued at about $160 billion. Gilead's hepatitis C cures, Sovaldi and Harvoni, have made it one of the sector's most profitable companies; in October it guided to $30–31 billion of product sales for the year. UnitedHealth cut its profit forecast in November and said it might leave the Affordable Care Act exchanges by 2017.",
+   "sources": [
+    "https://www.cbsnews.com/news/turing-pharmaceuticals-ceo-martin-shkreli-defends-5000-percent-price-hike-on-daraprim-drug/",
+    "https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-allergan-combine",
+    "https://www.gilead.com/news-and-press/press-room/press-releases/2016/2/gilead-sciences-announces-fourth-quarter-and-full-year-2015-financial-results",
+    "https://www.cnbc.com/2015/11/19/health-insurer-unitedhealth-cuts-full-year-profit-forecast.html"
+   ]
+  },
+  "Financials": {
+   "headline": "The first rate rise in nine years",
+   "body": "On 16 December the Federal Reserve raised its target rate to 0.25–0.50%, the first increase since 2006. Banks have waited years for this, because higher rates widen the gap between what they pay on deposits and what they earn on loans. Berkshire Hathaway agreed in August to buy the aerospace parts maker Precision Castparts for about $37 billion.",
+   "sources": [
+    "https://www.cnbc.com/2015/12/16/fed-raises-rates-for-first-time-since-2006.html",
+    "https://www.berkshirehathaway.com/news/aug1015.pdf"
+   ]
+  },
+  "Consumer Discretionary": {
+   "headline": "Amazon doubles, ESPN wobbles",
+   "body": "Amazon's shares more than doubled in 2015 after it disclosed in April, for the first time, how profitable its cloud business AWS is. Disney's Star Wars: The Force Awakens opened on 18 December, but in August the company admitted ESPN was losing subscribers and media stocks sold off. Comcast walked away from its purchase of Time Warner Cable in April after regulators objected. McDonald's, under a new chief executive since March, launched all-day breakfast in October.",
+   "sources": [
+    "https://ir.aboutamazon.com/news-release/news-release-details/2015/Amazoncom-Announces-First-Quarter-Sales-up-15-to-2272-Billion/default.aspx",
+    "https://money.cnn.com/2015/08/05/media/disney-stock-down-espn/index.html",
+    "https://www.justice.gov/archives/opa/pr/comcast-corporation-abandons-proposed-acquisition-time-warner-cable-after-justice-department",
+    "https://corporate.mcdonalds.com/corpmcd/our-stories/article/all_day_breakfast.html"
+   ]
+  },
+  "Consumer Staples": {
+   "headline": "Walmart's warning",
+   "body": "On 14 October Walmart warned that its profit would fall next year as it raises wages and invests in online shopping; its shares dropped about 10% in a day, the biggest fall in over fifteen years. Kraft and Heinz completed their merger in July. Philip Morris International, the overseas tobacco business spun out of Altria in 2008, sells nothing in the United States.",
+   "sources": [
+    "https://fortune.com/2015/10/14/walmart-weak-sales",
+    "https://news.kraftheinzcompany.com/press-releases-details/2015/The-Kraft-Heinz-Company-Announces-Successful-Completion-of-the-Merger-between-Kraft-Foods-Group-and-HJ-Heinz-Holding-Corporation/default.aspx",
+    "https://www.sec.gov/Archives/edgar/data/764180/000119312508069389/dex991.htm"
+   ]
+  },
+  "Energy": {
+   "headline": "Oil below $40",
+   "body": "West Texas crude ended 2015 at about $37 a barrel, its lowest level since early 2009, after OPEC again declined to cut output at its 4 December meeting. Energy was the worst-performing sector in the S&P 500 this year, down more than 20%.",
+   "sources": [
+    "https://www.eia.gov/todayinenergy/detail.php?id=24432",
+    "https://www.cbsnews.com/media/s-p-500-sectors-the-winners-and-losers-of-2015/"
+   ]
+  },
+  "Industrials": {
+   "headline": "GE goes back to being industrial",
+   "body": "General Electric announced in April that it would sell most of GE Capital, its large finance arm, and return to being an industrial company. Union Pacific's freight volumes fell through the year as coal shipments declined. In September the Volkswagen diesel emissions scandal became public.",
+   "sources": [
+    "https://www.ge.com/news/press-releases/ge-create-simpler-more-valuable-industrial-company-selling-most-ge-capital-assets",
+    "https://www.worldcoal.com/handling/27102015/weak-coal-volumes-hit-union-pacific-in-3q15-3071/",
+    "https://www.epa.gov/sites/default/files/2015-10/documents/vw-nov-caa-09-18-15.pdf"
+   ]
+  },
+  "Materials": {
+   "headline": "Commodities slump, chemicals merge",
+   "body": "Commodity prices fell sharply in 2015 as China's growth slowed. Dow Chemical and DuPont announced on 11 December that they would merge. Air Products said in September that it would spin off its materials technologies business.",
+   "sources": [
+    "https://money.cnn.com/2015/08/11/news/economy/china-yuan-devaluation-stocks-market/index.html",
+    "https://www.investors.dupont.com/news-and-media/press-release-details/2015/Dupont-And-Dow-To-Combine-In-Merger-Of-Equals/default.aspx",
+    "https://www.airproducts.com/company/news-center/2015/09/0916-materials-technologies-announcement"
+   ]
+  },
+  "Utilities": {
+   "headline": "Carbon rules and rate worries",
+   "body": "The EPA finalised the Clean Power Plan in August, setting carbon limits for power plants. Investors buy utilities for their dividends, which makes them sensitive to interest rates, so the Fed's December rise is the sector's main worry going into 2016.",
+   "sources": [
+    "https://archive.epa.gov/epa/cleanpowerplan/fact-sheet-overview-clean-power-plan.html",
+    "https://www.cnbc.com/2015/12/16/fed-raises-rates-for-first-time-since-2006.html"
+   ]
+  },
+  "Real Estate": {
+   "headline": "About to become a sector of its own",
+   "body": "Real estate is still filed under Financials, but S&P and MSCI announced in November 2014 that it will become its own sector in 2016. These companies are REITs (Real Estate Investment Trusts), which pay out most of their income as dividends, so like utilities they tend to fall when interest rates rise.",
+   "sources": [
+    "https://press.spglobal.com/2014-11-10-S-P-Dow-Jones-Indices-And-MSCI-Announce-The-Creation-Of-A-Real-Estate-Sector-In-The-Global-Industry-Classification-Standard-GICS-Structure"
+   ]
+  },
+  "Telecommunication Services": {
+   "headline": "Phone companies buy TV and media",
+   "body": "AT&T completed its $48.5 billion purchase of the satellite broadcaster DirecTV in July. Verizon bought AOL in June for about $4.4 billion to build an online advertising business.",
+   "sources": [
+    "https://about.att.com/story/att_completes_acquisition_of_directv.html",
+    "https://www.cnbc.com/2015/06/23/verizon-closes-aol-acquisition.html"
+   ]
+  },
+  "Bonds": {
+   "headline": "Rates finally move",
+   "body": "Three-month Treasury bills yielded close to nothing for most of 2015, until the Federal Reserve's rate rise on 16 December. A broad bond fund such as AGG holds thousands of government and company bonds and moves in the opposite direction to interest rates.",
+   "sources": ["https://www.cnbc.com/2015/12/16/fed-raises-rates-for-first-time-since-2006.html"]
+  },
+  "Gold": {
+   "headline": "A third losing year",
+   "body": "Gold fell about 10% in 2015, its third straight annual decline, ending the year near $1,060 an ounce.",
+   "sources": ["https://www.business-standard.com/amp/article/markets/gold-third-annual-drop-115123001196_1.html"]
+  }
+ },
+ "assets": {
+  "AAPL": "Record fiscal year to September 2015: $233.7 billion of revenue, 231 million iPhones.",
+  "MSFT": "Released Windows 10 in July as a free upgrade.",
+  "GOOGL": "Reorganised under a new parent, Alphabet, in August.",
+  "INTC": "Agreed in June to buy chipmaker Altera for about $16.7 billion.",
+  "CSCO": "Chuck Robbins replaced John Chambers as chief executive in July.",
+  "PFE": "Agreed in November to combine with Allergan, a deal valued at about $160 billion.",
+  "GILD": "Its hepatitis C drugs made 2015 another huge year; October guidance was $30–31 billion of product sales.",
+  "UNH": "Cut its profit forecast in November over losses on Affordable Care Act plans.",
+  "BRK-B": "Agreed in August to buy Precision Castparts for about $37 billion.",
+  "AMZN": "Shares more than doubled in 2015; AWS results were disclosed separately for the first time in April.",
+  "DIS": "The Force Awakens opened on 18 December; ESPN subscriber losses were admitted in August.",
+  "CMCSA": "Abandoned its purchase of Time Warner Cable in April.",
+  "MCD": "New chief executive Steve Easterbrook since March; all-day breakfast from October.",
+  "WMT": "Warned on 14 October that profit would fall next year; shares dropped about 10% that day.",
+  "PM": "The non-US tobacco business spun out of Altria in March 2008.",
+  "GE": "Announced in April that it would sell most of GE Capital.",
+  "UNP": "Freight volumes fell through 2015 as coal shipments declined.",
+  "APD": "Announced in September that it would spin off its materials technologies business.",
+  "T": "Completed its $48.5 billion purchase of DirecTV in July.",
+  "VZ": "Bought AOL in June for about $4.4 billion.",
+  "GLD": "Gold fell about 10% in 2015, a third straight annual decline.",
+  "AGG": "Broad US bond fund; the Fed's first rate rise since 2006 came on 16 December."
+ }
+}
