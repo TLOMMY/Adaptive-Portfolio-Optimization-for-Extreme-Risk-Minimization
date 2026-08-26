@@ -36,7 +36,10 @@ reproducible; they do not overwrite the website's precomputed results.
 ## Final Demo and Poster
 
 - Live demo: [adaptive-portfolio-optimization.netlify.app](https://adaptive-portfolio-optimization.netlify.app/)
-- Poster: [latest poster link](https://onedrive.live.com/:p:/g/personal/e7e6b3611f1cd60f/IQCq2O_lLEVpQLTOgS6k5yW6AX_vNtkGP_2xM6_gNwsPBOc?rtime=CRUZVzED30g&redeem=aHR0cHM6Ly8xZHJ2Lm1zL3AvYy9lN2U2YjM2MTFmMWNkNjBmL0lRQ3EyT19sTEVWcFFMVE9nUzZrNXlXNkFYX3ZOdGtHUF8yeE02X2dOd3NQQk9j)
+
+<p align="center">
+  <img src="docs/assets/final-poster.png" width="100%" alt="Final project poster">
+</p>
 
 The frozen website contains 54 assets (51 stocks, AGG, GLD, and CASH), SPY as
 the comparison benchmark, six investor profiles, five model views, and 30
