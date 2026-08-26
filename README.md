@@ -41,7 +41,8 @@ reproducible; they do not overwrite the website's precomputed results.
   <img src="docs/assets/final-poster.png" width="100%" alt="Final project poster">
 </p>
 
-The frozen website contains 54 assets (51 stocks, AGG, GLD, and CASH), SPY as
+The final poster reports the core experiment on 43 assets. The frozen website
+contains a broader 54-asset universe (51 stocks, AGG, GLD, and CASH), SPY as
 the comparison benchmark, six investor profiles, five model views, and 30
 profile-model runs covering `2016-01-04` through `2025-12-31`.
 
