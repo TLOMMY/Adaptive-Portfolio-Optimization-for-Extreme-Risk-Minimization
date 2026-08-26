@@ -1,7 +1,7 @@
 """Robust minimum-variance portfolio adapter.
 
-Portable integration of a covariance-uncertainty Robust Mean Variance formulation. It keeps
-the shared ``fit_model(train_returns, profile_config)`` contract while replacing a
+Portable integration of Jia Qi's Robust Mean Variance formulation. It keeps
+Bowen's ``fit_model(train_returns, profile_config)`` contract while replacing a
 single covariance estimate with a finite set of rolling covariance scenarios.
 """
 

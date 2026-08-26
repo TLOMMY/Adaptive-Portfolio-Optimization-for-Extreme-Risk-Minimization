@@ -1,4 +1,4 @@
-"""Adapt profile input data to model adapter configuration."""
+"""Adapt Kenta's exported profile schema to model adapter configuration."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def get_model_config(
     """Return a model config while making missing constraints explicit.
 
     `max_weight` is supplied by the final experiment convention because the
-    current profile input does not yet contain an asset-concentration limit.
+    current Kenta export does not yet contain an asset-concentration limit.
     The model adapter or backtester supplies `current_weights` at runtime;
     this export intentionally remains independent of a particular portfolio.
     """

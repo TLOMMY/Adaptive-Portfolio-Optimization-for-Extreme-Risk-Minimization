@@ -16,7 +16,7 @@ We adopt this as our project architecture. In particular:
 - later observations are held out for evaluation;
 - equal-weight and other transparent portfolios are useful benchmarks.
 
-The new `portfolio_backtest.py` implements the data, weights, evaluation, and backtest layers. Any compatible model can be plugged in without rewriting these layers.
+The new `portfolio_backtest.py` implements the data, weights, evaluation, and backtest layers. Mana's model can be plugged in without rewriting these layers.
 
 ## Do not copy directly
 

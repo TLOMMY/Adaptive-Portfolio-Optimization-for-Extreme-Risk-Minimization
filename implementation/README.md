@@ -1,6 +1,6 @@
 # Portfolio Backtest Handoff
 
-This is the model-independent research implementation. MVO, CVaR, and Robust MVO adapters plug into the same evaluation logic.
+This is Bowen's Day 1 implementation slice. It is deliberately model-independent so Mana can plug in MVO, CVaR, or Robust MVO without changing the evaluation logic.
 
 Day 2 adds `data_pipeline.py` and `day2_baseline.py`: cached adjusted-close CSV input, optional Yahoo Finance downloading, multiple market-period windows, and a runnable equal-weight baseline.
 
@@ -8,7 +8,7 @@ The integration adapters in `models/` use CVXPY with CLARABEL/HiGHS and accept
 the same profile configuration shape. They enforce continuous portfolio
 constraints and raise an explicit error for infeasible profiles.
 
-The model registry includes MVO, historical CVaR, and a covariance-uncertainty Robust MVO
+The model registry now includes MVO, historical CVaR, and Jia Qi's Robust MVO
 adapter. See `jiaqi_integration.md` for the selective-integration decision.
 
 ## Input contract
@@ -58,7 +58,7 @@ metrics, weights = run_backtest(
 
 ## Model handoff
 
-An optimizer adapter should have this signature:
+Mana's adapter should have this signature:
 
 ```python
 def fit_model(train_returns, profile_config):
@@ -77,9 +77,9 @@ The backtester normalizes and validates the weights, then evaluates them on the 
 - no transaction costs yet;
 - explicit windows so different market periods can be added later.
 
-The final web/export conventions are documented separately; this directory
-owns the executable framework, adapters, and tests. The static JSON contract
-is documented in `yesh_backend_contract.md`.
+Yeshwanth owns the final web/export conventions; Bowen owns the executable
+framework, adapters, and tests. The exact static JSON contract is documented
+in `yesh_backend_contract.md`.
 
 ## Day 2 baseline
 

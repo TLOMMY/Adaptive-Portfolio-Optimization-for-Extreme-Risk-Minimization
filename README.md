@@ -182,6 +182,12 @@ Close with:
 > The preferred portfolio depends on the investor's objective and constraints,
 > not just on which model has the highest return.
 
+## Contributors
+
+Mana (research question), Kenta (model framing), Bowen (methodology and
+research implementation), Raymond (results), Jia Qi (model research), and
+Yeshwanth (presentation website and live demo).
+
 ## Limitations
 
 This is an educational research prototype, not investment advice. Historical
