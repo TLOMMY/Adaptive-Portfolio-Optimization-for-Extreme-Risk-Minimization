@@ -184,9 +184,11 @@ Close with:
 
 ## Contributors
 
-Mana (research question), Kenta (model framing), Bowen (methodology and
-research implementation), Raymond (results), Jia Qi (model research), and
-Yeshwanth (presentation website and live demo).
+Mana (research question)
+Kenta (model framing)
+Bowen (methodology and research implementation)
+Raymond (results and model research)
+Yeshwanth (Front-end Rendering website, live demo and Optimization Method Exploration and Selection).
 
 ## Limitations
 
