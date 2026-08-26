@@ -24,9 +24,9 @@ optimization models so that the trade-offs are comparable.
 
 This repository contains two deliberately separated layers:
 
-- **Research layer (`implementation/`)**: Bowen's reusable Python backtester,
+- **Research layer (`implementation/`)**: a reusable Python backtester,
   CVXPY model adapters, profile constraints, and tests.
-- **Presentation layer (`src/portfolio/`, `model/`, `site/`)**: Yesh's frozen
+- **Presentation layer (`src/portfolio/`, `model/`, `site/`)**: the frozen
   AMPL/Svelte pipeline and the static JSON used by the final Netlify demo.
 
 The presentation layer is the source of truth for the published figures. The
@@ -36,7 +36,7 @@ reproducible; they do not overwrite the website's precomputed results.
 ## Final Demo and Poster
 
 - Live demo: [adaptive-portfolio-optimization.netlify.app](https://adaptive-portfolio-optimization.netlify.app/)
-- Poster: [SharePoint link](https://ncku365-my.sharepoint.com/:p:/g/personal/m16137010_ncku_edu_tw/IQAQXAs6NEEJQI9FSPpfYWA3AXic066vsgwCOuby8XqODZ8?e=jG5WaV)
+- Poster: [latest poster link](https://onedrive.live.com/:p:/g/personal/e7e6b3611f1cd60f/IQCq2O_lLEVpQLTOgS6k5yW6AX_vNtkGP_2xM6_gNwsPBOc?rtime=CRUZVzED30g&redeem=aHR0cHM6Ly8xZHJ2Lm1zL3AvYy9lN2U2YjM2MTFmMWNkNjBmL0lRQ3EyT19sTEVWcFFMVE9nUzZrNXlXNkFYX3ZOdGtHUF8yeE02X2dOd3NQQk9j)
 
 The frozen website contains 54 assets (51 stocks, AGG, GLD, and CASH), SPY as
 the comparison benchmark, six investor profiles, five model views, and 30
@@ -80,7 +80,7 @@ The frozen presentation displays five model views:
 
 The research directory also contains independent CVXPY adapters in
 `implementation/models/`. In particular, `implementation/models/robust_mvo.py`
-is a research comparison model and is not substituted for Yesh's AMPL Robust
+is a research comparison model and is not substituted for the frozen AMPL Robust
 model in the website.
 
 ## Data and Experimental Design
@@ -113,7 +113,7 @@ Adaptive-Portfolio-Optimization/
 |-- docs/
 |   |-- assets/                README architecture and pipeline figures
 |   |-- final_architecture.md  Research/presentation boundary
-|   |-- research_backend.md    Bowen implementation guide
+|   |-- research_backend.md    Research implementation guide
 |   |-- presentation_guide.md  Five-person presentation order
 |   `-- reproducibility.md     Verification commands
 |-- implementation/            Independent Python research and validation
@@ -167,15 +167,15 @@ prices or call the research backend.
 
 The recommended order follows the poster and the live demo:
 
-1. **Research question - Mana**: why investor profiles create an OR decision
+1. Explain why investor profiles create an operations-research decision
    problem.
-2. **Models - Kenta**: one equation and intuition for each risk definition.
-3. **Methodology/backtest - Bowen**: the six-stage pipeline, asset-universe
-   definition, lookback, quarterly rebalance, and no leakage.
-4. **Results - Raymond**: Growth versus Balanced trade-offs in return, risk,
-   drawdown, and turnover; avoid naming a universal winner.
-5. **Live demo - Yeshwanth**: choose a profile and period, run the time
-   machine, and open Strategy Diagnostics.
+2. Introduce one equation and one intuition for each risk definition.
+3. Walk through the six-stage pipeline, asset universe, lookback, quarterly
+   rebalance, and no-look-ahead rule.
+4. Discuss Growth versus Balanced trade-offs in return, risk, drawdown, and
+   turnover without naming a universal winner.
+5. Use the live demo to choose a profile and period, replay the time machine,
+   and inspect Strategy Diagnostics.
 
 Close with:
 
@@ -190,9 +190,3 @@ survivorship and selection bias, and results depend on the chosen dates,
 solver settings, transaction-cost assumptions, and profile constraints. The
 poster draft may describe a 2016-2024 narration while the frozen website data
 ends in 2025; presenters should state the exact period shown in each figure.
-
-## Contributors
-
-Mana (research question), Kenta (model framing), Bowen (methodology and
-research implementation), Raymond (results), Jia Qi (model research), and
-Yeshwanth (presentation website and live demo).

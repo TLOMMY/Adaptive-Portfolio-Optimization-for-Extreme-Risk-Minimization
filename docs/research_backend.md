@@ -1,6 +1,6 @@
 # Research Backend
 
-The Bowen implementation is a model-independent validation framework. It
+The `implementation/` directory is a model-independent validation framework. It
 accepts adjusted-close prices or aligned simple returns, creates explicit
 walk-forward windows, fits a model on the training slice, and evaluates only
 the later test slice.
