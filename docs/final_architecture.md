@@ -1,5 +1,9 @@
 # Final Architecture
 
+![End-to-end system architecture](assets/system-architecture.png)
+
+![Walk-forward portfolio pipeline](assets/walk-forward-pipeline.png)
+
 The repository intentionally contains two related but separate layers:
 
 ```text
