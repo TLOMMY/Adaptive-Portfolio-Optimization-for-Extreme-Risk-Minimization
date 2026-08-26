@@ -114,7 +114,7 @@ Adaptive-Portfolio-Optimization/
 |   |-- assets/                README architecture and pipeline figures
 |   |-- final_architecture.md  Research/presentation boundary
 |   |-- research_backend.md    Research implementation guide
-|   |-- presentation_guide.md  Five-person presentation order
+|   |-- presentation_guide.md  Presentation sequence
 |   `-- reproducibility.md     Verification commands
 |-- implementation/            Independent Python research and validation
 |   |-- portfolio_backtest.py  Walk-forward windows and metrics
