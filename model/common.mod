@@ -18,7 +18,7 @@ param mu {ASSETS};                # expected daily return (after shrinkage)
 param lambda_risk >= 0 default 0; # optional extra risk penalty in the objective
 param w_max  {ASSETS} >= 0, <= 1; # per-asset cap (concentration, exclusions)
 param w_min_pos >= 0, <= 1;       # if held, hold at least this much (no dust)
-param max_holdings integer >= 1;  # cardinality cap over non-cash assets
+param max_holdings integer >= 1;  # cardinality cap over non-cash assets (max number of unique assets we can hold)
 param sector_cap {SECTORS} >= 0, <= 1;
 param cash_min >= 0, <= 1 default 0;
 
@@ -39,9 +39,11 @@ var turnover   = sum {a in ASSETS} (buy[a] + sell[a]);
 subject to budget:            sum {a in ASSETS} w[a] = 1;
 subject to trade_balance {a in ASSETS}:  w[a] = w_prev[a] + buy[a] - sell[a];
 
-# cardinality and minimum position (cash is always allowed)
+# minimum and max position (cash is always allowed)
 subject to link_upper {a in ASSETS: is_cash[a] = 0}:  w[a] <= w_max[a] * z[a];
 subject to link_lower {a in ASSETS: is_cash[a] = 0}:  w[a] >= w_min_pos * z[a];
+
+# enforce we don't go beyond max num of unique assets (cardinality)
 subject to cardinality:       sum {a in ASSETS: is_cash[a] = 0} z[a] <= max_holdings;
 
 subject to sector_limit {k in SECTORS}:

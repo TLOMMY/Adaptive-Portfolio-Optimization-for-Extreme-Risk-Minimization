@@ -7,3 +7,14 @@ data/raw/
 site/node_modules/
 site/build/
 site/.svelte-kit/
+
+# poster: LaTeX build products, previews, regenerable experiment outputs
+poster/*.aux
+poster/*.log
+poster/*.fls
+poster/*.fdb_latexmk
+poster/*.synctex.gz
+poster/*.out
+poster/build.log
+poster/preview*.png
+poster/experiments/out/

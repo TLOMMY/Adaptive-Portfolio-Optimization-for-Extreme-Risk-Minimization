@@ -1,0 +1,28 @@
+# Netlify builds the SvelteKit site from the `site/` folder on every push.
+# Production = the `main` branch; every other branch and pull request gets its own preview URL.
+[build]
+  base = "site"
+  # Netlify's own URL variable becomes the public site URL the pages use for share-card links
+  command = "export PUBLIC_SITE_URL=$URL && npm run check && npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The precomputed data and event images change only when the model is re-run; let browsers keep
+# them for an hour, and revalidate the HTML on every visit so a deploy shows up immediately.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
