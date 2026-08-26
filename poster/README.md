@@ -35,6 +35,7 @@ Optional preview PNG (macOS): `sips -s format png -Z 2400 poster.pdf --out previ
 | File | What |
 |---|---|
 | `poster.tex` | The poster. Placeholders left: site URL in the QR code (`\qrcode{...}`). |
+| `guide.html` | Presenter's guide: concepts behind each block, what to say and why, likely questions. Open in a browser; needs `figures/*.png`. |
 | `figures/` | Generated PDFs/PNGs + `table_models.tex`; committed so the poster builds without rerunning experiments. |
 | `experiments/run_experiments.py` | Sub-period metrics, stationary block bootstrap (paired across runs), correlation heatmap data. Excludes Sprinter (3-year horizon). |
 | `experiments/make_figures.py` | All figures and the LaTeX table. |

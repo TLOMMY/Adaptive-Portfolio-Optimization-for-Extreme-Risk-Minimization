@@ -106,27 +106,29 @@ def fig_scatter():
     b = pd.read_csv(OUT / "bootstrap_runs.csv")
     pt = b.pivot_table(index="run", columns="metric", values="point")
     fig, ax = plt.subplots(figsize=(5.6, 4.8))
+    from matplotlib.patches import Ellipse
     for p in PROFILES:
-        for m in MODELS:
-            row = pt.loc[f"{p}__{m}"]
-            ax.scatter(row["cvar_95_daily"] * 100, row["cagr"] * 100, color=COL[m], marker=MARK[p],
-                       s=75, edgecolor="white", lw=0.5, zorder=3)
+        pts = np.array([[pt.loc[f"{p}__{m}", "cvar_95_daily"] * 100, pt.loc[f"{p}__{m}", "cagr"] * 100] for m in MODELS])
+        c = pts.mean(axis=0)
+        cov = np.cov(pts.T) + np.diag([0.004, 0.06])
+        vals, vecs = np.linalg.eigh(cov)
+        ang = np.degrees(np.arctan2(vecs[1, 1], vecs[0, 1]))
+        w_, h_ = 2 * 1.7 * np.sqrt(vals[1]), 2 * 1.7 * np.sqrt(vals[0])
+        ax.add_patch(Ellipse(c, w_, h_, angle=ang, facecolor="#000000", alpha=0.05, edgecolor="#999999", lw=0.8, zorder=1))
+        off = {"builder": (0.18, 0.55), "ethical": (0.22, -0.55), "maverick": (-0.28, 0.0), "steady": (0.2, 0.35), "preserver": (0.0, 0.5)}[p]
+        ax.text(c[0] + off[0], c[1] + off[1], PNAME[p], fontsize=8.5, color="#444444", ha="center", va="center", style="italic",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.75), zorder=2)
+        for m, (x, y) in zip(MODELS, pts):
+            ax.scatter(x, y, color=COL[m], s=70, edgecolor="white", lw=0.5, zorder=3)
     spy = pt.loc["SPY"]
-    ax.scatter(spy["cvar_95_daily"] * 100, spy["cagr"] * 100, color="black", marker="*", s=220, zorder=4)
-    ax.annotate("S&P 500", (spy["cvar_95_daily"] * 100, spy["cagr"] * 100), xytext=(-8, 8),
-                textcoords="offset points", ha="right", fontsize=10, fontweight="bold")
-    # per-model mean, as a larger hollow marker
-    for m in MODELS:
-        sub = pt.loc[[f"{p}__{m}" for p in PROFILES]]
-        ax.scatter(sub["cvar_95_daily"].mean() * 100, sub["cagr"].mean() * 100, facecolor="none",
-                   edgecolor=COL[m], s=260, lw=2.2, zorder=5)
-    h1 = [plt.Line2D([], [], color=COL[m], marker="o", ls="", ms=7, label=LABEL[m]) for m in MODELS]
-    h2 = [plt.Line2D([], [], color="#666666", marker=MARK[p], ls="", ms=6, label=PNAME[p]) for p in PROFILES]
-    l1 = ax.legend(handles=h1, loc="lower right", fontsize=10, title="colour = model", title_fontsize=10.5)
-    ax.add_artist(l1)
-    ax.legend(handles=h2, loc="upper left", fontsize=10, title="marker = investor rules", title_fontsize=10.5, ncol=2)
-    ax.set_xlabel("realised CVaR₉₅, % (mean loss on worst 5% of days)")
-    ax.set_ylabel("CAGR (% per year)")
+    ax.scatter(spy["cvar_95_daily"] * 100, spy["cagr"] * 100, color="black", marker="*", s=240, zorder=4)
+    ax.annotate("S&P 500\n(benchmark)", (spy["cvar_95_daily"] * 100, spy["cagr"] * 100), xytext=(-10, -4),
+                textcoords="offset points", ha="right", va="top", fontsize=10, fontweight="bold")
+    h1 = [plt.Line2D([], [], color=COL[m], marker="o", ls="", ms=8, label=LABEL[m]) for m in MODELS]
+    ax.legend(handles=h1, loc="upper left", fontsize=9.5, title="one dot = one run, coloured by model", title_fontsize=9.5)
+    ax.set_xlabel("loss on a bad day: realised CVaR₉₅, %")
+    ax.set_ylabel("return per year: CAGR, %")
+    ax.set_xlim(0.8, 3.0); ax.set_ylim(5, 16)
     ax.grid(color="#DDDDDD", lw=0.6)
     save(fig, "fig_scatter")
 
@@ -168,16 +170,21 @@ def fig_bootstrap(metric="sharpe", reference="equal"):
         ys = []
         for p in PROFILES:
             row = d[(d.model == m) & (d.profile == p)].iloc[0]
-            ax.plot([row["lo"], row["hi"]], [y, y], color=COL[m], lw=2.6, alpha=0.85)
-            ax.plot(row["point_diff"], y, marker=MARK[p], color=COL[m], ms=8, mec="white", mew=0.5)
+            ax.plot([row["lo"], row["hi"]], [y, y], color=COL[m], lw=3, alpha=0.85, solid_capstyle="butt")
+            ax.plot(row["point_diff"], y, marker="o", color=COL[m], ms=7, mec="white", mew=0.6)
+            ax.text(row["hi"] + 0.015, y, PNAME[p], fontsize=7.5, color="#666666", va="center")
             ys.append(y); y += 1
         yticks.append(np.mean(ys)); ylabels.append(LABEL[m])
         y += 1.2
     ax.axvline(0, color="black", lw=1)
-    ax.set_yticks(yticks); ax.set_yticklabels([l.replace(" (", "\n(") for l in ylabels], fontsize=11)
-    ax.invert_yaxis()
-    ax.set_xlabel(f"Δ {'Sharpe' if metric=='sharpe' else 'CVaR₉₅'} vs 1/N under the same rules")
-    ax.set_title("95% block-bootstrap CI, one row per rule-set", fontsize=12)
+    ax.set_yticks(yticks); ax.set_yticklabels([l.replace(" (", "\n(") for l in ylabels], fontsize=10)
+    lab = "Sharpe ratio" if metric == "sharpe" else "CVaR₉₅"
+    ax.set_xlabel(f"{lab} of the model  −  {lab} of 1/N,  same rules")
+    ax.set_title("dot = measured difference,  bar = 95% confidence interval", fontsize=10)
+    xl = ax.get_xlim(); ax.set_xlim(xl[0], xl[1] + 0.12)
+    ax.text(-0.02, -1.1, "◄ worse than 1/N", ha="right", va="center", fontsize=9, color="#444444")
+    ax.text(0.02, -1.1, "better than 1/N ►", ha="left", va="center", fontsize=9, color="#444444")
+    ax.set_ylim(y - 1.2, -1.8)
     ax.grid(axis="x", color="#DDDDDD", lw=0.6)
     save(fig, f"fig_bootstrap_{metric}")
 

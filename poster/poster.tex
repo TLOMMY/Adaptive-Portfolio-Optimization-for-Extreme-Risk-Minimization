@@ -171,11 +171,11 @@ $w_{\text{cash}} \;\ge\; c_{\min}$ & \large cash floor \\
 \column{0.333}
 
 \block{4. When the Portfolio Is Reweighted}{
-Weights are re-solved (box 2, from the current $\w^{\text{prev}}$) when any of the following holds:
+Starting from the weights currently held, $\w^{\text{prev}}$, the portfolio is re-solved when any of the following holds ($\w^{\text{target}}$ = weights chosen at the last solve; $\sigma_{21},\sigma_{252}$ = market volatility over the last 21 and 252 days):
 {\Large
 \begin{align*}
 &\text{calendar} && 63 \text{ trading days since the last solve} \\
-&\text{drift} && \textstyle\sum_a \bigl|w_a - w^{\text{target}}_a\bigr| \;\ge\; 0.10 \\
+&\text{drift} && \textstyle\sum_a \bigl|w^{\text{prev}}_a - w^{\text{target}}_a\bigr| \;\ge\; 0.10 \\
 &\text{volatility regime} && \sigma_{21}/\sigma_{252} \;\ge\; 2
 \end{align*}}
 \vspace{-0.3em}
@@ -184,10 +184,10 @@ Weights are re-solved (box 2, from the current $\w^{\text{prev}}$) when any of t
   box/.style={draw=posterNavy,line width=0.8pt,rounded corners=3pt,fill=posterLightBlue,minimum height=16mm,inner sep=6pt,font=\large,align=center},
   dec/.style={draw=posterOrange,line width=1.2pt,diamond,aspect=2,fill=white,inner sep=2pt,font=\large,align=center},
   arr/.style={-{Stealth[length=4mm]},line width=1pt,posterNavy}]
-\node[box] (day) at (0,0) {day $t$: holdings drift\\with realised returns};
+\node[box] (day) at (0,0) {day $t$: prices move,\\weights drift to $\w^{\text{prev}}$};
 \node[dec] (trig) at (7.2,0) {trigger?};
 \node[box] (est) at (14.6,0) {estimate $\hat\mub,\hat\Sig,r_s$\\from days $t{-}756 \ldots t{-}1$};
-\node[box] (solve) at (22.4,0) {solve box 2 $\to$ new $\w$\\pay $\tau$ on trades};
+\node[box] (solve) at (22.4,0) {solve for new $\w$\\pay $\tau$ on trades};
 \draw[arr] (day) -- (trig);
 \draw[arr] (trig) -- node[above,font=\large] {yes} (est);
 \draw[arr] (est) -- (solve);
@@ -233,18 +233,20 @@ Weights are re-solved (box 2, from the current $\w^{\text{prev}}$) when any of t
 \vspace{-0.25cm}
 \begin{center}
 \begin{minipage}[t]{0.495\linewidth}
-\centering\includegraphics[width=\linewidth]{figures/fig_scatter.pdf}
+\centering\includegraphics[width=\linewidth]{figures/fig_scatter.pdf}\\[0.2em]
+\parbox{0.96\linewidth}{\textbf{Rules decide risk, not models.} Each grey region is one rule-set. The rules fix where a portfolio lands; the model only slides it along the region, robust always to the low end.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.495\linewidth}
-\centering\includegraphics[width=\linewidth]{figures/fig_bootstrap_sharpe.pdf}
+\centering\includegraphics[width=\linewidth]{figures/fig_bootstrap_sharpe.pdf}\\[0.2em]
+\parbox{0.96\linewidth}{\textbf{No optimiser beats $1/N$.} Each bar is a 95\% confidence interval from 5\,000 resampled decades; none lies wholly right of zero.}
 \end{minipage}
 \end{center}
-\textbf{Left: rules decide risk, not models.} Runs cluster by marker (rule-set), not by colour (model). \quad \textbf{Right: no optimiser beats $1/N$.} Paired Sharpe difference under the same rules; 5\,000-draw block bootstrap; no interval clears zero.
 \begin{center}\small
 \input{figures/table_models.tex}
 \end{center}
 \vspace{-0.15cm}
-\textbf{What the optimisers bought:} 3--5 points less CAGR for $\approx$8 points less drawdown than $1/N$, at the same Sharpe. They delivered the risk target they were given.
+\textbf{What the optimisers bought:} 3--5 points less CAGR for $\approx$8 points less drawdown than $1/N$, at the same Sharpe. They delivered the risk target they were given.\\[0.2em]
+{\small CAGR = average growth per year. Sharpe = return above cash per unit of volatility. Max DD = largest peak-to-trough fall. CVaR$_{95}$ = mean loss on the worst 5\% of days.}
 }
 
 \block{7. Conclusions}{
@@ -254,7 +256,7 @@ Weights are re-solved (box 2, from the current $\w^{\text{prev}}$) when any of t
 \item \textbf{Robust is consistently worst}: guarding against the worst-case mean doubles up on rules that already limit concentration.
 \item \textbf{Nothing beats the S\&P 500} in a mega-cap decade whose winners every rule-set caps. The optimisers bought drawdown, not return.
 \end{itemize}
-\insightbox{Interactive version: pick an investor, travel back to 2016 and watch each model trade.\quad \qrcode[height=2.2cm]{https://example.org/}}
+\insightbox{Interactive version: pick an investor, travel back to 2016 and watch each model trade.\quad \qrcode[height=2.2cm]{https://adaptive-portfolio-optimization.netlify.app/}}
 }
 
 \block{References}{
